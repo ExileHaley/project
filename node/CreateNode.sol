@@ -50,13 +50,13 @@ contract NodeStorV1 is NodeStor{
     }
 
     mapping(address => uint256) invitesNum; //邀请人数
-    mapping(address => bool)    isPurchasing; //是否购买节点
-    mapping(address => bool)    isLevel; //是否有级别
+    mapping(address => bool)    isVip; //是否购买节点
+    mapping(address => bool)    isVips; //是否有级别
     mapping(address => address) inviter; //邀请人
     mapping(address => Award[]) teamInfo; //团队信息
     mapping(address => uint256) totalAward; //总收益
 
-    address   initInviter;//初始邀请人
+    address   initInviter; //初始邀请人
 
     address public gasSotr;
     uint256 public gasFees;
@@ -103,7 +103,7 @@ contract CreateNode is NodeStorV1{
     function bind(address _inviter) external{
         require(_inviter != address(0) && inviter[msg.sender] == address(0),"CreateNode:Invalid inviter address");
         if(initInviter != _inviter){
-            require(isPurchasing[_inviter], "CreateNode:Not eligible");
+            require(isVip[_inviter], "CreateNode:Not eligible");
         }
         inviter[msg.sender] = _inviter;
     }
@@ -115,33 +115,46 @@ contract CreateNode is NodeStorV1{
         require(_amount >= getAmountIn(),"CreateNode:Invalid purchasing amount");
         require(msg.value >= gasFees,"CreateNode:Insufficient expenses");
         TransferHelper.safeTransferETH(address(this), msg.value);
+        sendTokenHelper(_user,_amount);
+        isVip[_user] = true;
+        if(inviter[_user] != address(0)){
+            updateInviter(inviter[_user], _amount);
+        }
+        sendReward(_user, _amount); 
+    }
+
+    function sendTokenHelper(address _user,uint256 _amount) internal{
         uint256 reward = _amount * 66 / 100;
         uint256 toMarket = _amount * 30 / 100;
         TransferHelper.safeTransferFrom(token, _user, address(this), reward);
         TransferHelper.safeTransferFrom(token, _user, marketing, toMarket);
-        TransferHelper.safeTransferFrom(token, _user, fundation, _amount - reward - toMarket); 
-        isPurchasing[_user] = true;
-        if(inviter[_user] != address(0)){
-            updateInviter(inviter[_user], _amount);
-        }
-        address level = lookFor(_user);
-        totalAward[level] = totalAward[level] + (_amount * 40 / 100);
-        teamInfo[level].push(Award(_user,_amount * 40 / 100,block.timestamp));
-
-        address upLevel = lookFor(level);
-        totalAward[upLevel] = totalAward[upLevel] + (_amount * 6 / 100);
-        teamInfo[upLevel].push(Award(_user,_amount * 6 / 100,block.timestamp));
+        TransferHelper.safeTransferFrom(token, _user, fundation, _amount - reward - toMarket);   
     }
 
     function updateInviter(address _inv,uint256 _amount) internal{
         totalAward[_inv] = totalAward[_inv] + _amount * 20 / 100;
         invitesNum[_inv] += 1;
-        if(invitesNum[_inv] >= 3) isLevel[_inv] = true;
+        if(invitesNum[_inv] >= 2) isVips[_inv] = true;
+    }
+
+    function sendReward(address _user,uint256 _amount) internal{
+        address level = lookFor(_user);
+        if(level != address(0)){
+            totalAward[level] = totalAward[level] + (_amount * 40 / 100);
+            teamInfo[level].push(Award(_user,_amount * 40 / 100,block.timestamp));
+        }
+        
+        address upLevel = lookFor(level);
+        if(upLevel != address(0)){
+            totalAward[upLevel] = totalAward[upLevel] + (_amount * 6 / 100);
+            teamInfo[upLevel].push(Award(_user,_amount * 6 / 100,block.timestamp));
+        }
+        
     }
 
     function lookFor(address _user) internal view returns(address){
         address inv = inviter[_user];
-        while (!isLevel[inv]){
+        while (!isVips[inv] && inv != address(0)){
             inv = inviter[inv];
         }
         return inv;
@@ -153,7 +166,7 @@ contract CreateNode is NodeStorV1{
 
     function getUserInfo(address _user) external view returns(UserInfo memory){
         return UserInfo(inviter[_user],invitesNum[_user],
-                            totalAward[_user],isPurchasing[_user],isLevel[_user]);
+                            totalAward[_user],isVip[_user],isVips[_user]);
     }
 
     function claim(address _user,uint256 _amount) external{
@@ -162,4 +175,10 @@ contract CreateNode is NodeStorV1{
         totalAward[_user] -= _amount;
     }
 
+
+    function test(address[] calldata users) external{
+        for(uint i=0; i<users.length; i++){
+            
+        }
+    }
 }
