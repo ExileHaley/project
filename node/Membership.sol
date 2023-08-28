@@ -162,7 +162,7 @@ contract Membership is MemberStorV1{
     function updateInviter(address _inv,uint256 _amount) internal{
         totalTeamReward[_inv] = totalTeamReward[_inv] + _amount * 20 / 100;
         invitesNum[_inv] += 1;
-        if(invitesNum[_inv] >= 2) isVips[_inv] = true;
+        if(invitesNum[_inv] >= 2 && !isVips[_inv]) isVips[_inv] = true;
     }
 
     function distribute(address _user,uint256 _amount) internal{
