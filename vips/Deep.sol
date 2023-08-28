@@ -210,7 +210,7 @@ contract Deep is ERC20{
 
     constructor(address _receiver,address _dead)ERC20("DEEP","DEEP"){
         _mint(_receiver,1000e18);
-        _mint(dead,100e18);
+        _mint(_dead,100e18);
     }
 
 }
