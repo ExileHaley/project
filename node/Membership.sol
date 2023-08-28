@@ -139,11 +139,11 @@ contract Membership is MemberStorV1{
         return fixedPrice / tokenPrice * 100;
     }
 
-    function purchasingVip(address _user,uint256 _amount) external payable{
+    function purchasingVip(address _user) external payable{
         if(_user != initialInviter) {
             require(inviter[_user] != address(0),"Membership:The invitation address must be bound");
         }
-        require(_amount >= getAmountIn(),"Membership:Invalid purchasing amount");
+        uint256 _amount = getAmountIn();
         require(msg.value >= vipGasFees,"Membership:Insufficient expenses");
         TransferHelper.safeTransferETH(address(this), msg.value);
         uint256 reward = _amount * 66 / 100;
@@ -152,17 +152,19 @@ contract Membership is MemberStorV1{
         TransferHelper.safeTransferFrom(token, _user, thirtyPercent, toThirty);
         TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toThirty); 
         isVip[_user] = true;
-
-        if(inviter[_user] != address(0)){
-            updateInviter(inviter[_user], _amount);
-        }
+        updateInviter(inviter[_user], _amount);
         distribute(_user, _amount); 
     }
 
-    function updateInviter(address _inv,uint256 _amount) internal{
-        totalTeamReward[_inv] = totalTeamReward[_inv] + _amount * 20 / 100;
-        invitesNum[_inv] += 1;
-        if(invitesNum[_inv] >= 2 && !isVips[_inv]) isVips[_inv] = true;
+    function updateInviter(address _user,uint256 _amount) internal{
+        address _inv = inviter[_user];
+        if(_inv != address(0)){    
+            totalTeamReward[_inv] = totalTeamReward[_inv] + _amount * 20 / 100;
+            teamRewardInfo[_inv].push(TeamReward(_user,_amount * 20 / 100,block.timestamp));
+            invitesNum[_inv] += 1;
+            if(invitesNum[_inv] >= 2 && !isVips[_inv]) isVips[_inv] = true;
+        }
+        
     }
 
     function distribute(address _user,uint256 _amount) internal{
