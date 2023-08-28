@@ -22,8 +22,8 @@ function claim(address _user,uint256 _amount) external;
 5. 获取用户信息详情，返回数据如上述User结构
 function getUserInfo(address _user) external view returns(User memory);
     struct TeamReward{
-        address member;//自己团队新参与的钱包地址
-        uint256 amount;//给到当前地址的奖励
+        address member;//团队新参与的钱包地址
+        uint256 amount;//能给到当前地址的奖励
         uint256 time; //发放奖励的时间
     }
 6. 获取用户的团队奖励详情，返回数据如上述TeamReward结构
