@@ -9,7 +9,8 @@ contract Locked{
     uint256 lockedTime = 157680000;
     address beneficiary;
 
-    constructor(address _beneficiary){
+    constructor(address _token,address _beneficiary){
+        token = _token;
         beneficiary = _beneficiary;
         startTime = block.timestamp;
     }
