@@ -19,7 +19,7 @@ contract Locked{
     function getExtractableAmount() public view returns(uint256 extractable){
         if(block.timestamp >= startTime + lockedTime){
             (bool success, bytes memory data) = token.staticcall(abi.encodeWithSelector(0x70a08231,address(this)));
-            require(success,"Static call failed");
+            require(success,"BALANCE_OF_FAILED");
             extractable = abi.decode(data,(uint256));
         } 
     }
@@ -29,7 +29,7 @@ contract Locked{
         uint256 amount = getExtractableAmount();
         if(amount > 0){
             (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, beneficiary, amount));
-            require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FAILED');
+            require(success && (data.length == 0 || abi.decode(data, (bool))), 'TRANSFER_FAILED');
         }
     }
     
