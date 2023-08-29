@@ -18,7 +18,7 @@ contract Locked{
 
     function getExtractableAmount() public view returns(uint256 extractable){
         if(block.timestamp >= startTime + lockedTime){
-            (bool success, bytes memory data) = token.staticcall(abi.encodeWithSignature("balanceOf(address)",address(this)));
+            (bool success, bytes memory data) = token.staticcall(abi.encodeWithSelector(0x70a08231,address(this)));
             require(success,"Static call failed");
             extractable = abi.decode(data,(uint256));
         } 
