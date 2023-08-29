@@ -31,29 +31,32 @@ func main() {
 	}
 
 	for {
-		var newPriceInt64 int64
-		var err error
-
-		// 不断尝试获取价格，直到获取成功为止
-		for {
-			newPriceInt64, err = getNewPrice()
-			if err == nil {
-				break // 如果获取成功，退出内部循环
-			}
-			log.Println("Get new price failed, retrying in 1 minute:", err)
-			time.Sleep(time.Minute) // 等待1分钟后重试
-		}
-
-		tx, err := updatePrice(client, big.NewInt(newPriceInt64*100))
+		tx, err := process(client)
 		if err != nil {
-			fmt.Println("Update price failed", err)
-		} else {
-			fmt.Println("Update price txHash", tx.Hash().Hex())
+			fmt.Println("func main update price failed")
+			continue
 		}
-
-		// 等待10分钟
+		fmt.Println("update price txHash:", tx.Hash().Hex())
 		time.Sleep(time.Minute * 10)
 	}
+
+}
+
+func process(client *ethclient.Client) (*types.Transaction, error) {
+	var newPriceInt64 int64
+	var err error
+	// 不断尝试获取价格，直到获取成功为止
+	for {
+		newPriceInt64, err = getNewPrice()
+		if err == nil {
+			break // 如果获取成功，退出内部循环
+		}
+		log.Println("Get new price failed, retrying in 1 minute:", err)
+		time.Sleep(time.Minute) // 等待1分钟后重试
+	}
+
+	tx, err := updatePrice(client, big.NewInt(newPriceInt64*100))
+	return tx, err
 
 }
 
@@ -92,7 +95,7 @@ func updatePrice(client *ethclient.Client, newPrice *big.Int) (*types.Transactio
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
-		return nil, errors.New("parse address failed")
+		return nil, errors.New("parse from address failed")
 	}
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
 	nonce, err := client.PendingNonceAt(context.Background(), common.HexToAddress(fromAddress))
