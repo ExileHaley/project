@@ -19,7 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-var rpc = ""
+var rpc = "https://rpc-bsc.48.club"
 var contractAddress = ""
 var sendPrivateKey = "YOUR_PRIVATE_KEY"
 
