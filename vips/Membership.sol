@@ -122,6 +122,7 @@ contract Membership is MemberStorV1{
         fourPercent = _fourPercent;
         vipGasFees = 8e15;
         fixedPrice = 500e18;
+        tokenPrice = 100;
         tokenPrice = _tokenPrice;
         operator = _operator;
     }
