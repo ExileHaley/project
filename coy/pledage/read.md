@@ -30,6 +30,7 @@ function provide(address customer) external payable;
         User    user; //上述User结构体
         address inv; //当前用户的邀请人地址
         uint256 income; //用户挖矿收益，也就是收益可提现的coy数量
+        uint256 teamCom; //当前用户下属团队算力总值
     }
 
 

@@ -62,6 +62,7 @@ contract PledageStorV1 is PledageStor{
         User    user;
         address inv;
         uint256 income;
+        uint256 teamCom;
     }
 
     struct Team{
@@ -74,6 +75,7 @@ contract PledageStorV1 is PledageStor{
     mapping(address => address) public inviter;
     mapping(address => bool) initialInviter;
     mapping(address => Team[]) teamInfo;
+    mapping(address => uint256) teamComputility;
     uint256 perStakingEarnings;
     uint256 public totalComputility;
     uint256 perBlockAward;
@@ -243,7 +245,7 @@ contract BatchPledage is PledageStorV1{
     }
 
     function provide(address customer) external payable onlyPermit{
-        //这里需要补充msg.value的值最小为100
+        require(msg.value >= 100e18,"BatchPledage:Invalid provide amount");
         require(inviter[customer] != address(0),"BatchPledage:The address of the inviter must be bound");
         uint256 amount = getAmountOut(msg.value,wcore,token);
         sendHelper(customer, amount, msg.value);
@@ -253,6 +255,7 @@ contract BatchPledage is PledageStorV1{
         user.computility += computilities;
         user.rewardDebt = user.rewardDebt + computilities * perStakingEarnings;
         totalComputility += computilities;
+        updateTeamComputility(customer, computilities);
     }
 
     function getAmountOut(uint256 amountIn,address token0,address token1) public view returns(uint256 amountOut){
@@ -303,6 +306,14 @@ contract BatchPledage is PledageStorV1{
             dead, 
             block.timestamp
         );
+    }
+
+    function updateTeamComputility(address _user,uint256 _computility)internal{
+        address inv = inviter[_user];
+        while(inv != address(0)){
+            teamComputility[inv] += _computility;
+            inv = inviter[inv];
+        }
     }
 
     function getCurrentPerStakingEarnings() internal view returns(uint256){
@@ -360,7 +371,7 @@ contract BatchPledage is PledageStorV1{
     }
 
     function getUserInfo(address customer) external view returns(Info memory){
-        return Info(userInfo[customer],inviter[customer],getUserCurrentEarnings(customer));
+        return Info(userInfo[customer],inviter[customer],getUserCurrentEarnings(customer),teamComputility[customer]);
     }
 
     function getUserOfTeamInfo(address customer) external view returns(Team[] memory){
@@ -377,7 +388,7 @@ contract BatchPledage is PledageStorV1{
 
 }
 
-//000000000000000000
+
 //[5000000000000000000000,7000000000000000000000,10000000000000000000000]
 // receiver:0xc7384Aaf0c8231AfE211e52f129ae3B29f358F6A
 //5000\7000\10000
