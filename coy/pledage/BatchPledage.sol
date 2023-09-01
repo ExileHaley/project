@@ -44,12 +44,12 @@ contract Proxy is PledageStor{
 
 
 contract PledageStorV1 is PledageStor{
-    address  wcore;
-    address  token;
-    address  receiver;
-    address  dead;
-    address  uniswapV2Router;
-    address  uniswapV2Factory;
+    address  public wcore;
+    address  public token;
+    address  public receiver;
+    address  public dead;
+    address  public uniswapV2Router;
+    address  public uniswapV2Factory;
 
     struct User{
         uint256 computility;
@@ -75,7 +75,7 @@ contract PledageStorV1 is PledageStor{
     mapping(address => address) public inviter;
     mapping(address => bool) initialInviter;
     mapping(address => Team[]) teamInfo;
-    mapping(address => uint256) teamComputility;
+    mapping(address => uint256) public teamComputility;
     uint256 perStakingEarnings;
     uint256 public totalComputility;
     uint256 perBlockAward;
@@ -393,10 +393,7 @@ contract BatchPledage is PledageStorV1{
 // receiver:0xc7384Aaf0c8231AfE211e52f129ae3B29f358F6A
 //5000\7000\10000
 //["0xc9fc71fF0Ad342d7D0E6cCBD7C4234E98aC83369","0x0d17B54dc4507D0Abf27bd49cfB248b7eE4056d0","0x427DfD8Ec77a9226E038Ada1A12055eDc544B440"]
-//正式版
-//pledage:0x73eb69668de559DcEB44FC85f4177F88e0DB3c6B
-//proxy:0x98b1d6890d9Ed9025B05e08D0B7F50D82822857c
 
-//抛弃版本
-//pledage:0x391F5bA33775b406779878a54340f17DF77cd43A
-//proxy:0xc2321EC28bB6d266F38570Fc8B2B6eCc97359a31
+//正式版本2
+//pledage:0x1C46Faf0191dd528Ac4089026Dc4dEeD6aBE77F7
+//proxy:0x565dc9dBC610D464891eb00091d46eF376315390
