@@ -1,4 +1,4 @@
-#### 合约地址：0x565dc9dBC610D464891eb00091d46eF376315390
+#### 合约地址：0x9dd940a746726b6F48a9b0061dD1BA726d168c2e
 #### wcore地址：0x40375C92d9FAf44d2f9db9Bd9ba41a3317a2404f
 #### coy地址：0xf49e283b645790591aa51f4f6DAB9f0B069e8CdD
 
@@ -30,7 +30,6 @@ function provide(address customer) external payable;
         User    user; //上述User结构体
         address inv; //当前用户的邀请人地址
         uint256 income; //用户挖矿收益，也就是收益可提现的coy数量
-        uint256 teamCom; //当前用户下属团队算力总值
     }
 
 
