@@ -62,7 +62,6 @@ contract PledageStorV1 is PledageStor{
         User    user;
         address inv;
         uint256 income;
-        uint256 teamCom;
     }
 
     struct Team{
@@ -75,7 +74,6 @@ contract PledageStorV1 is PledageStor{
     mapping(address => address) public inviter;
     mapping(address => bool) initialInviter;
     mapping(address => Team[]) teamInfo;
-    mapping(address => uint256) public teamComputility;
     uint256 perStakingEarnings;
     uint256 public totalComputility;
     uint256 perBlockAward;
@@ -245,17 +243,24 @@ contract BatchPledage is PledageStorV1{
     }
 
     function provide(address customer) external payable onlyPermit{
+        //要求支付数量必须大于50
         require(msg.value >= 50e18,"BatchPledage:Invalid provide amount");
+        //用户的邀请人地址不能为空
         require(inviter[customer] != address(0),"BatchPledage:The address of the inviter must be bound");
+        //获取应该输入的数量
         uint256 amount = getAmountOut(msg.value,wcore,token);
+        //发送token
         sendHelper(customer, amount, msg.value);
+        //如果总算力大于0更新池子
         if (totalComputility > 0) updateFarm();
+        //更新用户信息包括算力、负债
         User storage user = userInfo[customer];
         uint256 computilities = msg.value * 2;
         user.computility += computilities;
         user.rewardDebt = user.rewardDebt + computilities * perStakingEarnings;
+        //更新总算力信息
         totalComputility += computilities;
-        updateTeamComputility(customer, computilities);
+
     }
 
     function getAmountOut(uint256 amountIn,address token0,address token1) public view returns(uint256 amountOut){
@@ -266,6 +271,7 @@ contract BatchPledage is PledageStorV1{
     function sendHelper(address user,uint256 amount, uint256 value) internal{
         //token award
         {   
+            //获取初始邀请地址
             address inivter0 = inviter[user];
             if(inivter0 != address(0)){
                 User storage user0 = userInfo[inivter0];
@@ -288,32 +294,26 @@ contract BatchPledage is PledageStorV1{
         {
             uint256 swapValue = value * 60 / 100;
             TransferHelper.safeTransferETH(address(this), swapValue);
-            TransferHelper.safeTransferETH(receiver, value - swapValue);
-
-            uint256 ethBalance = address(this).balance;
-            if (ethBalance > 0) swapETHForCOY(ethBalance);
+            TransferHelper.safeTransferETH(receiver, value - swapValue);            
+            swapETHForCOY();
         }
         
     }
 
-    function swapETHForCOY(uint256 amount) internal{
-        address[] memory path = new address[](2);
-        path[0] = IUniswapV2Router(uniswapV2Router).WETH();
-        path[1] = token;
-        IUniswapV2Router(uniswapV2Router).swapExactETHForTokensSupportingFeeOnTransferTokens{value:amount}(
-            0, 
-            path, 
-            dead, 
-            block.timestamp
-        );
-    }
-
-    function updateTeamComputility(address _user,uint256 _computility)internal{
-        address inv = inviter[_user];
-        while(inv != address(0)){
-            teamComputility[inv] += _computility;
-            inv = inviter[inv];
+    function swapETHForCOY() internal{
+        uint256 ethBalance = address(this).balance;
+        if (ethBalance > 0){
+            address[] memory path = new address[](2);
+            path[0] = IUniswapV2Router(uniswapV2Router).WETH();
+            path[1] = token;
+            IUniswapV2Router(uniswapV2Router).swapExactETHForTokensSupportingFeeOnTransferTokens{value:ethBalance}(
+                0, 
+                path, 
+                dead, 
+                block.timestamp
+            );
         }
+        
     }
 
     function getCurrentPerStakingEarnings() internal view returns(uint256){
@@ -371,7 +371,7 @@ contract BatchPledage is PledageStorV1{
     }
 
     function getUserInfo(address customer) external view returns(Info memory){
-        return Info(userInfo[customer],inviter[customer],getUserCurrentEarnings(customer),teamComputility[customer]);
+        return Info(userInfo[customer],inviter[customer],getUserCurrentEarnings(customer));
     }
 
     function getUserOfTeamInfo(address customer) external view returns(Team[] memory){
@@ -387,13 +387,17 @@ contract BatchPledage is PledageStorV1{
     }
 
 }
-
+//000000000000000000
 
 //[5000000000000000000000,7000000000000000000000,10000000000000000000000]
 // receiver:0xc7384Aaf0c8231AfE211e52f129ae3B29f358F6A
 //5000\7000\10000
 //["0xc9fc71fF0Ad342d7D0E6cCBD7C4234E98aC83369","0x0d17B54dc4507D0Abf27bd49cfB248b7eE4056d0","0x427DfD8Ec77a9226E038Ada1A12055eDc544B440"]
 
-//正式版本2
-//pledage:0x1C46Faf0191dd528Ac4089026Dc4dEeD6aBE77F7
-//proxy:0x565dc9dBC610D464891eb00091d46eF376315390
+
+//pledage:0x98368D6C716c2abDA54d8848621ACA57B40cddeA
+//proxy:0x1d15A403625fc52CB6d3F54de82e92902992C225
+
+//这个新版本
+//pledage:0x65Cb4C44acC7C9e0B3e467F015C2696a85b6e101
+//proxy:0x9dd940a746726b6F48a9b0061dD1BA726d168c2e
