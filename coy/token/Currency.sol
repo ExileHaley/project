@@ -253,7 +253,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata, CurrencyStorV1{
 
 
 contract CoyVersion is ERC20{
-    address public constant staking = 0x565dc9dBC610D464891eb00091d46eF376315390;
+    // address public constant staking = 0x565dc9dBC610D464891eb00091d46eF376315390;
 
     receive() external payable{}
 
@@ -267,13 +267,13 @@ contract CoyVersion is ERC20{
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
+        
+        bool nonWhite = !whitelist[sender] && !whitelist[recipient];
+        address staking = 0x9dd940a746726b6F48a9b0061dD1BA726d168c2e;
+        bool isSellOrPurchase = recipient == uniswapV2Pair || sender == uniswapV2Pair;
         bool isStaking = sender == staking || recipient == staking;
 
-        bool nonWhite = !whitelist[sender] && !whitelist[recipient];
-
-        bool isSellOrPurchase = recipient == uniswapV2Pair || sender == uniswapV2Pair;
-
-        if (feeAccumulated > 0 && !isSellOrPurchase && sender != uniswapV2Router && !isStaking) {
+        if (feeAccumulated > 0 && !isSellOrPurchase  && sender != uniswapV2Router && !isStaking) {
             uint256 feeBalance = feeAccumulated;
             feeAccumulated = 0;
             swapTokensForEth(feeBalance);
@@ -438,4 +438,8 @@ contract CoyVersion is ERC20{
         minRewardValue = _value;
     }
 
+
 }
+
+//token:0xAc97A82158A8Ecd8ecf833537C7b7DF6C41D9F86
+//proxy:0xf49e283b645790591aa51f4f6DAB9f0B069e8CdD
