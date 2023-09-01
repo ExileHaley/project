@@ -245,7 +245,7 @@ contract BatchPledage is PledageStorV1{
     }
 
     function provide(address customer) external payable onlyPermit{
-        require(msg.value >= 100e18,"BatchPledage:Invalid provide amount");
+        require(msg.value >= 50e18,"BatchPledage:Invalid provide amount");
         require(inviter[customer] != address(0),"BatchPledage:The address of the inviter must be bound");
         uint256 amount = getAmountOut(msg.value,wcore,token);
         sendHelper(customer, amount, msg.value);
@@ -291,7 +291,7 @@ contract BatchPledage is PledageStorV1{
             TransferHelper.safeTransferETH(receiver, value - swapValue);
 
             uint256 ethBalance = address(this).balance;
-            if (ethBalance > 0) swapETHForCOY(swapValue);
+            if (ethBalance > 0) swapETHForCOY(ethBalance);
         }
         
     }
