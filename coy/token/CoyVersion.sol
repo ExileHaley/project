@@ -76,9 +76,6 @@ interface IUniswapV2Router {
 
 }
 
-interface IUniswapV2Factory {
-    function createPair(address tokenA, address tokenB) external returns (address pair);
-}
 
 interface IERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -253,7 +250,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata, CurrencyStorV1{
 
 
 contract CoyVersion is ERC20{
-    // address public constant staking = 0x565dc9dBC610D464891eb00091d46eF376315390;
+    
 
     receive() external payable{}
 
@@ -266,51 +263,19 @@ contract CoyVersion is ERC20{
         _;
     }
 
-    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
-        
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {  
         bool nonWhite = !whitelist[sender] && !whitelist[recipient];
-        address staking = 0x9dd940a746726b6F48a9b0061dD1BA726d168c2e;
         bool isSellOrPurchase = recipient == uniswapV2Pair || sender == uniswapV2Pair;
-        bool isStaking = sender == staking || recipient == staking;
-
-        if (feeAccumulated > 0 && !isSellOrPurchase  && sender != uniswapV2Router && !isStaking) {
-            uint256 feeBalance = feeAccumulated;
-            feeAccumulated = 0;
-            swapTokensForEth(feeBalance);
-            uint256 newBalance = address(this).balance;
-            payable(marketing).transfer(newBalance * 34 / 100);
-            payable(fundation).transfer(newBalance * 44 / 100);
-        }
-
-        uint256 feeAmount = amount * 11 / 100;
-
+        uint256 feeAmount = amount * 2 / 100;
         if (isSellOrPurchase && nonWhite) {
-            uint256 burnAmount = feeAmount * 2 / 11; // 2% for burning
-            uint256 contractAmount = feeAmount - burnAmount; // 9% for the contract
-            feeAccumulated += contractAmount;
-            // Burn tokens
-            super._transfer(sender, dead, burnAmount);
-
-            // Send tokens to the contract
-            super._transfer(sender, address(this), contractAmount);
-
+            super._transfer(sender, marketing, feeAmount);
             amount -= feeAmount;
         }
-
         super._transfer(sender, recipient, amount);
 
-        if(!isSellOrPurchase  && sender != uniswapV2Router && !isStaking){
-            processReward(50000);
-        }
-
-        if (IERC20(uniswapV2Pair).balanceOf(sender) > 0) addHolder(sender);
-        else removeHolder(sender);
-        if (IERC20(uniswapV2Pair).balanceOf(recipient) > 0) addHolder(recipient);
-        else removeHolder(recipient);
     }
 
-
-    function swapTokensForEth(uint256 tokenAmount) private {
+    function swapTokensForEth(uint256 tokenAmount) external onlyOwner {
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = IUniswapV2Router(uniswapV2Router).WETH();
@@ -324,101 +289,6 @@ contract CoyVersion is ERC20{
             address(this),
             block.timestamp + 10
         );
-    }
-
-    function processReward(uint256 gas) private {
-
-        uint256 balance = address(this).balance;
-        if (balance < minRewardValue) {
-            return;
-        }
-        
-        uint256 totalLP = IERC20(uniswapV2Pair).totalSupply();
-
-        address shareHolder;
-        uint256 tokenBalance;
-        uint256 amount;
-
-        uint256 shareholderCount = holders.length;
-
-        uint256 gasUsed = 0;
-        uint256 iterations = 0;
-        uint256 gasLeft = gasleft();
-
-        balance = address(this).balance;
-
-        while (gasUsed < gas && iterations < shareholderCount) {
-            if (currentIndex >= shareholderCount) {
-                currentIndex = 0;
-            }
-            shareHolder = holders[currentIndex];
-            tokenBalance = IERC20(uniswapV2Pair).balanceOf(shareHolder);
-
-            if (tokenBalance > 0) {
-                amount = (balance * tokenBalance) / totalLP;
-
-                if (amount > 0 && address(this).balance > amount) {
-                    payable(shareHolder).transfer(amount);
-                }
-
-            }
-
-            gasUsed = gasUsed + (gasLeft - gasleft());
-            gasLeft = gasleft();
-            currentIndex++;
-            iterations++;
-        }
-
-    }    
-
-    function addHolder(address user) private  {
-        uint256 size;
-        assembly {
-            size := extcodesize(user)
-        }
-        if (size > 0) {
-            return;
-        }
-
-        if (holderIndex[user] == 0) {
-            if (holders.length ==0 || holders[0] != user) {
-                holderIndex[user] = holders.length;
-                holders.push(user);
-            }
-        }
-    }
-
-    function removeHolder(address user) private {
-        uint256 indexToRemove = holderIndex[user];
-        uint256 size;
-        assembly {
-            size := extcodesize(user)
-        }
-        if (indexToRemove == 0 || size > 0) {
-            return;
-        }
-        address lastHolder = holders[holders.length - 1];
-        holders[indexToRemove] = lastHolder;
-        holderIndex[lastHolder] = indexToRemove;
-        holders.pop();
-        delete holderIndex[user];
-    }
-
-    function initialize(address receiver,address _marketing,address _fundation) external onlyOwner{
-        require(totalSupply() == 0, "ERC20:Can`t be repeated");
-        _name = "COY Version2.0";
-        _symbol = "COY";
-        _mint(receiver, 100000000e18);
-        uniswapV2Router = 0x4ee133a21B2Bd8EC28d41108082b850B71A3845e;
-        uniswapV2Pair = IUniswapV2Factory(IUniswapV2Router(uniswapV2Router).factory()).createPair(
-            address(this),
-            IUniswapV2Router(uniswapV2Router).WETH()
-        );
-        dead = 0x000000000000000000000000000000000000dEaD;
-        marketing = _marketing;
-        fundation = _fundation;
-        whitelist[address(this)] = true;
-
     }
 
     function setReceiver(address _marketing,address _fundation) external onlyOwner{
@@ -436,6 +306,10 @@ contract CoyVersion is ERC20{
 
     function setRewardValue(uint256 _value) external onlyOwner{
         minRewardValue = _value;
+    }
+
+    function claimCore(address to,uint256 amount) external onlyOwner{
+        payable(to).transfer(amount);
     }
 
 
