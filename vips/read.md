@@ -8,12 +8,16 @@
 ``` javascript
 1. 绑定推荐人，_inviter推荐人地址
 function bind(address _inviter) external;
+
 2. 获取购买节点需要支付的deep数量
 function getAmountOut() public view returns(uint256 amountOut)
+
 3. 购买节点，deep数量合约回自己从用户钱包里扣，所以deep需要对合约进行授权
 function purchasingVip(address _user) external;
+
 4. 提取团队推荐收益
 function claim(address _user,uint256 _amount) external;
+
     struct User{
         bool isp; //是不是vip，当前地址如果购买了节点就是true，否则false。
         bool isps; //是不是vips，推荐超过2个人购买节点就是vips，true表示已经达成，false表示未达成。
@@ -23,6 +27,7 @@ function claim(address _user,uint256 _amount) external;
     }
 5. 获取用户信息详情，返回数据如上述User结构
 function getUserInfo(address _user) external view returns(User memory);
+
     struct TeamReward{
         address member;//团队新参与的钱包地址
         uint256 amount;//能给到当前地址的奖励
