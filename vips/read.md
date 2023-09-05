@@ -1,15 +1,14 @@
 ### deep token address:
 ### vip合约地址:
-
 ### vip合约方法列表:
 
 ``` javascript
 1. 绑定推荐人，_inviter推荐人地址
 function bind(address _inviter) external;
-2. 获取购买节点需要支付的deep数量
-function getAmountIn() public view returns(uint256);
-3. 购买节点，payable要求传入bnb数量，这里需要大于0.0008，deep数量合约回自己从用户钱包里扣，所以deep需要对合约进行授权
-function purchasingVip(address _user) external payable;
+2. 获取购买节点需要支付的deep数量,这里amountIn输入500个，token0输入usdt地址，token1输入deep地址
+function getAmountOut(uint256 amountIn,address token0,address token1) public view returns(uint256 amountOut)
+3. 购买节点，deep数量合约回自己从用户钱包里扣，所以deep需要对合约进行授权
+function purchasingVip(address _user) external;
 4. 提取团队推荐收益
 function claim(address _user,uint256 _amount) external;
     struct User{
