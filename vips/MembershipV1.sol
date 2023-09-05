@@ -150,8 +150,7 @@ contract MemberShip is MemberStorV1{
         require(admin == msg.sender,"Membership:Caller is not owner");
         _;
     }
-    //fourPercent:0x9356703BbB5738B0D6f977608e87a556Eb537deD
-    //initialInviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
+    
     function initialize(
         address _initialInviter,address _token,
         address _thirtyPercent,address _fourPercent
@@ -251,5 +250,9 @@ contract MemberShip is MemberStorV1{
         admin = _admin;
     }
 }
-
+//token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
+//fourPercent:0x9356703BbB5738B0D6f977608e87a556Eb537deD
+//initialInviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 //替代锁仓30%的地址:0xD54357a9C81d453FAD93D91E4fBA55dEabAE8C26
+//membership:0x983375537Ffe2Ee8E397CB12ec7a35Bf19285152
+//proxy:0xFe283a3A0d1FeCBE20E132Cb7D85c0D8ba6DCf9C

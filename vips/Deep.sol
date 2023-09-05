@@ -248,5 +248,9 @@ contract Deep is ERC20{
         slippage = _slippage;
     }
 
+    function setOwner(address _owner) external onlyOwner{
+        owner = _owner;
+    }
+
 }
 
