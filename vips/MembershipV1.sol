@@ -183,6 +183,7 @@ contract MemberShip is MemberStorV1{
             require(inviter[_user] != address(0),"Membership:The invitation address must be bound");
         }
         uint256 _amount = getAmountOut();
+        require(_amount > 0,"Membership:Invalid purchasing amount");
         uint256 reward = _amount * 66 / 100;
         uint256 toThirty = _amount * 30 / 100;
         TransferHelper.safeTransferFrom(token, _user, address(this), reward);
