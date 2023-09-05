@@ -1,7 +1,7 @@
-#### deep address:
+#### deep address:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
 #### vips 合约地址:
-#### usdt address:
-#### 初始邀请地址:
+#### usdt address:0x55d398326f99059fF775485246999027B3197955
+#### 初始邀请地址:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 
 #### vip合约方法列表:
 

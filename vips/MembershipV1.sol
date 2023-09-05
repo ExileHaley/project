@@ -251,3 +251,5 @@ contract MemberShip is MemberStorV1{
         admin = _admin;
     }
 }
+
+//替代锁仓30%的地址:0xD54357a9C81d453FAD93D91E4fBA55dEabAE8C26

@@ -194,7 +194,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual {}
 }
 
-contract Token is ERC20{
+contract Deep is ERC20{
     address public owner;
     address public uniswapV2Pair;
     address public slippage;
@@ -205,29 +205,24 @@ contract Token is ERC20{
     //foundation:0x2945f6957C110C75C44AE9B94EAe96Bb227E8486
     //charitable:0x094C142116a88ee251A6A1Ef54f13058E26A9Ece
     //dead:0x000000000000000000000000000000000000dEaD
+//["0x8ec899BB8C6a5E140F546d6fcc83958b193dB09E","0x3EbdF8338C6B77Bbf40Aba777F9fB7cC7f3628e2","0xC69D7E1F4c8FFa068b5f92fFaB60dFF5D578776E","0x3847faFFc561bb68EA69d245e325b31F69D436eA","0x2945f6957C110C75C44AE9B94EAe96Bb227E8486","0x094C142116a88ee251A6A1Ef54f13058E26A9Ece","0x000000000000000000000000000000000000dEaD"]
     //router:0x10ED43C718714eb63d5aA57B78B54704E256024E
     //usdt:0x55d398326f99059fF775485246999027B3197955
     //slippage:0x4fe0Da085b5DDB4F85a540e5fCE3D73D8Aecd95E
     constructor(
-        address _pool,
-        address _ido,
-        address _devFund,
-        address _tech,
-        address _foundation,
-        address _charitable,
-        address _dead,
+        address[] memory addrs,
         address _router,
         address _usdt,
         address _slippage
-    ) ERC20("Deep", "DEEP"){
+    ) ERC20("DeepTest", "DET"){
         uint256 amount = 1000000000000e18;
-        _mint(_pool, amount * 30 / 100);
-        _mint(_ido, amount * 5 / 100);
-        _mint(_devFund, amount * 5 / 100);
-        _mint(_tech, amount * 5 / 100);
-        _mint(_foundation, amount * 4 / 100);
-        _mint(_charitable, amount * 1 / 100);
-        _mint(_dead, amount * 50 / 100);
+        _mint(addrs[0], amount * 30 / 100);
+        _mint(addrs[1], amount * 5 / 100);
+        _mint(addrs[2], amount * 5 / 100);
+        _mint(addrs[3], amount * 5 / 100);
+        _mint(addrs[4], amount * 4 / 100);
+        _mint(addrs[5], amount * 1 / 100);
+        _mint(addrs[6], amount * 50 / 100);
         uniswapV2Pair = IUniswapV2Factory(IUniswapV2Router(_router).factory()).createPair(_usdt,address(this));
         slippage = _slippage;
         owner = msg.sender;
@@ -254,3 +249,4 @@ contract Token is ERC20{
     }
 
 }
+
