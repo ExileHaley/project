@@ -237,6 +237,10 @@ contract MemberShip is MemberStorV1{
         return User(isVip[_user],isVips[_user],inviter[_user],invitesNum[_user],totalTeamReward[_user]);
     }
 
+    function getTeamRewardInfo(address _user) external view returns (TeamReward[] memory){
+        return teamRewardInfo[_user];
+    }
+
     function updatePercentReceiver(address _thirtyPercent,address _fourPercent) external onlyOwner{
         thirtyPercent = _thirtyPercent;
         fourPercent = _fourPercent;
@@ -254,5 +258,5 @@ contract MemberShip is MemberStorV1{
 //fourPercent:0x9356703BbB5738B0D6f977608e87a556Eb537deD
 //initialInviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 //替代锁仓30%的地址:0xD54357a9C81d453FAD93D91E4fBA55dEabAE8C26
-//membership:0x983375537Ffe2Ee8E397CB12ec7a35Bf19285152
+//membership:0x6D5c096089a9c9aEc92B8d153649C3057569B5bC
 //proxy:0xFe283a3A0d1FeCBE20E132Cb7D85c0D8ba6DCf9C
