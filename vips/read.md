@@ -1,6 +1,9 @@
-### deep token address:
-### vip合约地址:
-### vip合约方法列表:
+#### deep address:
+#### vips 合约地址:
+#### usdt address:
+#### 初始邀请地址:
+
+#### vip合约方法列表:
 
 ``` javascript
 1. 绑定推荐人，_inviter推荐人地址
