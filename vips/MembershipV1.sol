@@ -173,16 +173,16 @@ contract MemberShip is MemberStorV1{
         inviter[msg.sender] = _inviter;
     }
 
-    function getAmountOut(uint256 amountIn,address token0,address token1) public view returns(uint256 amountOut){
-        (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, token0, token1);
-        amountOut = UniswapV2Library.getAmountOut(amountIn, reserveIn, reserveOut);
+    function getAmountOut() public view returns(uint256 amountOut){
+        (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, usdt, token);
+        amountOut = UniswapV2Library.getAmountOut(fixedPrice, reserveIn, reserveOut);
     }
 
     function purchasingVip(address _user) external{
         if(_user != initialInviter) {
             require(inviter[_user] != address(0),"Membership:The invitation address must be bound");
         }
-        uint256 _amount = getAmountOut(fixedPrice,usdt,token);
+        uint256 _amount = getAmountOut();
         uint256 reward = _amount * 66 / 100;
         uint256 toThirty = _amount * 30 / 100;
         TransferHelper.safeTransferFrom(token, _user, address(this), reward);
