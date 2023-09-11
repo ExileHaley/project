@@ -221,8 +221,11 @@ contract MemberShip is MemberStorV1{
 
     function lookFor(address _user) internal view returns(address){
         address invAddr = inviter[_user];
-        while (!isVips[invAddr] && invAddr != address(0)){
+        uint256 i = 0;
+        while (!isVips[invAddr]){
             invAddr = inviter[invAddr];
+            if(invAddr == address(0) || i >= 20) break;
+            i++;
         }
         return invAddr;
     }
