@@ -188,10 +188,12 @@ contract MemberShip is MemberStorV1{
         uint256 toThirty = _amount * 30 / 100;
         TransferHelper.safeTransferFrom(token, _user, address(this), reward);
         TransferHelper.safeTransferFrom(token, _user, thirtyPercent, toThirty);
-        TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toThirty); 
+        TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toThirty);  
+        if(!isVip[_user]){
+            updateInviter(inviter[_user], _amount);
+            distribute(_user, _amount); 
+        }
         isVip[_user] = true;
-        updateInviter(inviter[_user], _amount);
-        distribute(_user, _amount); 
     }
 
     function updateInviter(address _user,uint256 _amount) internal{
@@ -224,7 +226,7 @@ contract MemberShip is MemberStorV1{
         uint256 i = 0;
         while (!isVips[invAddr]){
             invAddr = inviter[invAddr];
-            if(invAddr == address(0) || i >= 20) break;
+            if(invAddr == address(0) || i >= 30) break;
             i++;
         }
         return invAddr;
@@ -261,5 +263,5 @@ contract MemberShip is MemberStorV1{
 //fourPercent:0x9356703BbB5738B0D6f977608e87a556Eb537deD
 //initialInviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 //替代锁仓30%的地址:0xD54357a9C81d453FAD93D91E4fBA55dEabAE8C26
-//membership:0x6D5c096089a9c9aEc92B8d153649C3057569B5bC
+//membership:0x6721995F4CBE53adF188fD43119533A1B3E10426
 //proxy:0xFe283a3A0d1FeCBE20E132Cb7D85c0D8ba6DCf9C
