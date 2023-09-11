@@ -130,6 +130,7 @@ contract MemberStorV1 is MemberStor{
     address   public thirtyPercent;
     address   public fourPercent;
     uint256   public fixedPrice;
+    uint8     public maxLooked;
     //`return user info`
     struct User{
         bool isp;
@@ -142,6 +143,7 @@ contract MemberStorV1 is MemberStor{
 }
 
 contract MemberShip is MemberStorV1{
+    
     constructor(){
         admin = msg.sender;
     }
@@ -162,6 +164,7 @@ contract MemberShip is MemberStorV1{
         thirtyPercent = _thirtyPercent;
         fourPercent = _fourPercent;
         fixedPrice = 500e18;
+        maxLooked = 30;
     }
 
     function bind(address _inviter) external{
@@ -222,7 +225,7 @@ contract MemberShip is MemberStorV1{
     }
 
     function lookFor(address _user) public view returns (address) {
-        return findVip(_user, 30); // 设置最大查找深度，防止无限递归
+        return findVip(_user, maxLooked); // 设置最大查找深度，防止无限递归
     }
 
     function findVip(address _user, uint8 maxDepth) private view returns (address) {
@@ -256,6 +259,10 @@ contract MemberShip is MemberStorV1{
 
     function updateFixed(uint256 _fixed) external onlyOwner{
         fixedPrice = _fixed;
+    }
+
+    function setMaxLooked(uint8 _looked) external onlyOwner{
+        maxLooked = _looked;
     }
 
     function setAdmin(address _admin) external  onlyOwner{
