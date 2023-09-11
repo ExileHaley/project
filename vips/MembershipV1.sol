@@ -109,11 +109,13 @@ library UniswapV2Library {
 
 
 contract MemberStorV1 is MemberStor{
+    enum Express{Direct,vips}
     //`Team info list`
     struct TeamReward{
         address member;
         uint256 amount;
         uint256 time;
+        Express express;
     }
     mapping(address => TeamReward[]) teamRewardInfo;
     //`user info list`
@@ -127,7 +129,8 @@ contract MemberStorV1 is MemberStor{
     address   public uniswapV2Factory;
     address   public token;
     address   public usdt;
-    address   public thirtyPercent;
+    address   public twentyPercent;
+    address   public tenPercent;
     address   public fourPercent;
     uint256   public fixedPrice;
     uint8     public maxLooked;
@@ -155,13 +158,15 @@ contract MemberShip is MemberStorV1{
     
     function initialize(
         address _initialInviter,address _token,
-        address _thirtyPercent,address _fourPercent
+        address _twentyPercent,address _fourPercent,
+        address _tenPercent
     ) external onlyOwner{
         initialInviter = _initialInviter;
         uniswapV2Factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
         token = _token;
         usdt = 0x55d398326f99059fF775485246999027B3197955;
-        thirtyPercent = _thirtyPercent;
+        twentyPercent = _twentyPercent;
+        tenPercent = _tenPercent;
         fourPercent = _fourPercent;
         fixedPrice = 500e18;
         maxLooked = 30;
@@ -188,12 +193,15 @@ contract MemberShip is MemberStorV1{
         uint256 _amount = getAmountOut();
         require(_amount > 0,"Membership:Invalid purchasing amount");
         uint256 reward = _amount * 66 / 100;
-        uint256 toThirty = _amount * 30 / 100;
+        uint256 toTwenty = _amount * 20 / 100;
+        uint256 toTen = _amount * 10 / 100;
         TransferHelper.safeTransferFrom(token, _user, address(this), reward);
-        TransferHelper.safeTransferFrom(token, _user, thirtyPercent, toThirty);
-        TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toThirty);  
+        TransferHelper.safeTransferFrom(token, _user, twentyPercent, toTwenty);
+        TransferHelper.safeTransferFrom(token, _user, tenPercent, toTen);
+        TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toTwenty - toTen);  
+
         if(!isVip[_user]){
-            updateInviter(inviter[_user], _amount);
+            updateInviter(_user, _amount);
             distribute(_user, _amount); 
             isVip[_user] = true;
         }
@@ -203,7 +211,7 @@ contract MemberShip is MemberStorV1{
         address _inv = inviter[_user];
         if(_inv != address(0)){    
             totalTeamReward[_inv] = totalTeamReward[_inv] + _amount * 20 / 100;
-            teamRewardInfo[_inv].push(TeamReward(_user,_amount * 20 / 100,block.timestamp));
+            teamRewardInfo[_inv].push(TeamReward(_user,_amount * 20 / 100, block.timestamp,Express.Direct));
             invitesNum[_inv] += 1;
             if(invitesNum[_inv] >= 2 && !isVips[_inv]) isVips[_inv] = true;
         }
@@ -213,14 +221,14 @@ contract MemberShip is MemberStorV1{
         address level = lookFor(_user);
         if(level != address(0) && isVips[level]){
             totalTeamReward[level] = totalTeamReward[level] + (_amount * 40 / 100);
-            teamRewardInfo[level].push(TeamReward(_user,_amount * 40 / 100,block.timestamp));
-        }
-        
-        address upLevel = lookFor(level);
-        if(upLevel != address(0) && isVips[upLevel]){
-            totalTeamReward[upLevel] = totalTeamReward[upLevel] + (_amount * 6 / 100);
-            teamRewardInfo[upLevel].push(TeamReward(_user,_amount * 6 / 100,block.timestamp));
-        }
+            teamRewardInfo[level].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
+
+            address upLevel = lookFor(level);
+            if(upLevel != address(0) && isVips[upLevel]){
+                totalTeamReward[upLevel] = totalTeamReward[upLevel] + (_amount * 6 / 100);
+                teamRewardInfo[upLevel].push(TeamReward(_user,_amount * 6 / 100,block.timestamp,Express.vips));
+            }
+        }        
         
     }
 
@@ -252,9 +260,10 @@ contract MemberShip is MemberStorV1{
         return teamRewardInfo[_user];
     }
 
-    function updatePercentReceiver(address _thirtyPercent,address _fourPercent) external onlyOwner{
-        thirtyPercent = _thirtyPercent;
+    function updatePercentReceiver(address _twentyPercent,address _tenPercent,address _fourPercent) external onlyOwner{
         fourPercent = _fourPercent;
+        twentyPercent = _twentyPercent;
+        tenPercent = _tenPercent;
     }
 
     function updateFixed(uint256 _fixed) external onlyOwner{
@@ -271,7 +280,11 @@ contract MemberShip is MemberStorV1{
 }
 //token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
 //fourPercent:0x9356703BbB5738B0D6f977608e87a556Eb537deD
-//initialInviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
+
+//4:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
+//10:0x3de09d761BF70F95b29f97f3Dc14386795B6A376
+//20:0xB6b25D0972359197864abbAA2328Df80680d9C93
 //替代锁仓30%的地址:0xD54357a9C81d453FAD93D91E4fBA55dEabAE8C26
-//membership:0xaeA075Aa635D5973860042eE3940069D687EdEcA
-//proxy:0x9287eE1b23CEedc14aC12971fe061714De5e99d0
+
+//membership:
+//proxy:
