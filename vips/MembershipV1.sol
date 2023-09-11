@@ -195,8 +195,8 @@ contract MemberShip is MemberStorV1{
         if(!isVip[_user]){
             updateInviter(inviter[_user], _amount);
             distribute(_user, _amount); 
+            isVip[_user] = true;
         }
-        isVip[_user] = true;
     }
 
     function updateInviter(address _user,uint256 _amount) internal{
