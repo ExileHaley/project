@@ -113,6 +113,11 @@
 						"internalType": "uint256",
 						"name": "time",
 						"type": "uint256"
+					},
+					{
+						"internalType": "enum MemberStorV1.Express",
+						"name": "express",
+						"type": "uint8"
 					}
 				],
 				"internalType": "struct MemberStorV1.TeamReward[]",
@@ -209,12 +214,17 @@
 			},
 			{
 				"internalType": "address",
-				"name": "_thirtyPercent",
+				"name": "_twentyPercent",
 				"type": "address"
 			},
 			{
 				"internalType": "address",
 				"name": "_fourPercent",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_tenPercent",
 				"type": "address"
 			}
 		],
@@ -307,6 +317,38 @@
 				"type": "address"
 			}
 		],
+		"name": "lookFor",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "maxLooked",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
 		"name": "purchasingVip",
 		"outputs": [],
 		"stateMutability": "nonpayable",
@@ -326,8 +368,21 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint8",
+				"name": "_looked",
+				"type": "uint8"
+			}
+		],
+		"name": "setMaxLooked",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
-		"name": "thirtyPercent",
+		"name": "tenPercent",
 		"outputs": [
 			{
 				"internalType": "address",
@@ -372,6 +427,19 @@
 	},
 	{
 		"inputs": [],
+		"name": "twentyPercent",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "uniswapV2Factory",
 		"outputs": [
 			{
@@ -400,7 +468,12 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_thirtyPercent",
+				"name": "_twentyPercent",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_tenPercent",
 				"type": "address"
 			},
 			{

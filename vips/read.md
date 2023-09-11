@@ -1,5 +1,5 @@
 #### deep address:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
-#### vips 合约地址:0x9287eE1b23CEedc14aC12971fe061714De5e99d0
+#### vips 合约地址:0xaA9ad958F6B2E23DD092d43069834704c3d27Eb4
 #### usdt address:0x55d398326f99059fF775485246999027B3197955
 #### 初始邀请地址:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 #### vips abi:同级目录下membership.json
@@ -29,10 +29,13 @@ function claim(address _user,uint256 _amount) external;
 5. 获取用户信息详情，返回数据如上述User结构
 function getUserInfo(address _user) external view returns(User memory);
 
+    enum Express{direct,vips,sameLevel}
+    //`Team info list`
     struct TeamReward{
-        address member;//团队新参与的钱包地址
-        uint256 amount;//能给到当前地址的奖励
-        uint256 time; //发放奖励的时间
+        address member; //被推荐的钱包地址
+        uint256 amount; //数量
+        uint256 time; //时间
+        Express express; //0表示直推奖励、1表示节点奖励,2表示平级奖励，具体展示文案跟项目方要
     }
 6. 获取用户的团队奖励详情，返回数据如上述TeamReward结构
 function getUserTeamInfo(address _user) external view returns(TeamReward[] memory);

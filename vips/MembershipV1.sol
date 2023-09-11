@@ -109,7 +109,7 @@ library UniswapV2Library {
 
 
 contract MemberStorV1 is MemberStor{
-    enum Express{Direct,vips}
+    enum Express{direct,vips,sameLevel}
     //`Team info list`
     struct TeamReward{
         address member;
@@ -211,7 +211,7 @@ contract MemberShip is MemberStorV1{
         address _inv = inviter[_user];
         if(_inv != address(0)){    
             totalTeamReward[_inv] = totalTeamReward[_inv] + _amount * 20 / 100;
-            teamRewardInfo[_inv].push(TeamReward(_user,_amount * 20 / 100, block.timestamp,Express.Direct));
+            teamRewardInfo[_inv].push(TeamReward(_user,_amount * 20 / 100, block.timestamp,Express.direct));
             invitesNum[_inv] += 1;
             if(invitesNum[_inv] >= 2 && !isVips[_inv]) isVips[_inv] = true;
         }
@@ -226,14 +226,14 @@ contract MemberShip is MemberStorV1{
             address upLevel = lookFor(level);
             if(upLevel != address(0) && isVips[upLevel]){
                 totalTeamReward[upLevel] = totalTeamReward[upLevel] + (_amount * 6 / 100);
-                teamRewardInfo[upLevel].push(TeamReward(_user,_amount * 6 / 100,block.timestamp,Express.vips));
+                teamRewardInfo[upLevel].push(TeamReward(_user,_amount * 6 / 100,block.timestamp,Express.sameLevel));
             }
         }        
         
     }
 
     function lookFor(address _user) public view returns (address) {
-        return findVip(_user, maxLooked); // 设置最大查找深度，防止无限递归
+        return findVip(_user, maxLooked); 
     }
 
     function findVip(address _user, uint8 maxDepth) private view returns (address) {
@@ -243,7 +243,6 @@ contract MemberShip is MemberStorV1{
         address invAddr = inviter[_user];
         return findVip(invAddr, maxDepth - 1);
     }
-
 
 
     function claim(address _user,uint256 _amount) external{
@@ -279,12 +278,12 @@ contract MemberShip is MemberStorV1{
     }
 }
 //token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
-//fourPercent:0x9356703BbB5738B0D6f977608e87a556Eb537deD
+//inviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 
-//4:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
+//4:0x9356703BbB5738B0D6f977608e87a556Eb537deD
 //10:0x3de09d761BF70F95b29f97f3Dc14386795B6A376
 //20:0xB6b25D0972359197864abbAA2328Df80680d9C93
-//替代锁仓30%的地址:0xD54357a9C81d453FAD93D91E4fBA55dEabAE8C26
 
-//membership:
-//proxy:
+
+//membership:0x2eE7Ba2fa8050629A1175ce07AA064921f6EB133
+//proxy:0xaA9ad958F6B2E23DD092d43069834704c3d27Eb4
