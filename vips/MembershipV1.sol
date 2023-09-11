@@ -208,29 +208,32 @@ contract MemberShip is MemberStorV1{
 
     function distribute(address _user,uint256 _amount) internal{
         address level = lookFor(_user);
-        if(level != address(0)){
+        if(level != address(0) && isVips[level]){
             totalTeamReward[level] = totalTeamReward[level] + (_amount * 40 / 100);
             teamRewardInfo[level].push(TeamReward(_user,_amount * 40 / 100,block.timestamp));
         }
         
         address upLevel = lookFor(level);
-        if(upLevel != address(0)){
+        if(upLevel != address(0) && isVips[upLevel]){
             totalTeamReward[upLevel] = totalTeamReward[upLevel] + (_amount * 6 / 100);
             teamRewardInfo[upLevel].push(TeamReward(_user,_amount * 6 / 100,block.timestamp));
         }
         
     }
 
-    function lookFor(address _user) internal view returns(address){
-        address invAddr = inviter[_user];
-        uint256 i = 0;
-        while (!isVips[invAddr]){
-            invAddr = inviter[invAddr];
-            if(invAddr == address(0) || i >= 30) break;
-            i++;
-        }
-        return invAddr;
+    function lookFor(address _user) public view returns (address) {
+        return findVip(_user, 30); // 设置最大查找深度，防止无限递归
     }
+
+    function findVip(address _user, uint8 maxDepth) private view returns (address) {
+        if (maxDepth == 0 || _user == address(0) || isVips[_user]) {
+            return _user;
+        }
+        address invAddr = inviter[_user];
+        return findVip(invAddr, maxDepth - 1);
+    }
+
+
 
     function claim(address _user,uint256 _amount) external{
         require(totalTeamReward[_user] >= _amount,"Membership:Invalid claim amount");
@@ -263,5 +266,5 @@ contract MemberShip is MemberStorV1{
 //fourPercent:0x9356703BbB5738B0D6f977608e87a556Eb537deD
 //initialInviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 //替代锁仓30%的地址:0xD54357a9C81d453FAD93D91E4fBA55dEabAE8C26
-//membership:0x6721995F4CBE53adF188fD43119533A1B3E10426
-//proxy:0xFe283a3A0d1FeCBE20E132Cb7D85c0D8ba6DCf9C
+//membership:0xaeA075Aa635D5973860042eE3940069D687EdEcA
+//proxy:0x9287eE1b23CEedc14aC12971fe061714De5e99d0

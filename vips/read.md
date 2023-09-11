@@ -1,5 +1,5 @@
 #### deep address:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
-#### vips 合约地址:0xFe283a3A0d1FeCBE20E132Cb7D85c0D8ba6DCf9C
+#### vips 合约地址:0x9287eE1b23CEedc14aC12971fe061714De5e99d0
 #### usdt address:0x55d398326f99059fF775485246999027B3197955
 #### 初始邀请地址:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 #### vips abi:同级目录下membership.json
