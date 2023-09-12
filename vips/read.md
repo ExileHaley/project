@@ -1,7 +1,7 @@
 ### 本次要更新json，重新检查方法变化，检查getUserTeamInfo和新增getClaimRecordsInfo方法
 
 #### deep address:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
-#### vips 合约地址:0x7C092C0bdB6d3eEB5608761388F97c2668dbBD3d
+#### vips 合约地址:0x1C1c80bCA02451fD7026A8B7E904C8140623990b
 #### 初始邀请地址:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 #### vips abi:同级目录下membership.json
 

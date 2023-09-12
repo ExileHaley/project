@@ -305,6 +305,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract Currency is ERC20{
     constructor()ERC20("",""){}
 }
+
 //token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
 //inviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 

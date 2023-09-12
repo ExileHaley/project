@@ -1,23 +1,5 @@
 [
 	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "admin",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -46,6 +28,132 @@
 		"name": "claim",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_token",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_initialInviter",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_fourPercent",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_tenPercent",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_twentyPercent",
+				"type": "address"
+			}
+		],
+		"name": "initialize",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
+		"name": "purchasingVip",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_admin",
+				"type": "address"
+			}
+		],
+		"name": "setAdmin",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint8",
+				"name": "_looked",
+				"type": "uint8"
+			}
+		],
+		"name": "setMaxLooked",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_fixed",
+				"type": "uint256"
+			}
+		],
+		"name": "updateFixed",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_twentyPercent",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_tenPercent",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_fourPercent",
+				"type": "address"
+			}
+		],
+		"name": "updatePercentReceiver",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "admin",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -240,39 +348,6 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_token",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_initialInviter",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_fourPercent",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_tenPercent",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_twentyPercent",
-				"type": "address"
-			}
-		],
-		"name": "initialize",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
 				"name": "",
 				"type": "address"
 			}
@@ -378,45 +453,6 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_user",
-				"type": "address"
-			}
-		],
-		"name": "purchasingVip",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_admin",
-				"type": "address"
-			}
-		],
-		"name": "setAdmin",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint8",
-				"name": "_looked",
-				"type": "uint8"
-			}
-		],
-		"name": "setMaxLooked",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"name": "tenPercent",
 		"outputs": [
@@ -485,42 +521,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_fixed",
-				"type": "uint256"
-			}
-		],
-		"name": "updateFixed",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_twentyPercent",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_tenPercent",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_fourPercent",
-				"type": "address"
-			}
-		],
-		"name": "updatePercentReceiver",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
