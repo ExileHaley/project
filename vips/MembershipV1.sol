@@ -112,18 +112,18 @@ contract MemberStorV1 is MemberStor{
     enum Express{direct,vips,sameLevel}
     //`Team info list`
     struct TeamReward{
-        address member;
-        uint256 amount;
-        uint256 time;
+        address partner;
+        uint256 rewardValue;
+        uint256 rewardTime;
         Express express;
     }
 
     struct ClaimRecords{
         address receiver;
         uint256 amount;
-        uint256 time;
+        uint256 claimTime;
     }
-    mapping(address => TeamReward[]) teamRewardInfo;
+    mapping(address => TeamReward[]) teamRewards;
     mapping(address => ClaimRecords[]) claimRecords;
     //`user info list`
     mapping(address => bool) public isVip;
@@ -164,17 +164,16 @@ contract MemberShip is MemberStorV1{
     }
     
     function initialize(
-        address _initialInviter,address _token,
-        address _twentyPercent,address _fourPercent,
-        address _tenPercent
+        address _token,address _initialInviter,
+        address _fourPercent,address _tenPercent,address _twentyPercent
     ) external onlyOwner{
         initialInviter = _initialInviter;
         uniswapV2Factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
         token = _token;
         usdt = 0x55d398326f99059fF775485246999027B3197955;
-        twentyPercent = _twentyPercent;
         tenPercent = _tenPercent;
         fourPercent = _fourPercent;
+        twentyPercent = _twentyPercent;
         fixedPrice = 500e18;
         maxLooked = 30;
     }
@@ -212,7 +211,7 @@ contract MemberShip is MemberStorV1{
             if(inviter[_user] != address(0)){
                 address level = inviter[_user];
                 totalTeamReward[level] = totalTeamReward[level] + _amount * 20 / 100;
-                teamRewardInfo[level].push(TeamReward(_user,_amount * 20 / 100, block.timestamp,Express.direct));
+                teamRewards[level].push(TeamReward(_user,_amount * 20 / 100, block.timestamp,Express.direct));
                 invitesNum[level] += 1;
                 if(invitesNum[level] >= 2 && !isVips[level]) isVips[level] = true; 
             }
@@ -226,12 +225,12 @@ contract MemberShip is MemberStorV1{
         address level = lookFor(_user);
         if(level != address(0) && isVips[level]){
             totalTeamReward[level] = totalTeamReward[level] + (_amount * 40 / 100);
-            teamRewardInfo[level].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
+            teamRewards[level].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
 
             address upLevel = lookFor(level);
             if(upLevel != address(0) && isVips[upLevel]){
                 totalTeamReward[upLevel] = totalTeamReward[upLevel] + (_amount * 6 / 100);
-                teamRewardInfo[upLevel].push(TeamReward(_user,_amount * 6 / 100,block.timestamp,Express.sameLevel));
+                teamRewards[upLevel].push(TeamReward(_user,_amount * 6 / 100,block.timestamp,Express.sameLevel));
             }
         }        
         
@@ -250,7 +249,6 @@ contract MemberShip is MemberStorV1{
         return findVip(invAddr, maxDepth - 1);
     }
 
-
     function claim(address _user,uint256 _amount) external{
         require(totalTeamReward[_user] >= _amount,"Membership:Invalid claim amount");
         TransferHelper.safeTransfer(token, _user, _amount);
@@ -263,7 +261,7 @@ contract MemberShip is MemberStorV1{
     }
 
     function getTeamRewardInfo(address _user) external view returns (TeamReward[] memory){
-        return teamRewardInfo[_user];
+        return teamRewards[_user];
     }
 
     function getClaimRecordsInfo(address _user) external view returns(ClaimRecords[] memory){

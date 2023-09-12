@@ -1,6 +1,5 @@
 #### deep address:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
-#### vips 合约地址:0xaA9ad958F6B2E23DD092d43069834704c3d27Eb4
-#### usdt address:0x55d398326f99059fF775485246999027B3197955
+#### vips 合约地址:
 #### 初始邀请地址:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 #### vips abi:同级目录下membership.json
 
@@ -32,11 +31,19 @@ function getUserInfo(address _user) external view returns(User memory);
     enum Express{direct,vips,sameLevel}
     //`Team info list`
     struct TeamReward{
-        address member; //被推荐的钱包地址
-        uint256 amount; //数量
-        uint256 time; //时间
-        Express express; //0表示直推奖励、1表示节点奖励,2表示平级奖励，具体展示文案跟项目方要
+        address partner; //被邀请地址
+        uint256 rewardValue; //奖励数量
+        uint256 rewardTime; //奖励时间
+        Express express; //0代表直推奖励，1代表vips奖励，2代表同级奖励
     }
 6. 获取用户的团队奖励详情，返回数据如上述TeamReward结构
 function getUserTeamInfo(address _user) external view returns(TeamReward[] memory);
+7. 获取用户的收益提现记录，返回的是ClaimRecords[]这样一个结构体数组
+
+    struct ClaimRecords{
+        address receiver; //提现收益到的地址
+        uint256 amount; //提现的数量
+        uint256 claimTime; //提现的时间
+    }
+function getClaimRecordsInfo(address _user) external view returns(ClaimRecords[] memory)
 ```

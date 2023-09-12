@@ -95,13 +95,13 @@
 				"type": "address"
 			}
 		],
-		"name": "getTeamRewardInfo",
+		"name": "getClaimRecordsInfo",
 		"outputs": [
 			{
 				"components": [
 					{
 						"internalType": "address",
-						"name": "member",
+						"name": "receiver",
 						"type": "address"
 					},
 					{
@@ -111,7 +111,43 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "time",
+						"name": "claimTime",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct MemberStorV1.ClaimRecords[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
+		"name": "getTeamRewardInfo",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "address",
+						"name": "partner",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "rewardValue",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "rewardTime",
 						"type": "uint256"
 					},
 					{
@@ -204,17 +240,12 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_initialInviter",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
 				"name": "_token",
 				"type": "address"
 			},
 			{
 				"internalType": "address",
-				"name": "_twentyPercent",
+				"name": "_initialInviter",
 				"type": "address"
 			},
 			{
@@ -225,6 +256,11 @@
 			{
 				"internalType": "address",
 				"name": "_tenPercent",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_twentyPercent",
 				"type": "address"
 			}
 		],
