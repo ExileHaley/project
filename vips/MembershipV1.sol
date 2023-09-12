@@ -117,7 +117,14 @@ contract MemberStorV1 is MemberStor{
         uint256 time;
         Express express;
     }
+
+    struct ClaimRecords{
+        address receiver;
+        uint256 amount;
+        uint256 time;
+    }
     mapping(address => TeamReward[]) teamRewardInfo;
+    mapping(address => ClaimRecords[]) claimRecords;
     //`user info list`
     mapping(address => bool) public isVip;
     mapping(address => bool) public isVips;
@@ -200,24 +207,22 @@ contract MemberShip is MemberStorV1{
         TransferHelper.safeTransferFrom(token, _user, tenPercent, toTen);
         TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toTwenty - toTen);  
 
-        if(!isVip[_user]){
-            updateInviter(_user, _amount);
-            distribute(_user, _amount); 
+        if(!isVip[_user] && !isVips[_user]){
+            distribute(_user,_amount);
+            if(inviter[_user] != address(0)){
+                address level = inviter[_user];
+                totalTeamReward[level] = totalTeamReward[level] + _amount * 20 / 100;
+                teamRewardInfo[level].push(TeamReward(_user,_amount * 20 / 100, block.timestamp,Express.direct));
+                invitesNum[level] += 1;
+                if(invitesNum[level] >= 2 && !isVips[level]) isVips[level] = true; 
+            }
             isVip[_user] = true;
         }
-    }
 
-    function updateInviter(address _user,uint256 _amount) internal{
-        address _inv = inviter[_user];
-        if(_inv != address(0)){    
-            totalTeamReward[_inv] = totalTeamReward[_inv] + _amount * 20 / 100;
-            teamRewardInfo[_inv].push(TeamReward(_user,_amount * 20 / 100, block.timestamp,Express.direct));
-            invitesNum[_inv] += 1;
-            if(invitesNum[_inv] >= 2 && !isVips[_inv]) isVips[_inv] = true;
-        }
     }
 
     function distribute(address _user,uint256 _amount) internal{
+
         address level = lookFor(_user);
         if(level != address(0) && isVips[level]){
             totalTeamReward[level] = totalTeamReward[level] + (_amount * 40 / 100);
@@ -233,6 +238,7 @@ contract MemberShip is MemberStorV1{
     }
 
     function lookFor(address _user) public view returns (address) {
+        if(isVips[_user]) return findVip(inviter[_user], maxLooked); 
         return findVip(_user, maxLooked); 
     }
 
@@ -249,6 +255,7 @@ contract MemberShip is MemberStorV1{
         require(totalTeamReward[_user] >= _amount,"Membership:Invalid claim amount");
         TransferHelper.safeTransfer(token, _user, _amount);
         totalTeamReward[_user] -= _amount;
+        claimRecords[_user].push(ClaimRecords(_user,_amount,block.timestamp));
     }
     
     function getUserInfo(address _user) external view returns(User memory){
@@ -257,6 +264,10 @@ contract MemberShip is MemberStorV1{
 
     function getTeamRewardInfo(address _user) external view returns (TeamReward[] memory){
         return teamRewardInfo[_user];
+    }
+
+    function getClaimRecordsInfo(address _user) external view returns(ClaimRecords[] memory){
+        return claimRecords[_user];
     }
 
     function updatePercentReceiver(address _twentyPercent,address _tenPercent,address _fourPercent) external onlyOwner{
@@ -285,5 +296,8 @@ contract MemberShip is MemberStorV1{
 //20:0xB6b25D0972359197864abbAA2328Df80680d9C93
 
 
-//membership:0x2eE7Ba2fa8050629A1175ce07AA064921f6EB133
-//proxy:0xaA9ad958F6B2E23DD092d43069834704c3d27Eb4
+//membership:
+//proxy:
+
+
+//["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4","0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2","0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db","0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB","0x617F2E2fD72FD9D5503197092aC168c91465E7f2","0x17F6AD8Ef982297579C203069C1DbfFE4348c372","0x5c6B0f7Bf3E7ce046039Bd8FABdfD3f9F5021678"]
