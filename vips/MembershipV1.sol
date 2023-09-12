@@ -180,9 +180,9 @@ contract MemberShip is MemberStorV1{
 
     function bind(address _inviter) external{
         require(initialInviter != address(0), "Membership:Zero initial address");
-        require(_inviter != address(0) && inviter[msg.sender] == address(0),"Membership:Invalid inviter address");
         if(initialInviter != _inviter){
             require(isVip[_inviter], "Membership:Not eligible");
+            require(_inviter != msg.sender,"Membership:Only vip");
         }
         inviter[msg.sender] = _inviter;
     }
@@ -193,47 +193,59 @@ contract MemberShip is MemberStorV1{
     }
 
     function purchasingVip(address _user) external{
-        if(_user != initialInviter) {
-            require(inviter[_user] != address(0),"Membership:The invitation address must be bound");
-        }
-        uint256 _amount = getAmountOut();
+        require(inviter[_user] != address(0),"Membership:The invitation address must be bound");
+        require(_user == msg.sender,"Membership:Invalid operator");
+
+        uint256 _amount = 100;
         require(_amount > 0,"Membership:Invalid purchasing amount");
+
         uint256 reward = _amount * 66 / 100;
         uint256 toTwenty = _amount * 20 / 100;
         uint256 toTen = _amount * 10 / 100;
+
         TransferHelper.safeTransferFrom(token, _user, address(this), reward);
         TransferHelper.safeTransferFrom(token, _user, twentyPercent, toTwenty);
         TransferHelper.safeTransferFrom(token, _user, tenPercent, toTen);
         TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toTwenty - toTen);  
 
-        if(!isVip[_user] && !isVips[_user]){
-            distribute(_user,_amount);
-            if(inviter[_user] != address(0)){
-                address level = inviter[_user];
-                totalTeamReward[level] = totalTeamReward[level] + _amount * 20 / 100;
-                teamRewards[level].push(TeamReward(_user,_amount * 20 / 100, block.timestamp,Express.direct));
-                invitesNum[level] += 1;
-                if(invitesNum[level] >= 2 && !isVips[level]) isVips[level] = true; 
-            }
+        if(!isVip[_user]){
+            updateInviter(_user,_amount);
             isVip[_user] = true;
         }
+    }
 
+    function updateInviter(address _user,uint256 _amount)internal{
+        address _direct = inviter[_user];
+        invitesNum[_direct] += 1;
+        if(invitesNum[_direct] >= 3 && !isVips[_direct]) isVips[_direct] = true; 
+
+        totalTeamReward[_direct] = totalTeamReward[_direct] + (_amount * 20 / 100);
+        teamRewards[_direct].push(TeamReward(_user, _amount * 20 / 100, block.timestamp, Express.direct));
+
+        if(isVips[_direct]){
+            totalTeamReward[_direct] = totalTeamReward[_direct] + (_amount * 40 / 100);
+            teamRewards[_direct].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
+            address _degrees = lookFor(_direct);
+            if(isVips[_degrees]){
+                totalTeamReward[_degrees] = totalTeamReward[_degrees] + (_amount * 6 / 100);
+                teamRewards[_degrees].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
+            }
+        }else{
+            distribute(_user, _amount);
+        }
     }
 
     function distribute(address _user,uint256 _amount) internal{
-
-        address level = lookFor(_user);
-        if(level != address(0) && isVips[level]){
-            totalTeamReward[level] = totalTeamReward[level] + (_amount * 40 / 100);
-            teamRewards[level].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
-
-            address upLevel = lookFor(level);
-            if(upLevel != address(0) && isVips[upLevel]){
-                totalTeamReward[upLevel] = totalTeamReward[upLevel] + (_amount * 6 / 100);
-                teamRewards[upLevel].push(TeamReward(_user,_amount * 6 / 100,block.timestamp,Express.sameLevel));
+        address firstVips = lookFor(_user);
+        if(isVips[firstVips]){
+            totalTeamReward[firstVips] = totalTeamReward[firstVips] + (_amount * 40 / 100);
+            teamRewards[firstVips].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
+            address secondVips = lookFor(firstVips);
+            if(isVips[secondVips]){
+                totalTeamReward[secondVips] = totalTeamReward[secondVips] + (_amount * 6 / 100);
+                teamRewards[secondVips].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
             }
-        }        
-        
+        }
     }
 
     function lookFor(address _user) public view returns (address) {
@@ -285,6 +297,7 @@ contract MemberShip is MemberStorV1{
     function setAdmin(address _admin) external  onlyOwner{
         admin = _admin;
     }
+
 }
 //token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
 //inviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
@@ -293,9 +306,3 @@ contract MemberShip is MemberStorV1{
 //10:0x3de09d761BF70F95b29f97f3Dc14386795B6A376
 //20:0xB6b25D0972359197864abbAA2328Df80680d9C93
 
-
-//membership:0xCb99A533EDE42Ed22A41dD9b521892137dF117cC
-//proxy:0x7C092C0bdB6d3eEB5608761388F97c2668dbBD3d
-
-
-//["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4","0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2","0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db","0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB","0x617F2E2fD72FD9D5503197092aC168c91465E7f2","0x17F6AD8Ef982297579C203069C1DbfFE4348c372","0x5c6B0f7Bf3E7ce046039Bd8FABdfD3f9F5021678"]
