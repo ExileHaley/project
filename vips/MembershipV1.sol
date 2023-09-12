@@ -196,7 +196,7 @@ contract MemberShip is MemberStorV1{
         require(inviter[_user] != address(0),"Membership:The invitation address must be bound");
         require(_user == msg.sender,"Membership:Invalid operator");
 
-        uint256 _amount = 100;
+        uint256 _amount = getAmountOut();
         require(_amount > 0,"Membership:Invalid purchasing amount");
 
         uint256 reward = _amount * 66 / 100;
