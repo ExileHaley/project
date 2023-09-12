@@ -299,6 +299,12 @@ contract MemberShip is MemberStorV1{
     }
 
 }
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract Currency is ERC20{
+    constructor()ERC20("",""){}
+}
 //token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
 //inviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 
@@ -306,3 +312,5 @@ contract MemberShip is MemberStorV1{
 //10:0x3de09d761BF70F95b29f97f3Dc14386795B6A376
 //20:0xB6b25D0972359197864abbAA2328Df80680d9C93
 
+//membership:0xb21d43FA208175233d36212865ddB0611ac8d760
+//proxy:0x1C1c80bCA02451fD7026A8B7E904C8140623990b
