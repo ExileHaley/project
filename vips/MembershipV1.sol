@@ -249,8 +249,8 @@ contract MemberShip is MemberStorV1{
     }
 
     function lookFor(address _user) public view returns (address) {
-        if(isVips[_user]) return findVip(inviter[_user], maxLooked); 
-        return findVip(_user, maxLooked); 
+        if(!isVips[_user]) return findVip(_user, maxLooked); 
+        return _user;
     }
 
     function findVip(address _user, uint8 maxDepth) private view returns (address) {
