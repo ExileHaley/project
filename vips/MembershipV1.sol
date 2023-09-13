@@ -174,7 +174,7 @@ contract MemberShip is MemberStorV1{
         tenPercent = _tenPercent;
         fourPercent = _fourPercent;
         twentyPercent = _twentyPercent;
-        fixedPrice = 500e18;
+        fixedPrice = 15e18;
         maxLooked = 30;
     }
 
