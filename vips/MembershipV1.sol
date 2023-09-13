@@ -225,8 +225,8 @@ contract MemberShip is MemberStorV1{
         if(isVips[_direct]){
             totalTeamReward[_direct] = totalTeamReward[_direct] + (_amount * 40 / 100);
             teamRewards[_direct].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
-            address _degrees = lookFor(_direct);
-            if(isVips[_degrees]){
+            address _degrees = inviter[_direct];
+            if(_degrees != address(0)){
                 totalTeamReward[_degrees] = totalTeamReward[_degrees] + (_amount * 6 / 100);
                 teamRewards[_degrees].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
             }
@@ -240,10 +240,10 @@ contract MemberShip is MemberStorV1{
         if(isVips[firstVips]){
             totalTeamReward[firstVips] = totalTeamReward[firstVips] + (_amount * 40 / 100);
             teamRewards[firstVips].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
-            address secondVips = lookFor(firstVips);
-            if(isVips[secondVips]){
-                totalTeamReward[secondVips] = totalTeamReward[secondVips] + (_amount * 6 / 100);
-                teamRewards[secondVips].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
+            address inviterOffirstVips = inviter[firstVips];
+            if(inviterOffirstVips != address(0)){
+                totalTeamReward[inviterOffirstVips] = totalTeamReward[inviterOffirstVips] + (_amount * 6 / 100);
+                teamRewards[inviterOffirstVips].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
             }
         }
     }
@@ -300,11 +300,11 @@ contract MemberShip is MemberStorV1{
 
 }
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract Currency is ERC20{
-    constructor()ERC20("",""){}
-}
+// contract Currency is ERC20{
+//     constructor()ERC20("",""){}
+// }
 
 //token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
 //inviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
