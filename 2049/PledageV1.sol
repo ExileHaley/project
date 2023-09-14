@@ -237,12 +237,12 @@ contract Pledage is PledageStorV1{
         if(block.timestamp >= option.createTime + duration[option.expiration]){
             uint256 tokenValue = option.amount * stakingRate[option.expiration] * duration[option.expiration];
             if(calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) >= option.extractedBNB)
-                        return calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) - option.extractedBNB;
+                        amountBNB = calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) - option.extractedBNB;
         }else{
             uint256 middleTime = block.timestamp - option.createTime;
             uint256 middleTokenValue = option.amount * stakingRate[option.expiration] * middleTime;
             if (calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) >= option.extractedBNB)
-                        return calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) - option.extractedBNB;
+                        amountBNB = calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) - option.extractedBNB;
         }
     }
 
