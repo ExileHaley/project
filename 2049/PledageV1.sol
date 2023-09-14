@@ -246,6 +246,15 @@ contract Pledage is PledageStorV1{
         }
     }
 
+    function getUserOptions(address _user) external view returns(Info[] memory){
+        Info[] memory infos = new Info[](optionIds[_user].length);
+        for(uint i=0; i<optionIds[_user].length; i++){
+            Option memory option = optionInfo[optionIds[_user][i]];
+            infos[i] = Info(option,getOptionIncome(optionIds[_user][i]));
+        }
+        return infos;
+    }
+
     function claim(uint256 optionId,uint256 amountBNB) external{
         Option storage option = optionInfo[optionId];
         uint256 income = getOptionIncome(optionId);
