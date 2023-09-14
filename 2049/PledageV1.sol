@@ -74,6 +74,13 @@ library TransferHelper {
         (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
     }
+
+    function safeTransferETH(address to, uint value) internal {
+        (bool success,) = to.call{value:value}(new bytes(0));
+        require(success, 'TransferHelper: ETH_TRANSFER_FAILED');
+    }
+
+
 }
 
 library SafeMath {
@@ -126,137 +133,131 @@ library UniswapV2Library {
 
 }
 
-//团队总算力（20代）、团队总人数
-//团队算力记录、
-//团队收益（2代）及算力
-//
 contract PledageStorV1 is PledageStor{
+    enum Expiration{
+        Seven,
+        Fifteen,
+        Thirty,
+        Sixty
+    }   
+    struct Option{
+        uint256     optionId;
+        address     owner;
+        uint256     amount;
+        uint256     createTime;
+        uint256     extractedBNB;
+        bool        isUnstaking;
+        Expiration  expiration;
+    } 
+    mapping(address => uint256[]) optionIds;
+    mapping(uint256 => Option) public optionInfo;
+    mapping(address => address) public referrer;
+    mapping(Expiration => uint256) stakingRate;
+    mapping(Expiration => uint256) duration;
 
-    struct Team{
-        uint256 members;
-        uint256 teamTotalStaking;
-        uint256 directTotalStaking;
-        address[] referrals;
-    }
-    
-    struct User{
-        address referrer; 
-        uint256 stakedAmount; 
-        uint256 earnings; 
-        uint256 debt; 
-        uint256 createTime;
-    }
-
-    struct Records{
-        address member;
-        uint256 amount;
-        uint256 hierarchy;
-        uint256 time;
-    }
-
-    mapping(address => User) public userInfo;
-    mapping(address => Team) public teamInfo;
-    mapping(address => bool) public hasReferrals;
-    mapping(address => Records[]) public referralRecords;
-
-    address public initialReferrals;
+    address public initialReferrer;
     address public uniswapV2Factory;
-    address public uniswaV2Router;
-    address public usdt;
+    address public uniswapV2Router;
     address public token;
-    uint256 public totalStaked;
-    uint256 public perStakingReward;
-    uint256 public period;
-    uint256 public interestRates;
+    address public usdt;
+
+    uint256 public initialOptionNum;
     uint256 public decimals;
-    
+    uint256 public totalStaking;
+
 }
 
-
 contract Pledage is PledageStorV1{
+
+    event Register(address registerAddress,address referrerAddress);
+    event CreateOption(address owner,uint256 amount,uint256 crateTime, Expiration expiration);
+    event Withdraw(address owner,uint256 optionId,uint256 amount);
+    event ClaimWithPermit(address owner,uint256 amountBNB);
 
     constructor() {
         admin = msg.sender;
     }
+    receive() external payable {}
 
     modifier onlyOwner() {
-        require(msg.sender == admin, "Only the owner can call this function");
+        require(msg.sender == admin, "Pledage:Caller is not owner");
         _;
     }
 
-    function initialize() external onlyOwner(){
-        
+    function updateFarm() external onlyOwner(){
+        // uint256 tokenAmount = IERC20(token).balanceOf(address(this));
+        // (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, token, usdt);
+        // tokenPrice = UniswapV2Library.getAmountOut(tokenAmount, reserveIn, reserveOut);
     }
 
-    function updateFarm() external onlyOwner(){
-        uint256 tokenAmount = IERC20(token).balanceOf(address(this));
+    function calculateIncomeUSDT(uint256 amount) public view returns(uint256){
         (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, token, usdt);
-        uint256 amountOut = UniswapV2Library.getAmountOut(tokenAmount, reserveIn, reserveOut);
+        return UniswapV2Library.getAmountOut(amount, reserveIn, reserveOut);
+    }
 
-        address weth = IUniswapV2Router(uniswaV2Router).WETH();
+    function calculateIncomeBNB(uint256 amount) public view returns(uint256){
+        address weth = IUniswapV2Router(uniswapV2Router).WETH();
         (uint reserveIn0, uint reserveOut0) = UniswapV2Library.getReserves(uniswapV2Factory, usdt, weth);
-        uint256 totalWeth = UniswapV2Library.getAmountOut(amountOut, reserveIn0, reserveOut0);
-        perStakingReward = perStakingReward + totalWeth * decimals / totalStaked;
+        return UniswapV2Library.getAmountOut(amount, reserveIn0, reserveOut0);
     }
 
     function registerWithReferrer(address referrerAddress) external {
-        require(!hasReferrals[msg.sender], "You already have a referrer");
-        require(msg.sender != referrerAddress, "You cannot refer yourself");
-
-        if (referrerAddress != initialReferrals) {
-            require(userInfo[referrerAddress].stakedAmount > 0, "Referrer must have a stake");
+        require(msg.sender != referrerAddress, "Pledage:You cannot refer yourself");
+        require(referrer[msg.sender] == address(0),"Pledage:Invalid referrer address");
+        if (referrerAddress != initialReferrer) {
+            require(optionIds[referrerAddress].length > 0, "Pledage:Referrer must have a stake");
         }
-        userInfo[msg.sender].referrer = referrerAddress;
-        hasReferrals[msg.sender] = true;
-        // userInfo[referrerAddress].referrals.push(msg.sender);
+        referrer[msg.sender] = referrerAddress;
+        emit Register(msg.sender, referrerAddress);
     }
 
-    function calculateAcrossReferralStakedAmount(address _user) public view returns (uint256 directReferralStaking) {
-        address[] memory _referrals = teamInfo[_user].referrals;
-        for (uint256 i = 0; i < _referrals.length; i++) {
-            directReferralStaking += teamInfo[_referrals[i]].directTotalStaking;
+    function provide(uint256 _amount, Expiration expiration) external{
+        require(_amount >= 100e18,"Pledage:Invalid provide amount");
+        require(referrer[msg.sender] == address(0),"Pledage:Invalid referrer address");
+        TransferHelper.safeTransferFrom(token, msg.sender, address(this), _amount);
+        optionInfo[initialOptionNum] = Option(initialOptionNum,msg.sender,_amount,block.timestamp,0,false,expiration); 
+        optionIds[msg.sender].push(initialOptionNum);
+        initialOptionNum++;
+        totalStaking += _amount;
+        emit CreateOption(msg.sender, _amount, block.timestamp, expiration);
+    }
+
+    function withdraw(uint256 optionId) external{
+        Option storage option = optionInfo[optionId];
+        require(block.timestamp >= option.createTime + duration[option.expiration],"Pledage:Invalid withdraw operate");
+        require(!option.isUnstaking,"Pledage:Invalid option state");
+        TransferHelper.safeTransferFrom(token, address(this), option.owner, option.amount * 99 /100);
+        totalStaking -= option.amount;
+        option.isUnstaking = true;
+        emit Withdraw(option.owner, optionId, option.amount);
+    }
+
+    function getOptionIncome(uint256 optionId) public view returns(uint256 amountBNB){
+        Option storage option = optionInfo[optionId];
+        if(block.timestamp >= option.createTime + duration[option.expiration]){
+            uint256 tokenValue = option.amount * stakingRate[option.expiration] * duration[option.expiration];
+            if(calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) >= option.extractedBNB)
+                        return calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) - option.extractedBNB;
+        }else{
+            uint256 middleTime = block.timestamp - option.createTime;
+            uint256 middleTokenValue = option.amount * stakingRate[option.expiration] * middleTime;
+            if (calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) >= option.extractedBNB)
+                        return calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) - option.extractedBNB;
         }
     }
 
-    function provide(address _user,uint256 _amount) external{
-        User storage user = userInfo[_user];
-        require(user.referrer != address(0),"Pledage:User must bind an inviter");
-        user.debt = user.debt + (_amount * perStakingReward);
-        if(user.createTime == 0) user.createTime = block.timestamp;
-        user.stakedAmount += _amount;
+    function claim(uint256 optionId,uint256 amountBNB) external{
+        Option storage option = optionInfo[optionId];
+        uint256 income = getOptionIncome(optionId);
+        require(income >= amountBNB,"Pledage:Invalid claim amount");
+        TransferHelper.safeTransferETH(msg.sender, amountBNB * 95 / 100);
+        option.extractedBNB += amountBNB;
     }
 
 
-    function stakingLoop(address _user,uint256 _amount)internal{
-        
-        address currentReferrer = userInfo[_user].referrer;
-        for (uint256 i = 0; i < 50; i++) {
-            // For the first iteration, update directTotalStaking and add a record
-            if(i == 0){
-                teamInfo[currentReferrer].directTotalStaking += _amount;
-            }
-            // Update the referrer's team information
-            teamInfo[currentReferrer].teamTotalStaking += _amount;
-
-            // Create a new record for the referrer
-                Records memory record = Records({
-                    member: _user,
-                    amount: _amount,
-                    hierarchy: i,
-                    time: block.timestamp
-                });
-
-            // Push the record into referralRecords
-            referralRecords[currentReferrer].push(record);
-
-            // Move to the next referrer in the hierarchy
-            currentReferrer = userInfo[currentReferrer].referrer;
-
-            // Check if the next referrer is address(0) and exit the loop if true
-            if (currentReferrer == address(0)) {
-                break;
-            }
-        }
+    function claimWithPermit(address _user, uint256 _amountBNB) external onlyOwner(){
+        TransferHelper.safeTransferETH(_user, _amountBNB);
+        emit ClaimWithPermit(_user, _amountBNB);
     }
 
 
