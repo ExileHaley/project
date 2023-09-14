@@ -1,0 +1,14 @@
+{
+    "mysql": {
+        "host": "localhost",
+        "port": 3306,
+        "user": "root",
+        "password": "d12345678",
+        "database": "null"
+    },
+    "rpc": {
+        "url": "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID",
+        "timeout": 30,
+        "contractAddress":""
+    }
+}
