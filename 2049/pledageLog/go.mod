@@ -1,10 +1,11 @@
-module event
+module pledageLog
 
-go 1.20
+go 1.21.0
 
 require (
 	github.com/ethereum/go-ethereum v1.13.0
-	github.com/jmoiron/sqlx v1.3.5
+	github.com/go-sql-driver/mysql v1.7.1
+	github.com/go-xorm/xorm v0.7.9
 )
 
 require (
@@ -34,4 +35,6 @@ require (
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
+	xorm.io/builder v0.3.6 // indirect
+	xorm.io/core v0.7.2-0.20190928055935-90aeac8d08eb // indirect
 )

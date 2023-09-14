@@ -7,10 +7,11 @@ import (
 
 type MysqlConfig struct {
 	Host     string `json:"host"`
-	Port     int    `json:"port"`
+	Port     string `json:"port"`
 	User     string `json:"user"`
 	Password string `json:"password"`
 	Database string `json:"database"`
+	ShowSql  bool   `json:"showSql"`
 }
 
 type RPCConfig struct {
@@ -19,9 +20,15 @@ type RPCConfig struct {
 	ContractAddress string `json:"contractAddress"`
 }
 
+type GinConfig struct {
+	Port string `json:"port"`
+	Mode string `json:"mode"`
+}
+
 type Config struct {
 	MySQL MysqlConfig `json:"mysql"`
 	RPC   RPCConfig   `json:"rpc"`
+	GIN   GinConfig   `json:"gin"`
 }
 
 func ParseConfig(dir string) (*Config, error) {
