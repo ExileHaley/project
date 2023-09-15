@@ -117,21 +117,23 @@ contract MemberStorV1 is MemberStor{
         uint256 rewardTime;
         Express express;
     }
-
     struct ClaimRecords{
         address receiver;
         uint256 amount;
         uint256 claimTime;
     }
+    struct User{
+        bool isVip;
+        bool isVips;
+        address inviter;
+        address additionalInviter;
+        uint256 invitesNum;
+        uint256 totalTeamReward;
+        address[] members;
+    }
+    mapping(address => User) public userInfo;
     mapping(address => TeamReward[]) teamRewards;
     mapping(address => ClaimRecords[]) claimRecords;
-    //`user info list`
-    mapping(address => bool) public isVip;
-    mapping(address => bool) public isVips;
-    
-    mapping(address => address) public inviter;
-    mapping(address => uint256) public invitesNum;
-    mapping(address => uint256) public totalTeamReward;
     //`pool info list` must be init
     address   public initialInviter;
     address   public uniswapV2Factory;
@@ -142,19 +144,10 @@ contract MemberStorV1 is MemberStor{
     address   public fourPercent;
     uint256   public fixedPrice;
     uint8     public maxLooked;
-    //`return user info`
-    struct User{
-        bool isp;
-        bool isps;
-        address inv;
-        uint256 invNum;
-        uint256 totalTR;
-    }
-
 }
 
-contract MemberShip is MemberStorV1{
-    
+
+contract MemberShipV2 is MemberStorV1{
     constructor(){
         admin = msg.sender;
     }
@@ -182,11 +175,14 @@ contract MemberShip is MemberStorV1{
     function bind(address _inviter) external{
         require(initialInviter != address(0), "Membership:Zero initial address");
         if(initialInviter != _inviter){
-            require(isVip[_inviter], "Membership:Not eligible");
+            User memory inv = userInfo[_inviter];
+            require(inv.isVip, "Membership:Not eligible");
             require(_inviter != msg.sender,"Membership:Only vip");
         }
-        inviter[msg.sender] = _inviter;
+        User storage user = userInfo[msg.sender];
+        user.inviter = _inviter;
     }
+
 
     function getAmountOut() public view returns(uint256 amountOut){
         (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, usdt, token);
@@ -194,7 +190,8 @@ contract MemberShip is MemberStorV1{
     }
 
     function purchasingVip(address _user) external{
-        require(inviter[_user] != address(0),"Membership:The invitation address must be bound");
+        User storage user = userInfo[_user];
+        require(user.inviter != address(0),"Membership:The invitation address must be bound");
         require(_user == msg.sender,"Membership:Invalid operator");
 
         uint256 _amount = getAmountOut();
@@ -208,69 +205,76 @@ contract MemberShip is MemberStorV1{
         TransferHelper.safeTransferFrom(token, _user, twentyPercent, toTwenty);
         TransferHelper.safeTransferFrom(token, _user, tenPercent, toTen);
         TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toTwenty - toTen);  
-
-        if(!isVip[_user]){
+        if(!user.isVip){
             updateInviter(_user,_amount);
-            isVip[_user] = true;
+            user.isVip = true;
         }
     }
 
-    function updateInviter(address _user,uint256 _amount)internal{
-        address _direct = inviter[_user];
-        invitesNum[_direct] += 1;
-        if(invitesNum[_direct] >= 3 && !isVips[_direct]) isVips[_direct] = true; 
-
-        totalTeamReward[_direct] = totalTeamReward[_direct] + (_amount * 20 / 100);
+    function updateInviter(address _user,uint256 _amount) internal{
+        address _direct = userInfo[_user].inviter;
+        User storage direct = userInfo[_direct];
+        direct.invitesNum += 1;
+        direct.members.push(_user);
+        if(direct.invitesNum >= 3 && !direct.isVips) direct.isVips = true; 
+        direct.totalTeamReward= direct.totalTeamReward + (_amount * 20 / 100);
         teamRewards[_direct].push(TeamReward(_user, _amount * 20 / 100, block.timestamp, Express.direct));
-
-        if(isVips[_direct]){
-            totalTeamReward[_direct] = totalTeamReward[_direct] + (_amount * 40 / 100);
+        if(direct.isVips){
+            direct.totalTeamReward = direct.totalTeamReward + (_amount * 40 / 100);
             teamRewards[_direct].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
-            address _degrees = inviter[_direct];
+
+            address _degrees = direct.inviter;
             if(_degrees != address(0)){
-                totalTeamReward[_degrees] = totalTeamReward[_degrees] + (_amount * 6 / 100);
+                userInfo[_degrees].totalTeamReward = userInfo[_degrees].totalTeamReward + (_amount * 6 / 100);
                 teamRewards[_degrees].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
             }
+            userInfo[direct.members[0]].additionalInviter = _degrees;
+            userInfo[direct.members[1]].additionalInviter = _degrees;
         }else{
-            distribute(_user, _amount);
+            distribute(_user,_amount);
         }
     }
 
     function distribute(address _user,uint256 _amount) internal{
-        address firstVips = lookFor(_user);
-        if(isVips[firstVips]){
-            totalTeamReward[firstVips] = totalTeamReward[firstVips] + (_amount * 40 / 100);
-            teamRewards[firstVips].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
-            address inviterOffirstVips = inviter[firstVips];
-            if(inviterOffirstVips != address(0)){
-                totalTeamReward[inviterOffirstVips] = totalTeamReward[inviterOffirstVips] + (_amount * 6 / 100);
-                teamRewards[inviterOffirstVips].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
+        address _firstVips = lookFor(_user);
+        if(userInfo[_firstVips].isVips){
+            User storage firstVips = userInfo[_firstVips];
+            firstVips.totalTeamReward = firstVips.totalTeamReward + (_amount * 40 / 100);
+            teamRewards[_firstVips].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
+
+            address _inviterOfFirstVips = firstVips.inviter;
+            if(_inviterOfFirstVips != address(0)){
+                User storage inviterOfFirstVips = userInfo[_inviterOfFirstVips];
+
+                inviterOfFirstVips.totalTeamReward = inviterOfFirstVips.totalTeamReward + (_amount * 6 / 100);
+                teamRewards[_inviterOfFirstVips].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
             }
         }
     }
 
     function lookFor(address _user) public view returns (address) {
-        if(!isVips[_user]) return findVip(_user, maxLooked); 
+        if(!userInfo[_user].isVips) return findVip(_user, maxLooked); 
         return _user;
     }
 
     function findVip(address _user, uint8 maxDepth) private view returns (address) {
-        if (maxDepth == 0 || _user == address(0) || isVips[_user]) {
+        if (maxDepth == 0 || _user == address(0) || userInfo[_user].isVips) {
             return _user;
         }
-        address invAddr = inviter[_user];
+        address invAddr = userInfo[_user].inviter;
+        if(userInfo[_user].additionalInviter != address(0)) invAddr = userInfo[_user].additionalInviter;
         return findVip(invAddr, maxDepth - 1);
     }
 
     function claim(address _user,uint256 _amount) external{
-        require(totalTeamReward[_user] >= _amount,"Membership:Invalid claim amount");
+        require(userInfo[_user].totalTeamReward >= _amount,"Membership:Invalid claim amount");
         TransferHelper.safeTransfer(token, _user, _amount);
-        totalTeamReward[_user] -= _amount;
+        userInfo[_user].totalTeamReward -= _amount;
         claimRecords[_user].push(ClaimRecords(_user,_amount,block.timestamp));
     }
-    
+
     function getUserInfo(address _user) external view returns(User memory){
-        return User(isVip[_user],isVips[_user],inviter[_user],invitesNum[_user],totalTeamReward[_user]);
+        return userInfo[_user];
     }
 
     function getTeamRewardInfo(address _user) external view returns (TeamReward[] memory){
@@ -299,20 +303,7 @@ contract MemberShip is MemberStorV1{
         admin = _admin;
     }
 
+
+
 }
-
-// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-// contract Currency is ERC20{
-//     constructor()ERC20("",""){}
-// }
-
-//token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
-//inviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
-
-//4:0x9356703BbB5738B0D6f977608e87a556Eb537deD
-//10:0x3de09d761BF70F95b29f97f3Dc14386795B6A376
-//20:0xB6b25D0972359197864abbAA2328Df80680d9C93
-
-//membership:0x8669f3a625c1350571DBdB0475DB82524735e680
-//proxy:0x798D0f103971bAE08B6Ca5aA41E88e58FC1FcCe9
+    
