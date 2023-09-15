@@ -17,9 +17,10 @@ type Option struct {
 	Id         int64          `xorm:"'id' pk autoincr"`
 	Hash       common.Hash    `xorm:"'hash' notnull varchar(255)"`
 	Owner      common.Address `xorm:"'owner' notnull varchar(255)"`
+	OptionId   *big.Int       `xorm:"'option_id' notnull BigInt"`
 	Amount     *big.Int       `xorm:"'amount' notnull BigInt"`
 	CreateTime *big.Int       `xorm:"'create_time' notnull BigInt"`
-	Expiration int            `xorm:"'expiration' notnull varchar(255)"`
+	Expiration uint8          `xorm:"'expiration' notnull varchar(255)"`
 }
 
 type Claim struct {

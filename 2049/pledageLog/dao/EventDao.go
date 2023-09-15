@@ -32,7 +32,7 @@ func (dao *EventDAO) CheckIfTxHashExistsAcrossTables(txHash common.Hash) (bool, 
 }
 
 // InsertCreateOptionEvent 插入 CreateOption 事件数据到对应的表
-func (dao *EventDAO) InsertCreateOptionEvent(owner common.Address, amount, createTime *big.Int, expiration int, txHash common.Hash) error {
+func (dao *EventDAO) InsertCreateOptionEvent(owner common.Address, amount, createTime *big.Int, expiration uint8, txHash common.Hash) error {
 	optionData := mode.Option{
 		Hash:       txHash,
 		Owner:      owner,
@@ -40,7 +40,14 @@ func (dao *EventDAO) InsertCreateOptionEvent(owner common.Address, amount, creat
 		CreateTime: createTime,
 		Expiration: expiration,
 	}
+
+	fmt.Printf("Inserting option data: %+v\n", optionData)
+
 	_, err := dao.engine.Insert(&optionData)
+	if err != nil {
+		fmt.Println("Error inserting data into MySQL:", err)
+	}
+
 	return err
 }
 

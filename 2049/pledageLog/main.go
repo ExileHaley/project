@@ -2,8 +2,17 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"os"
+	"pledageLog/controller"
 	"pledageLog/dao"
 	"pledageLog/utils"
+	"strings"
+	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func main() {
@@ -18,20 +27,38 @@ func main() {
 		fmt.Println("初始化Xorm失败!", err)
 		return
 	}
+
 	eventDAO := dao.NewEventDAO(ormEngine)
 
-	// // 合约 ABI
+	file, err := os.Open("./contract/Pledage.abi")
+	if err != nil {
+		log.Fatal("打开 abi 文件失败:", err)
+		return
+	}
+	defer file.Close()
 
-	// // 以太坊节点 URL
-	// ethURL := "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID"
+	content, err := io.ReadAll(file)
+	if err != nil {
+		log.Fatal("读取 abi 文件内容失败:", err)
+		return
+	}
 
+	contractABI, err := abi.JSON(strings.NewReader(string(content)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("数据库操作实例:", eventDAO)
+
+	fmt.Println("合约abi内容:", contractABI)
 	// // 创建事件监听器
-	// eventListener, err := controller.NewEventListener(ethURL, contractABI, eventDAO)
-	// if err != nil {
-	// 	fmt.Println("Error creating event listener:", err)
-	// 	return
-	// }
+	eventListener, err := controller.NewEventListener(cfg.RPC.URL, contractABI, eventDAO)
+	if err != nil {
+		fmt.Println("创建监听进程实例失败:", err)
+		return
+	}
+	defer ormEngine.Close()
 
 	// // 启动事件监听器
-	// go eventListener.StartListening(common.HexToAddress("YOUR_CONTRACT_ADDRESS"), 10*time.Second)
+	eventListener.StartListening(common.HexToAddress(cfg.RPC.ContractAddress), 10*time.Second)
 }

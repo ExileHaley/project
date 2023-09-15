@@ -4,21 +4,24 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"os"
 	"pledageLog/dao"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type EventController struct {
-	client      *ethclient.Client
-	contractABI abi.ABI
-	dao         *dao.EventDAO // 引用 DAO 层
+	client             *ethclient.Client
+	contractABI        abi.ABI
+	dao                *dao.EventDAO // 引用 DAO 层
+	lastProcessedBlock uint64
 }
 
 func NewEventListener(ethURL string, contractABI abi.ABI, dao *dao.EventDAO) (*EventController, error) {
@@ -36,7 +39,15 @@ func NewEventListener(ethURL string, contractABI abi.ABI, dao *dao.EventDAO) (*E
 
 func (el *EventController) StartListening(contractAddress common.Address, pollInterval time.Duration) {
 	for {
-		//获取最新区块
+		// 从本地文件加载最后已处理的区块高度
+		lastProcessedBlock, err := el.loadLastProcessedBlockFromFile()
+		if err != nil {
+			fmt.Println("Error loading last processed block:", err)
+			time.Sleep(pollInterval)
+			continue
+		}
+
+		// 获取最新区块
 		latestBlock, err := el.client.BlockByNumber(context.Background(), nil)
 		if err != nil {
 			fmt.Println("Error getting latest block:", err)
@@ -44,12 +55,21 @@ func (el *EventController) StartListening(contractAddress common.Address, pollIn
 			continue
 		}
 
-		fromBlock := latestBlock.NumberU64()
-		toBlock := fromBlock
+		fromBlock := lastProcessedBlock + 1 // 从上次处理的下一个区块开始
+		toBlock := latestBlock.NumberU64()
 
 		err = el.PollAndProcessLogs(contractAddress, fromBlock, toBlock)
 		if err != nil {
 			fmt.Println("Error polling and processing logs:", err)
+		}
+
+		// 更新最后一个已处理的区块高度
+		el.lastProcessedBlock = toBlock
+
+		// 将最后已处理的区块高度写入本地文件
+		err = el.writeLastProcessedBlockToFile(el.lastProcessedBlock)
+		if err != nil {
+			fmt.Println("Error writing last processed block to file:", err)
 		}
 
 		time.Sleep(pollInterval)
@@ -58,22 +78,41 @@ func (el *EventController) StartListening(contractAddress common.Address, pollIn
 
 func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fromBlock uint64, toBlock uint64) error {
 	// 创建 Ethereum filter query
-	registerTopic := []common.Hash{el.contractABI.Events["Register"].ID}
-	createOptionTopic := []common.Hash{el.contractABI.Events["CreateOption"].ID}
-	withdrawTopic := []common.Hash{el.contractABI.Events["Withdraw"].ID}
-	claimWithPermitTopic := []common.Hash{el.contractABI.Events["ClaimWithPermit"].ID}
+	// registerTopic := []common.Hash{el.contractABI.Events["Register"].ID}
+	// createOptionTopic := []common.Hash{el.contractABI.Events["CreateOption"].ID}
+	// withdrawTopic := []common.Hash{el.contractABI.Events["Withdraw"].ID}
+	// claimWithPermitTopic := []common.Hash{el.contractABI.Events["ClaimWithPermit"].ID}
+
+	// event Register(address registerAddress,address referrerAddress);
+	// event CreateOption(address owner,uint256 optionId,uint256 amount,uint256 crateTime, Expiration expiration);
+	// event Withdraw(address owner,uint256 optionId,uint256 amount);
+	// event ClaimWithPermit(address owner,uint256 amountBNB);
+
+	registerSig := []byte("Register(address,address)")
+	registerSigHash := crypto.Keccak256Hash(registerSig)
+
+	createOptionSig := []byte("CreateOption(address,uint256,uint256,uint256,uint8)")
+	createOptionSigHash := crypto.Keccak256Hash(createOptionSig)
+
+	withdrawSig := []byte("Withdraw(address,uint256,uint256)")
+	withdrawSigHash := crypto.Keccak256Hash(withdrawSig)
+
+	claimSig := []byte("ClaimWithPermit(address,uint256)")
+	claimSigHash := crypto.Keccak256Hash(claimSig)
+
 	//组装过滤条件
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{contractAddress},
-		Topics: [][]common.Hash{
-			registerTopic,
-			createOptionTopic,
-			withdrawTopic,
-			claimWithPermitTopic,
-		},
+		// Topics: [][]common.Hash{
+		// 	registerTopic,
+		// 	createOptionTopic,
+		// 	withdrawTopic,
+		// 	claimWithPermitTopic,
+		// },
 		FromBlock: big.NewInt(int64(fromBlock)),
 		ToBlock:   big.NewInt(int64(toBlock)),
 	}
+
 	//获取过滤事件结果
 	logs, err := el.client.FilterLogs(context.Background(), query)
 	if err != nil {
@@ -82,21 +121,27 @@ func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fr
 
 	// 处理事件日志
 	for _, log := range logs {
-		switch {
-		case strings.HasPrefix(log.Topics[0].Hex(), registerTopic[0].Hex()):
-
-		case strings.HasPrefix(log.Topics[0].Hex(), createOptionTopic[0].Hex()):
+		switch log.Topics[0].Hex() {
+		case registerSigHash.Hex():
+			el.ProcessRegisterEvent(log)
+			fmt.Println("抓取到了register结果")
+		case createOptionSigHash.Hex():
+			fmt.Println("我们看下错误前会有什么结果", log)
 			// 处理 CreateOption 事件
 			el.ProcessCreateOptionEvent(log)
-		case strings.HasPrefix(log.Topics[0].Hex(), withdrawTopic[0].Hex()):
+			fmt.Println("抓取到了createOption结果")
+		case withdrawSigHash.Hex():
 			// 处理 Withdraw 事件
 			el.ProcessWithdrawEvent(log)
-		case strings.HasPrefix(log.Topics[0].Hex(), claimWithPermitTopic[0].Hex()):
+			fmt.Println("抓取到了withdraw结果")
+		case claimSigHash.Hex():
 			// 处理 ClaimWithPermit 事件
 			el.ProcessClaimWithPermitEvent(log)
+			fmt.Println("抓取到了claim结果")
 		default:
 			// 未知事件类型
 			fmt.Println("Unknown event type")
+
 		}
 	}
 
@@ -107,13 +152,13 @@ func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fr
 
 func (el *EventController) ProcessRegisterEvent(log types.Log) {
 	var registerEvent struct {
-		registerAddress common.Address
-		referrerAddress common.Address
+		RegisterAddress common.Address
+		ReferrerAddress common.Address
 	}
 
-	err := el.contractABI.UnpackIntoInterface(&registerEvent, "CreateOption", log.Data)
+	err := el.contractABI.UnpackIntoInterface(&registerEvent, "Register", log.Data)
 	if err != nil {
-		fmt.Println("Error unpacking CreateOption event:", err)
+		fmt.Println("Error unpacking Register event:", err)
 		return
 	}
 
@@ -124,7 +169,7 @@ func (el *EventController) ProcessRegisterEvent(log types.Log) {
 	}
 
 	if !exists {
-		if err := el.dao.InsertRegisterEvent(registerEvent.registerAddress, registerEvent.referrerAddress, log.TxHash); err != nil {
+		if err := el.dao.InsertRegisterEvent(registerEvent.RegisterAddress, registerEvent.ReferrerAddress, log.TxHash); err != nil {
 			fmt.Println("Error inserting data into MySQL:", err)
 		}
 	}
@@ -134,13 +179,14 @@ func (el *EventController) ProcessRegisterEvent(log types.Log) {
 // event CreateOption(address owner,uint256 amount,uint256 crateTime, Expiration expiration);
 func (el *EventController) ProcessCreateOptionEvent(log types.Log) {
 	// 解析 CreateOption 事件数据
-	var event struct {
+	var CreateOptionEvent struct {
 		Owner      common.Address
+		OptionId   *big.Int
 		Amount     *big.Int
 		CrateTime  *big.Int
-		Expiration int
+		Expiration uint8 // Solidity 枚举类型 "Expiration" 对应的 Go 类型为 uint8
 	}
-	err := el.contractABI.UnpackIntoInterface(&event, "CreateOption", log.Data)
+	err := el.contractABI.UnpackIntoInterface(&CreateOptionEvent, "CreateOption", log.Data)
 	if err != nil {
 		fmt.Println("Error unpacking CreateOption event:", err)
 		return
@@ -156,7 +202,7 @@ func (el *EventController) ProcessCreateOptionEvent(log types.Log) {
 	// 如果不存在相同 txHash 的记录，则插入数据
 	if !exists {
 		// owner common.Address, amount, createTime *big.Int, expiration int, txHash common.Hash
-		if err := el.dao.InsertCreateOptionEvent(event.Owner, event.Amount, event.CrateTime, event.Expiration, log.TxHash); err != nil {
+		if err := el.dao.InsertCreateOptionEvent(CreateOptionEvent.Owner, CreateOptionEvent.Amount, CreateOptionEvent.CrateTime, CreateOptionEvent.Expiration, log.TxHash); err != nil {
 			fmt.Println("Error inserting data into MySQL:", err)
 		}
 	}
@@ -212,4 +258,33 @@ func (el *EventController) ProcessClaimWithPermitEvent(log types.Log) {
 	}
 
 	// 其他逻辑继续...
+}
+
+func (el *EventController) loadLastProcessedBlockFromFile() (uint64, error) {
+	// 从本地文件加载最后已处理的区块高度
+	data, err := os.ReadFile("block")
+	if err != nil {
+		return 0, err
+	}
+
+	// 解析文件内容为 uint64
+	lastProcessedBlock, err := strconv.ParseUint(string(data), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return lastProcessedBlock, nil
+}
+
+func (el *EventController) writeLastProcessedBlockToFile(blockNumber uint64) error {
+	// 将最后已处理的区块高度转换为字符串
+	blockNumberStr := strconv.FormatUint(blockNumber, 10)
+
+	// 将字符串写入本地文件
+	err := os.WriteFile("block", []byte(blockNumberStr), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

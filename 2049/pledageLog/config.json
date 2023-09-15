@@ -3,14 +3,14 @@
         "host": "localhost",
         "port": "3306",
         "user": "root",
-        "password": "d12345678",
-        "database": "null",
+        "password": "DRq@daVgYulHq@gq",
+        "database": "pledage",
         "showSql":true
     },
     "rpc": {
-        "url": "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID",
+        "url": "https://koge-rpc-bsc.48.club",
         "timeout": 30,
-        "contractAddress": "0x"
+        "contractAddress": "0xEc1a116aef380ddB7A3cA056AD1D5c523DDD8343"
     },
     "gin": {
         "port": "8080",
