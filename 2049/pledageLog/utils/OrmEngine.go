@@ -17,6 +17,9 @@ func NewEngine(cfg *Config) (*xorm.Engine, error) {
 		return nil, err
 	}
 	engine.ShowSQL(baseCfg.ShowSql)
-	engine.Sync2(new(mode.Register), new(mode.Option), new(mode.Claim))
+	err = engine.Sync2(new(mode.Register), new(mode.Option), new(mode.Claim))
+	if err != nil {
+		fmt.Println("数据库表同步错误:", err)
+	}
 	return engine, nil // 返回 engine 而不是 Engine
 }

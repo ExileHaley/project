@@ -23,7 +23,7 @@ func NewEventDAO(engine *xorm.Engine) *EventDAO {
 // CheckIfTxHashExistsAcrossTables 查询是否已经存在具有相同 txHash 的记录，跨多个事件表
 func (dao *EventDAO) CheckIfTxHashExistsAcrossTables(txHash common.Hash) (bool, error) {
 	count, err := dao.engine.
-		Where("tx_hash = ?", txHash.Hex()).
+		Where("hash = ?", txHash.Hex()).
 		Count(new(mode.Option), new(mode.Register), new(mode.Claim))
 	if err != nil {
 		return false, err
@@ -31,10 +31,10 @@ func (dao *EventDAO) CheckIfTxHashExistsAcrossTables(txHash common.Hash) (bool, 
 	return count > 0, nil
 }
 
-// InsertCreateOptionEvent 插入 CreateOption 事件数据到对应的表
-func (dao *EventDAO) InsertCreateOptionEvent(owner common.Address, amount, createTime *big.Int, expiration uint8, txHash common.Hash) error {
+func (dao *EventDAO) InsertCreateOptionEvent(owner common.Address, optionId *big.Int, amount *big.Int, createTime *big.Int, expiration uint8, txHash common.Hash) error {
 	optionData := mode.Option{
 		Hash:       txHash,
+		OptionId:   optionId,
 		Owner:      owner,
 		Amount:     amount,
 		CreateTime: createTime,

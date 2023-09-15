@@ -1,16 +1,16 @@
 {
     "mysql": {
-        "host": "localhost",
+        "host": "47.242.69.104",
         "port": "3306",
-        "user": "root",
-        "password": "DRq@daVgYulHq@gq",
-        "database": "pledage",
+        "user": "2049-block",
+        "password": "hRFb7Cx27Ajh2znN",
+        "database": "2049-block",
         "showSql":true
     },
     "rpc": {
         "url": "https://koge-rpc-bsc.48.club",
         "timeout": 30,
-        "contractAddress": "0xEc1a116aef380ddB7A3cA056AD1D5c523DDD8343"
+        "contractAddress": "0x0B84A2AE6939dd8fe7083cED1ad5e06A7787bA0D"
     },
     "gin": {
         "port": "8080",

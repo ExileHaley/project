@@ -161,7 +161,7 @@ contract PledageStorV1 is PledageStor{
     address public token;
     address public usdt;
 
-    uint256 public initialOptionNum;
+    uint256 public initialOptionNum = 1;
     uint256 public decimals;
     uint256 public totalStaking;
 
@@ -169,8 +169,12 @@ contract PledageStorV1 is PledageStor{
 
 contract Pledage is PledageStorV1{
 
+    struct Info{
+        Option option;
+        uint256 income;
+    }
     event Register(address registerAddress,address referrerAddress);
-    event CreateOption(address owner,uint256 amount,uint256 crateTime, Expiration expiration);
+    event CreateOption(address owner,uint256 optionId,uint256 amount,uint256 crateTime, Expiration expiration);
     event Withdraw(address owner,uint256 optionId,uint256 amount);
     event ClaimWithPermit(address owner,uint256 amountBNB);
 
@@ -217,9 +221,9 @@ contract Pledage is PledageStorV1{
         TransferHelper.safeTransferFrom(token, msg.sender, address(this), _amount);
         optionInfo[initialOptionNum] = Option(initialOptionNum,msg.sender,_amount,block.timestamp,0,false,expiration); 
         optionIds[msg.sender].push(initialOptionNum);
-        initialOptionNum++;
         totalStaking += _amount;
-        emit CreateOption(msg.sender, _amount, block.timestamp, expiration);
+        emit CreateOption(msg.sender, initialOptionNum, _amount, block.timestamp, expiration);
+        initialOptionNum++;
     }
 
     function withdraw(uint256 optionId) external{
@@ -229,6 +233,7 @@ contract Pledage is PledageStorV1{
         TransferHelper.safeTransferFrom(token, address(this), option.owner, option.amount * 99 /100);
         totalStaking -= option.amount;
         option.isUnstaking = true;
+
         emit Withdraw(option.owner, optionId, option.amount);
     }
 

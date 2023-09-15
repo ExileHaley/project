@@ -191,6 +191,7 @@ func (el *EventController) ProcessCreateOptionEvent(log types.Log) {
 		fmt.Println("Error unpacking CreateOption event:", err)
 		return
 	}
+	fmt.Println("这是CreateOptionEvent解析结果:", CreateOptionEvent)
 
 	// 检查 MySQL 表是否已经存在具有相同 txHash 的记录
 	exists, err := el.dao.CheckIfTxHashExistsAcrossTables(log.TxHash)
@@ -202,7 +203,7 @@ func (el *EventController) ProcessCreateOptionEvent(log types.Log) {
 	// 如果不存在相同 txHash 的记录，则插入数据
 	if !exists {
 		// owner common.Address, amount, createTime *big.Int, expiration int, txHash common.Hash
-		if err := el.dao.InsertCreateOptionEvent(CreateOptionEvent.Owner, CreateOptionEvent.Amount, CreateOptionEvent.CrateTime, CreateOptionEvent.Expiration, log.TxHash); err != nil {
+		if err := el.dao.InsertCreateOptionEvent(CreateOptionEvent.Owner, CreateOptionEvent.OptionId, CreateOptionEvent.Amount, CreateOptionEvent.CrateTime, CreateOptionEvent.Expiration, log.TxHash); err != nil {
 			fmt.Println("Error inserting data into MySQL:", err)
 		}
 	}
