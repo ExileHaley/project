@@ -21,11 +21,13 @@ function purchasingVip(address _user) external;
 function claim(address _user,uint256 _amount) external;
 
     struct User{
-        bool isp; //是不是vip，当前地址如果购买了节点就是true，否则false。
-        bool isps; //是不是vips，推荐超过2个人购买节点就是vips，true表示已经达成，false表示未达成。
-        address inv; //邀请人地址
-        uint256 invNum; //当前地址总共直推的用户数量
-        uint256 totalTR; //当前用户总的团队奖励(deep)，用户只有这一个收益可以提取，对应到上面的claim方法
+        bool isVip; //是不是vip
+        bool isVips; //是不是vips
+        address inviter; //邀请地址
+        address additionalInviter; //额外邀请地址，忽略不展示
+        uint256 invitesNum; //邀请人数
+        uint256 totalTeamReward; //动态奖励总数量
+        address[] members; //直退的用户地址，忽略
     }
 5. 获取用户信息详情，返回数据如上述User结构
 function getUserInfo(address _user) external view returns(User memory);
