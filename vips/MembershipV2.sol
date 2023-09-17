@@ -172,14 +172,14 @@ contract MemberShipV2 is MemberStorV1{
         maxLooked = 30;
     }
 
-    function bind(address _inviter,address _user) external{
+    function bind(address _inviter) external{
         require(initialInviter != address(0), "Membership:Zero initial address");
         if(initialInviter != _inviter){
             User memory inv = userInfo[_inviter];
             require(inv.isVip, "Membership:Not eligible");
-            require(_inviter != _user,"Membership:Only vip");
+            require(_inviter != msg.sender,"Membership:Only vip");
         }
-        User storage user = userInfo[_user];
+        User storage user = userInfo[msg.sender];
         require(user.inviter == address(0),"Membership:Only once");
         user.inviter = _inviter;
     }
