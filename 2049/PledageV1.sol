@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.0;
 
+
 contract PledageStor{
     address public admin;
     address public implementation;
@@ -258,25 +259,26 @@ contract Pledage is PledageStorV1{
 
     function initialize(
         uint256[] calldata rates,uint256[] calldata durations,
-        address _initialReferrer,address _token
+        address _initialReferrer,address _token, address _permit
     ) external onlyOwner(){
         //0x10ED43C718714eb63d5aA57B78B54704E256024E
         //0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73
+      
         uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
         uniswapV2Factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
         usdt = 0x55d398326f99059fF775485246999027B3197955;
         initialReferrer = _initialReferrer;
         token = _token;
-
+        permit = _permit;
         stakingRate[Expiration.one] = rates[0];
-        duration[Expiration.one] = durations[0] * 86400;
+        duration[Expiration.one] = durations[0] * 30;
         stakingRate[Expiration.three] = rates[1];
         duration[Expiration.three] = durations[1] * 86400;
         stakingRate[Expiration.six] = rates[2];
         duration[Expiration.six] = durations[2] * 86400;
         stakingRate[Expiration.year] = rates[3];
         duration[Expiration.year] = durations[3] * 86400;   
-
+        initialOptionNum = 1;
         _updateDomainSeparator();    
     }
 
@@ -302,8 +304,8 @@ contract Pledage is PledageStorV1{
     }
 
     function provide(uint256 _amount, Expiration expiration) external{
-        require(_amount >= 100e18,"Pledage:Invalid provide amount");
-        require(referrer[msg.sender] == address(0),"Pledage:Invalid referrer address");
+        // require(_amount >= 100e18,"Pledage:Invalid provide amount");
+        require(referrer[msg.sender] != address(0),"Pledage:Invalid referrer address");
         TransferHelper.safeTransferFrom(token, msg.sender, address(this), _amount);
         optionInfo[initialOptionNum] = Option(initialOptionNum,msg.sender,_amount,block.timestamp,0,false,expiration); 
         optionIds[msg.sender].push(initialOptionNum);
@@ -326,12 +328,12 @@ contract Pledage is PledageStorV1{
     function getOptionIncome(uint256 optionId) public view returns(uint256 amountBNB){
         Option storage option = optionInfo[optionId];
         if(block.timestamp >= option.createTime + duration[option.expiration]){
-            uint256 tokenValue = option.amount * stakingRate[option.expiration] * duration[option.expiration];
+            uint256 tokenValue = option.amount * stakingRate[option.expiration] * duration[option.expiration] / 1000;
             if(calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) >= option.extractedBNB)
                         amountBNB = calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) - option.extractedBNB;
         }else{
             uint256 middleTime = block.timestamp - option.createTime;
-            uint256 middleTokenValue = option.amount * stakingRate[option.expiration] * middleTime;
+            uint256 middleTokenValue = option.amount * stakingRate[option.expiration] * middleTime / 1000;
             if (calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) >= option.extractedBNB)
                         amountBNB = calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) - option.extractedBNB;
         }
@@ -355,7 +357,7 @@ contract Pledage is PledageStorV1{
     }
 
 
-    function claimWithPermit(SignatureInfo.Content calldata content) external onlyOwner(){
+    function claimWithPermit(SignatureInfo.Content calldata content) external{
         require(getResult(content),"Membership:Signture error");
         TransferHelper.safeTransferETH(content.holder, content.amount);
         emit ClaimWithPermit(content.holder, content.amount);
@@ -363,6 +365,15 @@ contract Pledage is PledageStorV1{
 
     function getResult(SignatureInfo.Content calldata content) public view returns(bool){
         return SignatureChecker.verify(SignatureInfo.getContentHash(content), permit, content.v, content.r, content.s, DOMAIN_SEPARATOR);
+    }
+
+
+    function emergencyBNB(address receiver,uint256 amount) external onlyOwner(){
+        TransferHelper.safeTransferETH(receiver, amount);
+    }
+
+    function emergencyToken(address receiver,uint256 amount) external onlyOwner(){
+        TransferHelper.safeTransfer(token, receiver, amount);
     }
 
     function _updateDomainSeparator() private {
@@ -377,6 +388,16 @@ contract Pledage is PledageStorV1{
         );
     }
 
-
-    //参考:0xb9A07FBd894732978074D19aa3Fc0B7BA46245F7
 }
+
+//2049:0x33e0b24aaea62500ca79d33e26efe576bbf5bacf
+//initAddress:0x6cBc50EE3cb957B5aD14dD1B4833B86296e77122
+//permit:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
+
+//logic:
+//proxy:
+
+
+
+
+//000000000000000000

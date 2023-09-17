@@ -58,13 +58,13 @@ func main() {
 	defer ormEngine.Close()
 
 	// // 启动事件监听器
-	eventListener.StartListening(common.HexToAddress(cfg.RPC.ContractAddress), 10*time.Second)
+	go eventListener.StartListening(common.HexToAddress(cfg.RPC.ContractAddress), 20*time.Second)
 
 	app := gin.Default()
 	claimController := new(controller.ClaimController)
 
 	// Register the router with the config
-	app.GET("/signer", func(ctx *gin.Context) {
+	app.POST("/signer", func(ctx *gin.Context) {
 		claimController.SignParam(ctx, cfg)
 	})
 
