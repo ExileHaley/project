@@ -32,17 +32,16 @@ func (dao *EventDAO) CheckIfTxHashExistsAcrossTables(txHash common.Hash) (bool, 
 }
 
 func (dao *EventDAO) InsertCreateOptionEvent(owner common.Address, optionId *big.Int, amount *big.Int, createTime *big.Int, expiration uint8, txHash common.Hash) error {
+
 	optionData := mode.Option{
-		Hash:       txHash,
-		OptionId:   optionId,
-		Owner:      owner,
-		Amount:     amount,
-		CreateTime: createTime,
+		Hash:       txHash.String(),
+		OptionId:   optionId.String(),
+		Owner:      owner.String(),
+		Amount:     amount.String(),
+		CreateTime: createTime.String(),
 		Expiration: expiration,
 	}
-
-	fmt.Printf("Inserting option data: %+v\n", optionData)
-
+	fmt.Println("用户创建订单记录:", optionData)
 	_, err := dao.engine.Insert(&optionData)
 	if err != nil {
 		fmt.Println("Error inserting data into MySQL:", err)
@@ -53,6 +52,7 @@ func (dao *EventDAO) InsertCreateOptionEvent(owner common.Address, optionId *big
 
 // UpdateBalance 更新数据库中 Owner 的余额，执行 Withdraw 事件
 func (dao *EventDAO) UpdateBalance(owner common.Address, withdrawValue *big.Int) error {
+	fmt.Println("用户赎回订单记录:", owner, withdrawValue)
 	// 获取当前 Owner 的余额
 	var currentBalance big.Int
 	has, err := dao.engine.Where("owner = ?", owner.Hex()).Get(&currentBalance)
@@ -83,7 +83,7 @@ func (dao *EventDAO) UpdateBalance(owner common.Address, withdrawValue *big.Int)
 	}
 
 	// 更新 option 表中的余额
-	affected, err := session.Where("owner = ?", owner.Hex()).Update(&mode.Option{Amount: newBalance})
+	affected, err := session.Where("owner = ?", owner.Hex()).Update(&mode.Option{Amount: newBalance.String()})
 	if err != nil {
 		session.Rollback()
 		return err
@@ -107,10 +107,11 @@ func (dao *EventDAO) UpdateBalance(owner common.Address, withdrawValue *big.Int)
 // InsertClaimWithPermitEvent 插入 ClaimWithPermit 事件数据到对应的表
 func (dao *EventDAO) InsertClaimWithPermitEvent(receiver common.Address, amount *big.Int, txHash common.Hash) error {
 	claimData := mode.Claim{
-		Hash:     txHash,
-		Receiver: receiver,
-		Balance:  amount,
+		Hash:     txHash.String(),
+		Receiver: receiver.String(),
+		Balance:  amount.String(),
 	}
+	fmt.Println("用户提取动态收益记录:", claimData)
 	_, err := dao.engine.Insert(&claimData)
 	return err
 }
@@ -119,10 +120,11 @@ func (dao *EventDAO) InsertClaimWithPermitEvent(receiver common.Address, amount 
 func (dao *EventDAO) InsertRegisterEvent(registerAddress common.Address, referrerAddress common.Address, txHash common.Hash) error {
 	// 将 eventData 和 txHash 插入数据库
 	registerData := mode.Register{
-		Member:   registerAddress,
-		Referrer: referrerAddress,
-		Hash:     txHash,
+		Member:   registerAddress.String(),
+		Referrer: referrerAddress.String(),
+		Hash:     txHash.String(),
 	}
+	fmt.Println("用户绑定邀请关系记录:", registerData)
 	_, err := dao.engine.Insert(&registerData)
 	if err != nil {
 		return err

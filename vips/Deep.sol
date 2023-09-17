@@ -214,7 +214,7 @@ contract Deep is ERC20{
         address _router,
         address _usdt,
         address _slippage
-    ) ERC20("DeepTest", "DET"){
+    ) ERC20("Deep", "DEEP"){
         uint256 amount = 1000000000000e18;
         _mint(addrs[0], amount * 30 / 100);
         _mint(addrs[1], amount * 5 / 100);

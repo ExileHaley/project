@@ -25,10 +25,16 @@ type GinConfig struct {
 	Mode string `json:"mode"`
 }
 
+type ContractConfig struct {
+	PrivateKey      string `json:"privateKey"`
+	DomainSeparator string `json:"domainSeparator"`
+}
+
 type Config struct {
-	MySQL MysqlConfig `json:"mysql"`
-	RPC   RPCConfig   `json:"rpc"`
-	GIN   GinConfig   `json:"gin"`
+	MySQL    MysqlConfig    `json:"mysql"`
+	RPC      RPCConfig      `json:"rpc"`
+	GIN      GinConfig      `json:"gin"`
+	Contract ContractConfig `json:"contract"`
 }
 
 func ParseConfig(dir string) (*Config, error) {

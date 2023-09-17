@@ -15,5 +15,9 @@
     "gin": {
         "port": "8080",
         "mode": "debug"
+    },
+    "contract":{
+        "privateKey":"",
+        "domainSeparator":""
     }
 }

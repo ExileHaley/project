@@ -13,6 +13,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 		fmt.Println("解析配置文件失败!", err)
 		return
 	}
-	fmt.Println("配置文件内容:", cfg)
+
 	ormEngine, err := utils.NewEngine(cfg)
 	if err != nil {
 		fmt.Println("初始化Xorm失败!", err)
@@ -48,9 +49,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("数据库操作实例:", eventDAO)
-
-	fmt.Println("合约abi内容:", contractABI)
 	// // 创建事件监听器
 	eventListener, err := controller.NewEventListener(cfg.RPC.URL, contractABI, eventDAO)
 	if err != nil {
@@ -61,4 +59,21 @@ func main() {
 
 	// // 启动事件监听器
 	eventListener.StartListening(common.HexToAddress(cfg.RPC.ContractAddress), 10*time.Second)
+
+	app := gin.Default()
+	claimController := new(controller.ClaimController)
+
+	// Register the router with the config
+	app.GET("/signer", func(ctx *gin.Context) {
+		claimController.SignParam(ctx, cfg)
+	})
+
+	//运行gin框架
+	app.Run(":" + cfg.GIN.Port)
+
 }
+
+// func registerRouter(engine *gin.Engine, cfg *utils.Config) {
+// 	new(controller.ClaimController).Router(engine, cfg)
+
+// }

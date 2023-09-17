@@ -64,6 +64,70 @@ interface IUniswapV2Pair {
     function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
 }
 
+library SignatureInfo {
+    bytes32 constant CONTENT_HASH =
+        0x58e2f0ec35eb789493367bbd774d478d0e7e6916118069574ff2690b38004245;
+
+    struct Content {
+        address holder;
+        uint128 amount;
+        uint8 v; // v: parameter (27 or 28)
+        bytes32 r; // r: parameter
+        bytes32 s;
+    }
+
+    function getContentHash(Content calldata content)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return
+            keccak256(
+                abi.encode(
+                    CONTENT_HASH,
+                    content.holder,
+                    content.amount
+                )
+            );
+    }
+
+}
+
+library SignatureChecker {
+    function recover(
+        bytes32 hash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal pure returns (address) {
+        require(
+            uint256(s) <=
+                0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
+            "Signature: Invalid s parameter"
+        );
+
+        require(v == 27 || v == 28, "Signature: Invalid v parameter");
+        address signer = ecrecover(hash, v, r, s);
+        require(signer != address(0), "Signature: Invalid signer");
+
+        return signer;
+    }
+
+    function verify(
+        bytes32 hash,
+        address signer,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        bytes32 domainSeparator
+    ) internal pure returns (bool) {
+        bytes32 digest = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, hash)
+        );
+        return recover(digest, v, r, s) == signer;
+    }
+}
+
 library TransferHelper {
     function safeTransfer(address token, address to, uint value) internal {
         (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, to, value));
@@ -135,10 +199,10 @@ library UniswapV2Library {
 
 contract PledageStorV1 is PledageStor{
     enum Expiration{
-        Seven,
-        Fifteen,
-        Thirty,
-        Sixty
+        one,
+        three,
+        six,
+        year
     }   
     struct Option{
         uint256     optionId;
@@ -160,10 +224,14 @@ contract PledageStorV1 is PledageStor{
     address public uniswapV2Router;
     address public token;
     address public usdt;
+    address public permit;
 
-    uint256 public initialOptionNum = 1;
+    uint256 public initialOptionNum;
     uint256 public decimals;
     uint256 public totalStaking;
+
+    uint256 public  chainId;
+    bytes32 public  DOMAIN_SEPARATOR;
 
 }
 
@@ -188,10 +256,28 @@ contract Pledage is PledageStorV1{
         _;
     }
 
-    function updateFarm() external onlyOwner(){
-        // uint256 tokenAmount = IERC20(token).balanceOf(address(this));
-        // (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, token, usdt);
-        // tokenPrice = UniswapV2Library.getAmountOut(tokenAmount, reserveIn, reserveOut);
+    function initialize(
+        uint256[] calldata rates,uint256[] calldata durations,
+        address _initialReferrer,address _token
+    ) external onlyOwner(){
+        //0x10ED43C718714eb63d5aA57B78B54704E256024E
+        //0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73
+        uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
+        uniswapV2Factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
+        usdt = 0x55d398326f99059fF775485246999027B3197955;
+        initialReferrer = _initialReferrer;
+        token = _token;
+
+        stakingRate[Expiration.one] = rates[0];
+        duration[Expiration.one] = durations[0] * 86400;
+        stakingRate[Expiration.three] = rates[1];
+        duration[Expiration.three] = durations[1] * 86400;
+        stakingRate[Expiration.six] = rates[2];
+        duration[Expiration.six] = durations[2] * 86400;
+        stakingRate[Expiration.year] = rates[3];
+        duration[Expiration.year] = durations[3] * 86400;   
+
+        _updateDomainSeparator();    
     }
 
     function calculateIncomeUSDT(uint256 amount) public view returns(uint256){
@@ -269,11 +355,28 @@ contract Pledage is PledageStorV1{
     }
 
 
-    function claimWithPermit(address _user, uint256 _amountBNB) external onlyOwner(){
-        TransferHelper.safeTransferETH(_user, _amountBNB);
-        emit ClaimWithPermit(_user, _amountBNB);
+    function claimWithPermit(SignatureInfo.Content calldata content) external onlyOwner(){
+        require(getResult(content),"Membership:Signture error");
+        TransferHelper.safeTransferETH(content.holder, content.amount);
+        emit ClaimWithPermit(content.holder, content.amount);
+    }
+
+    function getResult(SignatureInfo.Content calldata content) public view returns(bool){
+        return SignatureChecker.verify(SignatureInfo.getContentHash(content), permit, content.v, content.r, content.s, DOMAIN_SEPARATOR);
+    }
+
+    function _updateDomainSeparator() private {
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256("Pledage"),
+                keccak256(bytes("1")),
+                block.chainid,
+                address(this)
+            )
+        );
     }
 
 
-
+    //参考:0xb9A07FBd894732978074D19aa3Fc0B7BA46245F7
 }

@@ -77,16 +77,6 @@ func (el *EventController) StartListening(contractAddress common.Address, pollIn
 }
 
 func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fromBlock uint64, toBlock uint64) error {
-	// 创建 Ethereum filter query
-	// registerTopic := []common.Hash{el.contractABI.Events["Register"].ID}
-	// createOptionTopic := []common.Hash{el.contractABI.Events["CreateOption"].ID}
-	// withdrawTopic := []common.Hash{el.contractABI.Events["Withdraw"].ID}
-	// claimWithPermitTopic := []common.Hash{el.contractABI.Events["ClaimWithPermit"].ID}
-
-	// event Register(address registerAddress,address referrerAddress);
-	// event CreateOption(address owner,uint256 optionId,uint256 amount,uint256 crateTime, Expiration expiration);
-	// event Withdraw(address owner,uint256 optionId,uint256 amount);
-	// event ClaimWithPermit(address owner,uint256 amountBNB);
 
 	registerSig := []byte("Register(address,address)")
 	registerSigHash := crypto.Keccak256Hash(registerSig)
@@ -103,12 +93,6 @@ func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fr
 	//组装过滤条件
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{contractAddress},
-		// Topics: [][]common.Hash{
-		// 	registerTopic,
-		// 	createOptionTopic,
-		// 	withdrawTopic,
-		// 	claimWithPermitTopic,
-		// },
 		FromBlock: big.NewInt(int64(fromBlock)),
 		ToBlock:   big.NewInt(int64(toBlock)),
 	}
@@ -124,20 +108,15 @@ func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fr
 		switch log.Topics[0].Hex() {
 		case registerSigHash.Hex():
 			el.ProcessRegisterEvent(log)
-			fmt.Println("抓取到了register结果")
 		case createOptionSigHash.Hex():
-			fmt.Println("我们看下错误前会有什么结果", log)
 			// 处理 CreateOption 事件
 			el.ProcessCreateOptionEvent(log)
-			fmt.Println("抓取到了createOption结果")
 		case withdrawSigHash.Hex():
 			// 处理 Withdraw 事件
 			el.ProcessWithdrawEvent(log)
-			fmt.Println("抓取到了withdraw结果")
 		case claimSigHash.Hex():
 			// 处理 ClaimWithPermit 事件
 			el.ProcessClaimWithPermitEvent(log)
-			fmt.Println("抓取到了claim结果")
 		default:
 			// 未知事件类型
 			fmt.Println("Unknown event type")
@@ -191,7 +170,6 @@ func (el *EventController) ProcessCreateOptionEvent(log types.Log) {
 		fmt.Println("Error unpacking CreateOption event:", err)
 		return
 	}
-	fmt.Println("这是CreateOptionEvent解析结果:", CreateOptionEvent)
 
 	// 检查 MySQL 表是否已经存在具有相同 txHash 的记录
 	exists, err := el.dao.CheckIfTxHashExistsAcrossTables(log.TxHash)
@@ -202,7 +180,7 @@ func (el *EventController) ProcessCreateOptionEvent(log types.Log) {
 
 	// 如果不存在相同 txHash 的记录，则插入数据
 	if !exists {
-		// owner common.Address, amount, createTime *big.Int, expiration int, txHash common.Hash
+
 		if err := el.dao.InsertCreateOptionEvent(CreateOptionEvent.Owner, CreateOptionEvent.OptionId, CreateOptionEvent.Amount, CreateOptionEvent.CrateTime, CreateOptionEvent.Expiration, log.TxHash); err != nil {
 			fmt.Println("Error inserting data into MySQL:", err)
 		}
@@ -228,7 +206,6 @@ func (el *EventController) ProcessWithdrawEvent(log types.Log) {
 		fmt.Println("Error inserting data into MySQL:", err)
 	}
 
-	// 其他逻辑继续...
 }
 
 // event ClaimWithPermit(address owner,uint256 amountBNB);
@@ -258,7 +235,6 @@ func (el *EventController) ProcessClaimWithPermitEvent(log types.Log) {
 		}
 	}
 
-	// 其他逻辑继续...
 }
 
 func (el *EventController) loadLastProcessedBlockFromFile() (uint64, error) {

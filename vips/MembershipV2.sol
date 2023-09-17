@@ -168,7 +168,7 @@ contract MemberShipV2 is MemberStorV1{
         tenPercent = _tenPercent;
         fourPercent = _fourPercent;
         twentyPercent = _twentyPercent;
-        fixedPrice = 15e18;
+        fixedPrice = 500e18;
         maxLooked = 30;
     }
 
@@ -192,6 +192,7 @@ contract MemberShipV2 is MemberStorV1{
     function purchasingVip(address _user) external{
         User storage user = userInfo[_user];
         require(user.inviter != address(0),"Membership:The invitation address must be bound");
+        require(!user.isVip, "Membership:Duplicate participation is not allowed");
         require(_user == msg.sender,"Membership:Invalid operator");
 
         uint256 _amount = getAmountOut();
@@ -205,10 +206,8 @@ contract MemberShipV2 is MemberStorV1{
         TransferHelper.safeTransferFrom(token, _user, twentyPercent, toTwenty);
         TransferHelper.safeTransferFrom(token, _user, tenPercent, toTen);
         TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toTwenty - toTen);  
-        if(!user.isVip){
-            updateInviter(_user,_amount);
-            user.isVip = true;
-        }
+        updateInviter(_user,_amount);
+        user.isVip = true;
     }
 
     function updateInviter(address _user,uint256 _amount) internal{
@@ -217,19 +216,31 @@ contract MemberShipV2 is MemberStorV1{
         direct.invitesNum += 1;
         direct.members.push(_user);
         if(direct.invitesNum >= 3 && !direct.isVips) direct.isVips = true; 
+
         direct.totalTeamReward= direct.totalTeamReward + (_amount * 20 / 100);
+
         teamRewards[_direct].push(TeamReward(_user, _amount * 20 / 100, block.timestamp, Express.direct));
+
         if(direct.isVips){
+
             direct.totalTeamReward = direct.totalTeamReward + (_amount * 40 / 100);
             teamRewards[_direct].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
 
             address _degrees = direct.inviter;
             if(_degrees != address(0)){
+                
                 userInfo[_degrees].totalTeamReward = userInfo[_degrees].totalTeamReward + (_amount * 6 / 100);
                 teamRewards[_degrees].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
+
+
+                address additional = _degrees;
+                User memory degress = userInfo[_degrees];
+                if (degress.additionalInviter != address(0)) additional = degress.additionalInviter;
+                userInfo[direct.members[0]].additionalInviter = additional;
+                userInfo[direct.members[1]].additionalInviter = additional;
             }
-            userInfo[direct.members[0]].additionalInviter = _degrees;
-            userInfo[direct.members[1]].additionalInviter = _degrees;
+
+            
         }else{
             distribute(_user,_amount);
         }
@@ -314,5 +325,5 @@ contract MemberShipV2 is MemberStorV1{
 //10:0x3de09d761BF70F95b29f97f3Dc14386795B6A376
 //20:0xB6b25D0972359197864abbAA2328Df80680d9C93
 
-//logic:0xFC22aFaC385a8Cd6Cad57148ff4f3575BE23915b
-//proxy:0x9C9EdD4be7C64d1875407C67037a65Bc8Fa8b599
+//logic:
+//proxy:0xB4e38f0f0C1A4519f3BbAb672555f6231f3d9c15
