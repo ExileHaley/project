@@ -394,8 +394,8 @@ contract Pledage is PledageStorV1{
 //initAddress:0x6cBc50EE3cb957B5aD14dD1B4833B86296e77122
 //permit:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
 
-//logic:
-//proxy:
+//logic:0x2E7EcF8249D6c557463f82B260A2eD130343930E
+//proxy:0x2e9f5bF02e70aa84CDAF6F16a1b360607d5B59e5
 
 
 

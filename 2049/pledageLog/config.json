@@ -10,7 +10,7 @@
     "rpc": {
         "url": "https://koge-rpc-bsc.48.club",
         "timeout": 30,
-        "contractAddress": "0x4259837a28E76bDa1D4552aD331F05773979116B"
+        "contractAddress": "0x2e9f5bF02e70aa84CDAF6F16a1b360607d5B59e5"
     },
     "gin": {
         "port": "8080",
@@ -18,6 +18,6 @@
     },
     "contract":{
         "privateKey":"",
-        "domainSeparator":"2d4d2156c5e7aac310a64bb28319a54135bb6abece7702f8414f1404327f5d3d"
+        "domainSeparator":"3e07eed8a23258f60cc21ff88839e842c8fbd1a3f256549279558883b39f5964"
     }
 }

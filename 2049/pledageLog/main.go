@@ -72,8 +72,3 @@ func main() {
 	app.Run(":" + cfg.GIN.Port)
 
 }
-
-// func registerRouter(engine *gin.Engine, cfg *utils.Config) {
-// 	new(controller.ClaimController).Router(engine, cfg)
-
-// }
