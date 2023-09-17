@@ -4,7 +4,7 @@
 
 
 ### 方法列表：
-```
+```javascript
 1.绑定邀请人地址，邀请人地址
 function registerWithReferrer(address referrerAddress) external
 
@@ -59,4 +59,6 @@ struct Content {
 
 6.用户提取团队奖励收益
 function claimWithPermit(SignatureInfo.Content calldata content) external
+7.获取邀请人地址，传入用户的地址返回邀请人地址
+function referrer(address _user) external view returns(address);
 ```
