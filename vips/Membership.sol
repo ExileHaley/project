@@ -147,7 +147,7 @@ contract MemberStorV1 is MemberStor{
 }
 
 
-contract MemberShipV2 is MemberStorV1{
+contract MemberShip is MemberStorV1{
     constructor(){
         admin = msg.sender;
     }
@@ -224,10 +224,12 @@ contract MemberShipV2 is MemberStorV1{
         if(direct.isVips){
             direct.totalTeamReward = direct.totalTeamReward + (_amount * 40 / 100);
             teamRewards[_direct].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
+
             address _degrees = direct.inviter;
             if(_degrees != address(0)){
                 userInfo[_degrees].totalTeamReward = userInfo[_degrees].totalTeamReward + (_amount * 6 / 100);
                 teamRewards[_degrees].push(TeamReward(_user, _amount * 6 / 100, block.timestamp, Express.sameLevel));
+                
                 address additional = _degrees;
                 if (direct.additionalInviter != address(0)) additional = direct.additionalInviter;
                 userInfo[direct.members[0]].additionalInviter = additional;
@@ -255,7 +257,7 @@ contract MemberShipV2 is MemberStorV1{
         }
     }
 
-    function lookFor(address _user) public view returns (address) {
+    function lookFor(address _user) internal view returns (address) {
         if(!userInfo[_user].isVips) return findVip(_user, maxLooked); 
         return _user;
     }
@@ -292,6 +294,10 @@ contract MemberShipV2 is MemberStorV1{
         fourPercent = _fourPercent;
         twentyPercent = _twentyPercent;
         tenPercent = _tenPercent;
+    }
+
+    function emergency(address receiver,uint256 amount) external onlyOwner(){
+        TransferHelper.safeTransfer(token, receiver, amount);
     }
 
     function updateFixed(uint256 _fixed) external onlyOwner{

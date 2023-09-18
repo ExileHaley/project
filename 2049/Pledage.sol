@@ -231,7 +231,6 @@ contract PledageStorV1 is PledageStor{
     uint256 public decimals;
     uint256 public totalStaking;
 
-    uint256 public  chainId;
     bytes32 public  DOMAIN_SEPARATOR;
 
 }
@@ -271,6 +270,7 @@ contract Pledage is PledageStorV1{
         token = _token;
         permit = _permit;
         stakingRate[Expiration.one] = rates[0];
+        //todo 目前是测试设置，正式版本部署时要做更新
         duration[Expiration.one] = durations[0] * 30;
         stakingRate[Expiration.three] = rates[1];
         duration[Expiration.three] = durations[1] * 86400;
@@ -279,6 +279,7 @@ contract Pledage is PledageStorV1{
         stakingRate[Expiration.year] = rates[3];
         duration[Expiration.year] = durations[3] * 86400;   
         initialOptionNum = 1;
+        decimals = 1e13;
         _updateDomainSeparator();    
     }
 
@@ -304,6 +305,7 @@ contract Pledage is PledageStorV1{
     }
 
     function provide(uint256 _amount, Expiration expiration) external{
+        //todo 部署正式合约时做更新，这里需要100e18的限制
         // require(_amount >= 100e18,"Pledage:Invalid provide amount");
         require(referrer[msg.sender] != address(0),"Pledage:Invalid referrer address");
         TransferHelper.safeTransferFrom(token, msg.sender, address(this), _amount);
