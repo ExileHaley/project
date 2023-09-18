@@ -168,6 +168,7 @@ contract MemberShip is MemberStorV1{
         tenPercent = _tenPercent;
         fourPercent = _fourPercent;
         twentyPercent = _twentyPercent;
+        //todo 部署正式合约时更新为500e18
         fixedPrice = 15e18;
         maxLooked = 30;
     }
@@ -223,7 +224,7 @@ contract MemberShip is MemberStorV1{
 
         if(direct.isVips){
             direct.totalTeamReward = direct.totalTeamReward + (_amount * 40 / 100);
-            teamRewards[_direct].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
+            teamRewards[_direct].push(TeamReward(_user, _amount * 40 / 100, block.timestamp, Express.vips));
 
             address _degrees = direct.inviter;
             if(_degrees != address(0)){
@@ -236,7 +237,7 @@ contract MemberShip is MemberStorV1{
                 userInfo[direct.members[1]].additionalInviter = additional;
             }
         }else{
-            distribute(_user,_amount);
+            distribute(_user, _amount);
         }
     }
 
@@ -245,7 +246,7 @@ contract MemberShip is MemberStorV1{
         if(userInfo[_firstVips].isVips){
             User storage firstVips = userInfo[_firstVips];
             firstVips.totalTeamReward = firstVips.totalTeamReward + (_amount * 40 / 100);
-            teamRewards[_firstVips].push(TeamReward(_user,_amount * 40 / 100,block.timestamp,Express.vips));
+            teamRewards[_firstVips].push(TeamReward(_user, _amount * 40 / 100, block.timestamp, Express.vips));
 
             address _inviterOfFirstVips = firstVips.inviter;
             if(_inviterOfFirstVips != address(0)){
