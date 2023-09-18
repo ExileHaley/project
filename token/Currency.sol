@@ -251,7 +251,7 @@ contract Currency is ERC20{
 
     //router:0x10ED43C718714eb63d5aA57B78B54704E256024E
     //project:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
-    constructor(address _uniswapV2Router,address _project)ERC20("Test","TES"){
+    constructor(address _uniswapV2Router,address _project)ERC20("Test","TPT"){
         _mint(msg.sender,100000e18);
         admin = msg.sender;
         dead = 0x000000000000000000000000000000000000dEaD;
@@ -300,7 +300,7 @@ contract Currency is ERC20{
     }
 
 
-    function _swapAndAdd() public{
+    function _swapAndAdd() internal {
         uint256 halfAmount;
         if(luidityAmount > 0){
             halfAmount = luidityAmount / 2;
@@ -315,14 +315,14 @@ contract Currency is ERC20{
     }
 
 
-    function nonSwap(address sender,address recipient) public view returns(bool){
+    function nonSwap(address sender,address recipient) internal view returns(bool){
         bool isSale = (recipient == uniswapV2Pair);
         bool isPurs = (sender == uniswapV2Pair);
         bool isRouter = (sender == uniswapV2Router) || (recipient == uniswapV2Router);
         return isSale || isPurs || isRouter;
     }
 
-    function _swap(uint256 amount) public{
+    function _swap(uint256 amount) internal{
         _approve(address(this),uniswapV2Router, amount);
         address[] memory path = new address[](2);
         path[0] = address(this);
@@ -336,7 +336,7 @@ contract Currency is ERC20{
         );
     }
 
-    function _addLuidity(uint256 tokenAmount,uint256 usdtAmount) public{
+    function _addLuidity(uint256 tokenAmount,uint256 usdtAmount) internal{
 
         _approve(address(this),uniswapV2Router, tokenAmount);
         IERC20(usdt).approve(uniswapV2Router, usdtAmount);
