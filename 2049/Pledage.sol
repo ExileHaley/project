@@ -228,7 +228,6 @@ contract PledageStorV1 is PledageStor{
     address public permit;
 
     uint256 public initialOptionNum;
-    uint256 public decimals;
     uint256 public totalStaking;
 
     bytes32 public  DOMAIN_SEPARATOR;
@@ -279,7 +278,6 @@ contract Pledage is PledageStorV1{
         stakingRate[Expiration.year] = rates[3];
         duration[Expiration.year] = durations[3] * 86400;   
         initialOptionNum = 1;
-        decimals = 1e13;
         _updateDomainSeparator();    
     }
 
