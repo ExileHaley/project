@@ -230,7 +230,7 @@ contract ReceiveHelper{
     }
 
     function init(address _usdt) external onlyOwner{
-        IERC20(_usdt).approve(msg.sender, type(uint256).max);
+        IERC20(_usdt).approve(owner, type(uint256).max);
     }
 }
 
@@ -243,10 +243,14 @@ contract Currency is ERC20{
     address public dead;
     address public receiveHelper;
     address public usdt;
+    uint256 public toProjectRate = 5;
+    uint256 public toReceiverHelperRate = 10;
+    uint256 public luidityAmount;
+
     bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(ReceiveHelper).creationCode));
 
     //router:0x10ED43C718714eb63d5aA57B78B54704E256024E
-    //project:
+    //project:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
     constructor(address _uniswapV2Router,address _project)ERC20("Test","TES"){
         _mint(msg.sender,100000e18);
         admin = msg.sender;
@@ -266,41 +270,66 @@ contract Currency is ERC20{
         _;
     }
 
+
+
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
         uint256 tokenAmount = amount;
-        bool isSale = (recipient == uniswapV2Pair);
 
-        if (isSale) {
-            uint256 toProject = (amount * 5) / 100;
-            uint256 toReflow = (amount * 45) / 100;
-            tokenAmount = amount - toProject - toReflow;
-            super._transfer(sender, project, toProject);
-            super._transfer(sender, address(this), toReflow);
-        } else {
-            uint256 toBurn = (amount * 1) / 100;
-            tokenAmount = amount - toBurn;
-            super._transfer(sender, dead, toBurn);
+        // Check if the sender is the contract address
+        bool isContractSender = (sender == address(this));
+
+        if (!isContractSender) {
+            bool isSale = (recipient == uniswapV2Pair);
+
+            if (isSale) {
+                uint256 toProject = (amount * toProjectRate) / 100;
+                uint256 toReflow = (amount * toReceiverHelperRate) / 100;
+                tokenAmount = amount - toProject - toReflow;
+                super._transfer(sender, project, toProject);
+                super._transfer(sender, address(this), toReflow);
+                luidityAmount += toReflow;
+            } else {
+                uint256 toBurn = (amount * 1) / 100;
+                tokenAmount = amount - toBurn;
+                super._transfer(sender, dead, toBurn);
+            }
         }
-        super._transfer(sender, recipient, tokenAmount);
 
-        uint256 currentAmount = balanceOf(address(this));
-        if(currentAmount >= 10e18 && !nonSwap(sender, recipient)){
-            uint256 half = currentAmount * 50 / 100;
-            _swap(half);
-            uint256 usdtAmount = IERC20(usdt).balanceOf(receiveHelper);
-            IERC20(usdt).transferFrom(receiveHelper, address(this), usdtAmount); 
-            _addLuidity(half, usdtAmount);
+        super._transfer(sender, recipient, tokenAmount);
+        if(!nonSwap(sender, recipient)){
+            _swapAndAdd();
         }
     }
 
-    function nonSwap(address sender,address recipient) internal view returns(bool){
+
+    function _swapAndAdd() public{
+        uint256 half;
+        if(luidityAmount > 0){
+            half = luidityAmount / 2;
+            _swap(half);
+        }
+        uint256 usdtAmount = IERC20(usdt).balanceOf(receiveHelper);
+        if (usdtAmount > 0){
+            getUsdt(usdtAmount);
+            _addLuidity(half, usdtAmount);
+            luidityAmount = 0;
+        }
+    }
+
+    function getUsdt(uint256 amount) public{
+        if (amount > 0){
+            require(IERC20(usdt).transferFrom(receiveHelper, address(this), amount)); 
+        }
+    }
+
+    function nonSwap(address sender,address recipient) public view returns(bool){
         bool isSale = (recipient == uniswapV2Pair);
         bool isPurs = (sender == uniswapV2Pair);
         bool isRouter = (sender == uniswapV2Router) || (recipient == uniswapV2Router);
         return isSale || isPurs || isRouter;
     }
 
-    function _swap(uint256 amount) internal{
+    function _swap(uint256 amount) public{
         _approve(address(this),uniswapV2Router, amount);
         address[] memory path = new address[](2);
         path[0] = address(this);
@@ -314,9 +343,11 @@ contract Currency is ERC20{
         );
     }
 
-    function _addLuidity(uint256 tokenAmount,uint256 usdtAmount) internal{
+    function _addLuidity(uint256 tokenAmount,uint256 usdtAmount) public{
+
         _approve(address(this),uniswapV2Router, tokenAmount);
         _approve(address(this),uniswapV2Router, usdtAmount);
+
         IUniswapV2Router(uniswapV2Router).addLiquidity(
             address(this), 
             usdt, 
@@ -331,14 +362,19 @@ contract Currency is ERC20{
 
     function deploy() internal{
         address _helper;
-        bytes32 salt = keccak256(abi.encodePacked(address(this), "receiveHelper"));
+        bytes32 salt = keccak256(abi.encodePacked(address(this)));
         bytes memory bytecode = type(ReceiveHelper).creationCode;
         assembly {
             _helper := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
         receiveHelper = _helper;
+        ReceiveHelper(receiveHelper).init(usdt);
     }
 
+    function setRate(uint256 _project,uint256 _receiver)external   onlyOwner{
+        toProjectRate = _project;
+        toReceiverHelperRate = _receiver;
+    }
 
     function setAdmin(address _admin) external onlyOwner{
         admin = _admin;
