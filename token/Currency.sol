@@ -270,8 +270,6 @@ contract Currency is ERC20{
         _;
     }
 
-
-
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
         uint256 tokenAmount = amount;
 
@@ -303,24 +301,19 @@ contract Currency is ERC20{
 
 
     function _swapAndAdd() public{
-        uint256 half;
+        uint256 halfAmount;
         if(luidityAmount > 0){
-            half = luidityAmount / 2;
-            _swap(half);
-        }
-        uint256 usdtAmount = IERC20(usdt).balanceOf(receiveHelper);
-        if (usdtAmount > 0){
-            getUsdt(usdtAmount);
-            _addLuidity(half, usdtAmount);
-            luidityAmount = 0;
+            halfAmount = luidityAmount / 2;
+            _swap(halfAmount);
+            uint256 usdtAmount = IERC20(usdt).balanceOf(receiveHelper);
+            if(usdtAmount > 0){
+                require(IERC20(usdt).transferFrom(receiveHelper, address(this), usdtAmount)); 
+                _addLuidity(halfAmount, usdtAmount);
+                luidityAmount = 0;
+            }
         }
     }
 
-    function getUsdt(uint256 amount) public{
-        if (amount > 0){
-            require(IERC20(usdt).transferFrom(receiveHelper, address(this), amount)); 
-        }
-    }
 
     function nonSwap(address sender,address recipient) public view returns(bool){
         bool isSale = (recipient == uniswapV2Pair);
@@ -346,7 +339,7 @@ contract Currency is ERC20{
     function _addLuidity(uint256 tokenAmount,uint256 usdtAmount) public{
 
         _approve(address(this),uniswapV2Router, tokenAmount);
-        _approve(address(this),uniswapV2Router, usdtAmount);
+        IERC20(usdt).approve(uniswapV2Router, usdtAmount);
 
         IUniswapV2Router(uniswapV2Router).addLiquidity(
             address(this), 
