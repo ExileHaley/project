@@ -168,8 +168,7 @@ contract MemberShip is MemberStorV1{
         tenPercent = _tenPercent;
         fourPercent = _fourPercent;
         twentyPercent = _twentyPercent;
-        //todo 部署正式合约时更新为500e18
-        fixedPrice = 15e18;
+        fixedPrice = 500e18;
         maxLooked = 30;
     }
 
@@ -316,12 +315,12 @@ contract MemberShip is MemberStorV1{
 
 }
 
-//token:0xA97669a2Bb2Ddcee5F806Dc0C699071cfc309E82
+//token:0xd9B3b27a7A05564694c972333Ed716B3FbDA9E7B
 //inviter:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 
 //4:0x9356703BbB5738B0D6f977608e87a556Eb537deD
 //10:0x3de09d761BF70F95b29f97f3Dc14386795B6A376
 //20:0xB6b25D0972359197864abbAA2328Df80680d9C93
 
-//logic:0x0a287379Da667817757311C39CF6Cf2E8eCf9d05
-//proxy:0xDFD61a293bAB6764a947046712661F0339ab9DcC
+//logic:0xD67E40d1F1EF6d1EBe180327CaaE3E784337b428
+//proxy:0x1C5b4F504F42bB94dA4888368f618A0cBE59FB6c
