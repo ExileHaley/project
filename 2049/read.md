@@ -41,6 +41,7 @@ enum Expiration{
 struct Info{
         Option option; //上述订单信息
         uint256 income; //当前订单的可提取收益
+        uint256 total; //当前用户所有有效订单的总质押量
     }
 
 4.获取用户所有的订单信息
