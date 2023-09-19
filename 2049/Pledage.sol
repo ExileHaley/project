@@ -392,3 +392,10 @@ contract Pledage is PledageStorV1{
     }
 
 }
+
+//2049:0x33e0b24aaea62500ca79d33e26efe576bbf5bacf
+//init:0x6cBc50EE3cb957B5aD14dD1B4833B86296e77122
+//permit:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
+
+//logic:0xaAc43a24c4ce682e3Fd1B334B6374CcbDE403c9A
+//proxy:0xb5415c41b1c01a920a1F93F3f243C7befFCbCe6e
