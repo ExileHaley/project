@@ -335,6 +335,30 @@
 				"type": "address"
 			}
 		],
+		"name": "getUserInfo",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "totalIncome",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "totalStaked",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
 		"name": "getUserOptions",
 		"outputs": [
 			{
@@ -384,11 +408,6 @@
 					{
 						"internalType": "uint256",
 						"name": "income",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "staked",
 						"type": "uint256"
 					}
 				],
