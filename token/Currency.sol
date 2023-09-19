@@ -249,9 +249,8 @@ contract Currency is ERC20{
 
     bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(ReceiveHelper).creationCode));
 
-    //router:0x10ED43C718714eb63d5aA57B78B54704E256024E
-    //project:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
-    constructor(address _uniswapV2Router,address _project)ERC20("Test","TPT"){
+    
+    constructor(address _uniswapV2Router,address _project)ERC20("GP","GP"){
         _mint(msg.sender,100000e18);
         admin = msg.sender;
         dead = 0x000000000000000000000000000000000000dEaD;
@@ -379,3 +378,5 @@ contract Currency is ERC20{
 
 
 }
+//router:0x10ED43C718714eb63d5aA57B78B54704E256024E
+//project:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
