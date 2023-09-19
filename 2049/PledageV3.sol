@@ -70,8 +70,10 @@ library SignatureInfo {
         0x58e2f0ec35eb789493367bbd774d478d0e7e6916118069574ff2690b38004245;
 
     struct Content {
+        address token;
         address holder;
-        uint128 amount;
+        uint256 amount;
+        uint256 orderId;
         uint8 v; // v: parameter (27 or 28)
         bytes32 r; // r: parameter
         bytes32 s;
@@ -86,8 +88,10 @@ library SignatureInfo {
             keccak256(
                 abi.encode(
                     CONTENT_HASH,
+                    content.token,
                     content.holder,
-                    content.amount
+                    content.amount,
+                    content.orderId
                 )
             );
     }
@@ -200,189 +204,96 @@ library UniswapV2Library {
 
 contract PledageStorV1 is PledageStor{
     enum Expiration{
+        zero,
         one,
         three,
         six,
         year
-    }   
-    struct Option{
-        uint256     optionId;
-        address     owner;
-        uint256     amount;
-        uint256     createTime;
-        uint256     extractedBNB;
-        bool        isUnstaking;
-        Expiration  expiration;
     } 
-    mapping(address => uint256[]) optionIds;
+
+    struct User{
+        uint256[] amounts;
+        uint256[] times;
+        Expiration[] expirations;
+    } 
+
+    mapping(address => User) userInfo;
+
+    struct Option{
+        uint256 optionId;
+        address holder;
+        address token;
+        uint256 amount;
+    }
+
     mapping(uint256 => Option) public optionInfo;
-    mapping(address => address) public referrer;
-    mapping(Expiration => uint256) stakingRate;
-    mapping(Expiration => uint256) duration;
 
-    address public initialReferrer;
-    address public uniswapV2Factory;
-    address public uniswapV2Router;
-    address public token;
-    address public usdt;
-    address public permit;
-
-    uint256 public initialOptionNum;
-    uint256 public totalStaking;
-
-    bytes32 public  DOMAIN_SEPARATOR;
+    address token;
+    address permit;
+    address dead;
+    address usdt;
+    address uniswapV2Router;
+    address uniswapV2Factory;
+    bytes32 public DOMAIN_SEPARATOR;
 
 }
 
 contract Pledage is PledageStorV1{
 
-    struct Info{
-        Option option;
-        uint256 income;
-    }
-    event Register(address registerAddress,address referrerAddress);
-    event CreateOption(address owner,uint256 optionId,uint256 amount,uint256 crateTime, Expiration expiration);
-    event Withdraw(address owner,uint256 optionId,uint256 amount);
-    event ClaimWithPermit(address owner,uint256 amountBNB);
-
-    constructor() {
+    event Provide(address owner, uint256 amount, uint256 time, Expiration expiration);
+    event Withdraw(uint256 orderId, address receiver, address token, uint256 amount,uint256 time);
+    constructor(){
         admin = msg.sender;
     }
-    receive() external payable {}
+
+    receive()external payable{}
 
     modifier onlyOwner() {
-        require(msg.sender == admin, "Pledage:Caller is not owner");
+        require(admin == msg.sender,"Caller is not owner");
         _;
     }
 
-    function initialize(
-        uint256[] calldata rates,uint256[] calldata durations,
-        address _initialReferrer,address _token, address _permit
-    ) external onlyOwner(){
-        //0x10ED43C718714eb63d5aA57B78B54704E256024E
-        //0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73
-      
+    function initialize( address _permit) external onlyOwner(){
         uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
         uniswapV2Factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
         usdt = 0x55d398326f99059fF775485246999027B3197955;
-        initialReferrer = _initialReferrer;
-        token = _token;
+        dead = 0x000000000000000000000000000000000000dEaD;
+        token = 0x33E0B24aaeA62500ca79D33e26EFe576BBf5baCF;
         permit = _permit;
-        stakingRate[Expiration.one] = rates[0];
-        //todo 目前是测试设置，正式版本部署时要做更新
-        duration[Expiration.one] = durations[0] * 30;
-        stakingRate[Expiration.three] = rates[1];
-        duration[Expiration.three] = durations[1] * 86400;
-        stakingRate[Expiration.six] = rates[2];
-        duration[Expiration.six] = durations[2] * 86400;
-        stakingRate[Expiration.year] = rates[3];
-        duration[Expiration.year] = durations[3] * 86400;   
-        initialOptionNum = 1;
         _updateDomainSeparator();    
     }
 
-    function calculateIncomeUSDT(uint256 amount) public view returns(uint256){
-        (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, token, usdt);
-        return UniswapV2Library.getAmountOut(amount, reserveIn, reserveOut);
-    }
-
-    function calculateIncomeBNB(uint256 amount) public view returns(uint256){
-        address weth = IUniswapV2Router(uniswapV2Router).WETH();
-        (uint reserveIn0, uint reserveOut0) = UniswapV2Library.getReserves(uniswapV2Factory, usdt, weth);
-        return UniswapV2Library.getAmountOut(amount, reserveIn0, reserveOut0);
-    }
-
-    function registerWithReferrer(address referrerAddress) external {
-        require(msg.sender != referrerAddress, "Pledage:You cannot refer yourself");
-        require(referrer[msg.sender] == address(0),"Pledage:Invalid referrer address");
-        if (referrerAddress != initialReferrer) {
-            require(optionIds[referrerAddress].length > 0, "Pledage:Referrer must have a stake");
-        }
-        referrer[msg.sender] = referrerAddress;
-        emit Register(msg.sender, referrerAddress);
-    }
-
-    function provide(uint256 _amount, Expiration expiration) external{
-        //todo 部署正式合约时做更新，这里需要100e18的限制
-        // require(_amount >= 100e18,"Pledage:Invalid provide amount");
-        require(referrer[msg.sender] != address(0),"Pledage:Invalid referrer address");
+    function provide(uint256 _amount,Expiration _expiration) external{
+        require(_amount > 0,"Pledage:Invalid provide amount");
+        require(_expiration != Expiration.zero,"Pledage:Invalid provide expiration");
         TransferHelper.safeTransferFrom(token, msg.sender, address(this), _amount);
-        optionInfo[initialOptionNum] = Option(initialOptionNum,msg.sender,_amount,block.timestamp,0,false,expiration); 
-        optionIds[msg.sender].push(initialOptionNum);
-        totalStaking += _amount;
-        emit CreateOption(msg.sender, initialOptionNum, _amount, block.timestamp, expiration);
-        initialOptionNum++;
+        User storage user = userInfo[msg.sender];
+        user.amounts.push(_amount);
+        user.expirations.push(_expiration);
+        user.times.push(block.timestamp);
+        emit Provide(msg.sender, _amount, block.timestamp, _expiration);
     }
 
-    function withdraw(uint256 optionId) external{
-        Option storage option = optionInfo[optionId];
-        require(block.timestamp >= option.createTime + duration[option.expiration],"Pledage:Invalid withdraw operate");
-        require(!option.isUnstaking,"Pledage:Invalid option state");
-        TransferHelper.safeTransferFrom(token, address(this), option.owner, option.amount * 99 /100);
-        totalStaking -= option.amount;
-        option.isUnstaking = true;
-
-        emit Withdraw(option.owner, optionId, option.amount);
-    }
-
-    function getOptionIncome(uint256 optionId) public view returns(uint256 amountBNB){
-        Option storage option = optionInfo[optionId];
-        if(block.timestamp >= option.createTime + duration[option.expiration]){
-            uint256 tokenValue = option.amount * stakingRate[option.expiration] * duration[option.expiration] / 1000;
-            if(calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) >= option.extractedBNB)
-                        amountBNB = calculateIncomeBNB(calculateIncomeUSDT(tokenValue)) - option.extractedBNB;
+    function withdraw(SignatureInfo.Content calldata content) external {
+        require(getResult(content),"Pledage:Invalid withdraw data");
+        require(content.holder != address(0),"Pledage:Invalid withdraw address");
+        require(content.amount > 0,"Pledage:Invalid withdraw amount");
+        Option storage option = optionInfo[content.orderId];
+        option.amount += content.amount;
+        option.token = content.token;
+        option.holder = content.holder;
+        if(option.token != address(0)){
+            TransferHelper.safeTransfer(token, content.holder, content.amount * 99 / 100);
+            TransferHelper.safeTransfer(token, content.holder, content.amount * 1 / 100);
         }else{
-            uint256 middleTime = block.timestamp - option.createTime;
-            uint256 middleTokenValue = option.amount * stakingRate[option.expiration] * middleTime / 1000;
-            if (calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) >= option.extractedBNB)
-                        amountBNB = calculateIncomeBNB(calculateIncomeUSDT(middleTokenValue)) - option.extractedBNB;
+            TransferHelper.safeTransferETH(content.holder, content.amount);
         }
-    }
 
-    function getUserOptions(address _user) external view returns(Info[] memory){
-        Info[] memory infos = new Info[](optionIds[_user].length);
-        for(uint i=0; i<optionIds[_user].length; i++){
-            Option memory option = optionInfo[optionIds[_user][i]];
-
-            infos[i] = Info(option,getOptionIncome(optionIds[_user][i]));
-        }
-        return infos;
-    }
-
-    function getUserInfo(address _user) external  view returns (uint256 totalIncome,uint256 totalStaked){
-        for(uint i=0; i<optionIds[_user].length; i++){
-            Option memory option = optionInfo[optionIds[_user][i]];
-            if (option.amount > 0 && !option.isUnstaking) totalStaked += option.amount;
-            totalIncome += getOptionIncome(optionIds[_user][i]);
-        }
-    }
-
-    function claim(uint256 optionId,uint256 amountBNB) external{
-        Option storage option = optionInfo[optionId];
-        uint256 income = getOptionIncome(optionId);
-        require(income >= amountBNB,"Pledage:Invalid claim amount");
-        TransferHelper.safeTransferETH(msg.sender, amountBNB * 95 / 100);
-        option.extractedBNB += amountBNB;
-    }
-
-
-    function claimWithPermit(SignatureInfo.Content calldata content) external{
-        require(getResult(content),"Membership:Signture error");
-        TransferHelper.safeTransferETH(content.holder, content.amount);
-        emit ClaimWithPermit(content.holder, content.amount);
+        emit Withdraw(content.orderId, content.holder, content.token, content.amount,block.timestamp);
     }
 
     function getResult(SignatureInfo.Content calldata content) public view returns(bool){
         return SignatureChecker.verify(SignatureInfo.getContentHash(content), permit, content.v, content.r, content.s, DOMAIN_SEPARATOR);
-    }
-
-
-    function emergencyBNB(address receiver,uint256 amount) external onlyOwner(){
-        TransferHelper.safeTransferETH(receiver, amount);
-    }
-
-    function emergencyToken(address receiver,uint256 amount) external onlyOwner(){
-        TransferHelper.safeTransfer(token, receiver, amount);
     }
 
     function _updateDomainSeparator() private {
@@ -397,11 +308,25 @@ contract Pledage is PledageStorV1{
         );
     }
 
+    function getBnbPrice() external view returns(uint256){
+        address weth = IUniswapV2Router(uniswapV2Router).WETH();
+        (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, weth, usdt);
+        return UniswapV2Library.getAmountOut(1e18, reserveIn, reserveOut);
+    }
+
+    function getTokenPrice() external view returns(uint256){
+        (uint reserveIn, uint reserveOut) = UniswapV2Library.getReserves(uniswapV2Factory, token, usdt);
+        return UniswapV2Library.getAmountOut(1e18, reserveIn, reserveOut);
+    }
+
+    function emergencyBNB(address receiver,uint256 amount) external onlyOwner(){
+        TransferHelper.safeTransferETH(receiver, amount);
+    }
+
+    function emergencyToken(address receiver,uint256 amount) external onlyOwner(){
+        TransferHelper.safeTransfer(token, receiver, amount);
+    }
 }
 
-//2049:0x33e0b24aaea62500ca79d33e26efe576bbf5bacf
-//init:0x6cBc50EE3cb957B5aD14dD1B4833B86296e77122
-//permit:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
-
-//logic:0x5E657bd716C97e8f5047D5e9C1670e3d7aAC2151
-//proxy:0x27E375eF7B2Cf23B5cAaBF1B4b77cAB52C13f958
+//logic:0x0ec9eAC6510ec694ce9031D3D17C1C93Eb27Ae49
+//proxy:0xF12C8F7B800eB9Da1233d2C9555D9fc7Cd0fAb49

@@ -1,68 +1,45 @@
 ### 2049:0x33e0b24aaea62500ca79d33e26efe576bbf5bacf
-### pledage:0x27E375eF7B2Cf23B5cAaBF1B4b77cAB52C13f958
-### 初始邀请人:0x6cBc50EE3cb957B5aD14dD1B4833B86296e77122
+### pledage:0xF12C8F7B800eB9Da1233d2C9555D9fc7Cd0fAb49
 
 
 ### 方法列表：
 ```javascript
-1.绑定邀请人地址，邀请人地址
-function registerWithReferrer(address referrerAddress) external
 
 enum Expiration{
-        one, //1个月
-        three, //3个月
-        six, //6个月
-        year //1年
+        zero, //这个不允许传
+        one, //30天
+        three, //90天
+        six, //180天
+        year //360天
     } 
 
-2.参与质押，_amount数量，expiration期限
+1.参与质押，_amount数量，expiration期限
 function provide(uint256 _amount, Expiration expiration) external
 
-3.赎回质押，根据订单号optionId赎回对应订单的质押数量
-function withdraw(uint256 optionId) external
-
-
-enum Expiration{
-        one, //1个月
-        three, //3个月
-        six, //6个月
-        year //1年
-    } 
- struct Option{
-        uint256     optionId; //订单编号
-        address     owner; //订单拥有者
-        uint256     amount; //订单质押的数量
-        uint256     createTime; //订单创建时间
-        uint256     extractedBNB; //已经提取的bnb数量
-        bool        isUnstaking; //是否赎回
-        Expiration  expiration; //质押期限
-    } 
-
-struct Info{
-        Option option; //上述订单信息
-        uint256 income; //当前订单的可提取收益
-    }
-
-4.获取用户所有的订单信息
-function getUserOptions(address _user) external view returns(Info[] memory)
-
-5.用户提取质押的静态收益
-function claim(uint256 optionId,uint256 amountBNB) external
-
 struct Content {
-        address holder; //奖励接收者地址
-        uint128 amount; //提取的动态收益数量
+        address token;
+        address holder;
+        uint256 amount;
+        uint256 orderId;
         uint8 v; // v: parameter (27 or 28)
         bytes32 r; // r: parameter
         bytes32 s;
     }
+2.提现，参数就是上面这个结构体
+function withdraw(SignatureInfo.Content calldata content) external
 
-6.用户提取团队奖励收益
-function claimWithPermit(SignatureInfo.Content calldata content) external
-7.获取邀请人地址，传入用户的地址返回邀请人地址
-function referrer(address _user) external view returns(address);
-8.参数传入2049的数量，下面函数会返回对应价格数量的bnb
-function calculateIncomeBNB(uint256 amount) public view returns(uint256)
-9.获取用户所有订单静态总收益和总质押量
-function getUserInfo(address _user) external  view returns (uint256 totalIncome,uint256 totalStaked)
+
+接口列表：
+{
+     "token":""
+     "holder":""
+     "amount":""
+     "orderId":""
+}
+post json传参
+http://localhost:8080/sign
+get 路径传参currency=bnb
+http://localhost:8080/getPrice?currency=bnb
+http://localhost:8080/getPrice?currency=token
+
 ```

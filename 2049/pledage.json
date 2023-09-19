@@ -16,38 +16,13 @@
 			{
 				"indexed": false,
 				"internalType": "uint256",
-				"name": "amountBNB",
-				"type": "uint256"
-			}
-		],
-		"name": "ClaimWithPermit",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "optionId",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
 			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
-				"name": "crateTime",
+				"name": "time",
 				"type": "uint256"
 			},
 			{
@@ -57,47 +32,40 @@
 				"type": "uint8"
 			}
 		],
-		"name": "CreateOption",
+		"name": "Provide",
 		"type": "event"
 	},
 	{
 		"anonymous": false,
 		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "registerAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "referrerAddress",
-				"type": "address"
-			}
-		],
-		"name": "Register",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
-				"name": "optionId",
+				"name": "orderId",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "receiver",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "token",
+				"type": "address"
 			},
 			{
 				"indexed": false,
 				"internalType": "uint256",
 				"name": "amount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "time",
 				"type": "uint256"
 			}
 		],
@@ -128,102 +96,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "calculateIncomeBNB",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "calculateIncomeUSDT",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "optionId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amountBNB",
-				"type": "uint256"
-			}
-		],
-		"name": "claim",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"components": [
-					{
-						"internalType": "address",
-						"name": "holder",
-						"type": "address"
-					},
-					{
-						"internalType": "uint128",
-						"name": "amount",
-						"type": "uint128"
-					},
-					{
-						"internalType": "uint8",
-						"name": "v",
-						"type": "uint8"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "r",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "s",
-						"type": "bytes32"
-					}
-				],
-				"internalType": "struct SignatureInfo.Content",
-				"name": "content",
-				"type": "tuple"
-			}
-		],
-		"name": "claimWithPermit",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -263,18 +135,12 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "optionId",
-				"type": "uint256"
-			}
-		],
-		"name": "getOptionIncome",
+		"inputs": [],
+		"name": "getBnbPrice",
 		"outputs": [
 			{
 				"internalType": "uint256",
-				"name": "amountBNB",
+				"name": "",
 				"type": "uint256"
 			}
 		],
@@ -287,13 +153,23 @@
 				"components": [
 					{
 						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
 						"name": "holder",
 						"type": "address"
 					},
 					{
-						"internalType": "uint128",
+						"internalType": "uint256",
 						"name": "amount",
-						"type": "uint128"
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "orderId",
+						"type": "uint256"
 					},
 					{
 						"internalType": "uint8",
@@ -328,92 +204,13 @@
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_user",
-				"type": "address"
-			}
-		],
-		"name": "getUserInfo",
+		"inputs": [],
+		"name": "getTokenPrice",
 		"outputs": [
 			{
 				"internalType": "uint256",
-				"name": "totalIncome",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "totalStaked",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_user",
-				"type": "address"
-			}
-		],
-		"name": "getUserOptions",
-		"outputs": [
-			{
-				"components": [
-					{
-						"components": [
-							{
-								"internalType": "uint256",
-								"name": "optionId",
-								"type": "uint256"
-							},
-							{
-								"internalType": "address",
-								"name": "owner",
-								"type": "address"
-							},
-							{
-								"internalType": "uint256",
-								"name": "amount",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "createTime",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "extractedBNB",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bool",
-								"name": "isUnstaking",
-								"type": "bool"
-							},
-							{
-								"internalType": "enum PledageStorV1.Expiration",
-								"name": "expiration",
-								"type": "uint8"
-							}
-						],
-						"internalType": "struct PledageStorV1.Option",
-						"name": "option",
-						"type": "tuple"
-					},
-					{
-						"internalType": "uint256",
-						"name": "income",
-						"type": "uint256"
-					}
-				],
-				"internalType": "struct Pledage.Info[]",
 				"name": "",
-				"type": "tuple[]"
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -433,53 +230,7 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "initialOptionNum",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "initialReferrer",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"inputs": [
-			{
-				"internalType": "uint256[]",
-				"name": "rates",
-				"type": "uint256[]"
-			},
-			{
-				"internalType": "uint256[]",
-				"name": "durations",
-				"type": "uint256[]"
-			},
-			{
-				"internalType": "address",
-				"name": "_initialReferrer",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_token",
-				"type": "address"
-			},
 			{
 				"internalType": "address",
 				"name": "_permit",
@@ -508,46 +259,18 @@
 			},
 			{
 				"internalType": "address",
-				"name": "owner",
+				"name": "holder",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "token",
 				"type": "address"
 			},
 			{
 				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "createTime",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "extractedBNB",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bool",
-				"name": "isUnstaking",
-				"type": "bool"
-			},
-			{
-				"internalType": "enum PledageStorV1.Expiration",
-				"name": "expiration",
-				"type": "uint8"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "permit",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
 			}
 		],
 		"stateMutability": "view",
@@ -562,7 +285,7 @@
 			},
 			{
 				"internalType": "enum PledageStorV1.Expiration",
-				"name": "expiration",
+				"name": "_expiration",
 				"type": "uint8"
 			}
 		],
@@ -574,106 +297,46 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "referrer",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "referrerAddress",
-				"type": "address"
-			}
-		],
-		"name": "registerWithReferrer",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "token",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalStaking",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "uniswapV2Factory",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "uniswapV2Router",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "usdt",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "optionId",
-				"type": "uint256"
+				"components": [
+					{
+						"internalType": "address",
+						"name": "token",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "holder",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "orderId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint8",
+						"name": "v",
+						"type": "uint8"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "r",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "s",
+						"type": "bytes32"
+					}
+				],
+				"internalType": "struct SignatureInfo.Content",
+				"name": "content",
+				"type": "tuple"
 			}
 		],
 		"name": "withdraw",

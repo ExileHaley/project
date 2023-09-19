@@ -58,14 +58,23 @@ func main() {
 	defer ormEngine.Close()
 
 	// // 启动事件监听器
-	go eventListener.StartListening(common.HexToAddress(cfg.RPC.ContractAddress), 20*time.Second)
+	go eventListener.StartListening(common.HexToAddress(cfg.RPC.ContractAddress), 20*time.Second, 30)
 
 	app := gin.Default()
-	claimController := new(controller.ClaimController)
+
+	claimController, err := controller.SetupClaimController(cfg.RPC.URL, common.HexToAddress(cfg.RPC.ContractAddress))
+	if err != nil {
+		fmt.Println("初始化 ClaimController 失败:", err)
+		return
+	}
 
 	// Register the router with the config
-	app.POST("/signer", func(ctx *gin.Context) {
+	app.POST("/sign", func(ctx *gin.Context) {
 		claimController.SignParam(ctx, cfg)
+	})
+
+	app.GET("/getPrice", func(ctx *gin.Context) {
+		claimController.GetPrice(ctx)
 	})
 
 	//运行gin框架

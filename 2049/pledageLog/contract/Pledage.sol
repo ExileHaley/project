@@ -2,16 +2,18 @@
 
 pragma solidity ^0.8.0;
 
-contract Pledage{
+interface Pledage{
     enum Expiration{
-        Seven,
-        Fifteen,
-        Thirty,
-        Sixty
+        zero,
+        one,
+        three,
+        six,
+        year
     }
+    event Provide(address owner, uint256 amount, uint256 time, Expiration expiration);
+    event Withdraw(uint256 orderId, address receiver, address token, uint256 amount,uint256 time);
 
-    event Register(address registerAddress,address referrerAddress);
-    event CreateOption(address owner,uint256 optionId,uint256 amount,uint256 crateTime, Expiration expiration);
-    event Withdraw(address owner,uint256 optionId,uint256 amount);
-    event ClaimWithPermit(address owner,uint256 amountBNB);
+    function getBnbPrice() external view returns(uint256);
+
+    function getTokenPrice() external view returns(uint256);
 }

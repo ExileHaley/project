@@ -37,9 +37,8 @@ func NewEventListener(ethURL string, contractABI abi.ABI, dao *dao.EventDAO) (*E
 	}, nil
 }
 
-func (el *EventController) StartListening(contractAddress common.Address, pollInterval time.Duration) {
+func (el *EventController) StartListening(contractAddress common.Address, pollInterval time.Duration, blockBatchSize uint64) {
 	for {
-		// 从本地文件加载最后已处理的区块高度
 		lastProcessedBlock, err := el.loadLastProcessedBlockFromFile()
 		if err != nil {
 			fmt.Println("Error loading last processed block:", err)
@@ -47,7 +46,6 @@ func (el *EventController) StartListening(contractAddress common.Address, pollIn
 			continue
 		}
 
-		// 获取最新区块
 		latestBlock, err := el.client.BlockByNumber(context.Background(), nil)
 		if err != nil {
 			fmt.Println("Error getting latest block:", err)
@@ -55,18 +53,25 @@ func (el *EventController) StartListening(contractAddress common.Address, pollIn
 			continue
 		}
 
-		fromBlock := lastProcessedBlock + 1 // 从上次处理的下一个区块开始
+		fromBlock := lastProcessedBlock + 1
 		toBlock := latestBlock.NumberU64()
 
-		err = el.PollAndProcessLogs(contractAddress, fromBlock, toBlock)
-		if err != nil {
-			fmt.Println("Error polling and processing logs:", err)
+		for fromBlock < toBlock {
+			endBlock := fromBlock + blockBatchSize - 1
+			if endBlock > toBlock {
+				endBlock = toBlock
+			}
+
+			err = el.PollAndProcessLogs(contractAddress, fromBlock, endBlock)
+			if err != nil {
+				fmt.Printf("Error polling and processing logs for blocks %d to %d: %v\n", fromBlock, endBlock, err)
+			}
+
+			fromBlock = endBlock + 1
 		}
 
-		// 更新最后一个已处理的区块高度
 		el.lastProcessedBlock = toBlock
 
-		// 将最后已处理的区块高度写入本地文件
 		err = el.writeLastProcessedBlockToFile(el.lastProcessedBlock)
 		if err != nil {
 			fmt.Println("Error writing last processed block to file:", err)
@@ -77,18 +82,14 @@ func (el *EventController) StartListening(contractAddress common.Address, pollIn
 }
 
 func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fromBlock uint64, toBlock uint64) error {
+	fmt.Println("Event listener started.")
+	// event Provide(address owner, uint256 amount, uint256 time, Expiration expiration);
+	// event Withdraw(uint256 orderId, address receiver, address token, uint256 amount,uint256 time);
+	provideSig := []byte("Provide(address,uint256,uint256,uint8)")
+	provideSigHash := crypto.Keccak256Hash(provideSig)
 
-	registerSig := []byte("Register(address,address)")
-	registerSigHash := crypto.Keccak256Hash(registerSig)
-
-	createOptionSig := []byte("CreateOption(address,uint256,uint256,uint256,uint8)")
-	createOptionSigHash := crypto.Keccak256Hash(createOptionSig)
-
-	withdrawSig := []byte("Withdraw(address,uint256,uint256)")
-	withdrawSigHash := crypto.Keccak256Hash(withdrawSig)
-
-	claimSig := []byte("ClaimWithPermit(address,uint256)")
-	claimSigHash := crypto.Keccak256Hash(claimSig)
+	WithdrawSig := []byte("Withdraw(uint256,address,address,uint256,uint256)")
+	WithdrawSigHash := crypto.Keccak256Hash(WithdrawSig)
 
 	//组装过滤条件
 	query := ethereum.FilterQuery{
@@ -106,17 +107,13 @@ func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fr
 	// 处理事件日志
 	for _, log := range logs {
 		switch log.Topics[0].Hex() {
-		case registerSigHash.Hex():
-			el.ProcessRegisterEvent(log)
-		case createOptionSigHash.Hex():
+		case provideSigHash.Hex():
+			el.ProcessProvideEvent(log)
+			fmt.Println("走到充值数据抓取了")
+		case WithdrawSigHash.Hex():
 			// 处理 CreateOption 事件
-			el.ProcessCreateOptionEvent(log)
-		case withdrawSigHash.Hex():
-			// 处理 Withdraw 事件
 			el.ProcessWithdrawEvent(log)
-		case claimSigHash.Hex():
-			// 处理 ClaimWithPermit 事件
-			el.ProcessClaimWithPermitEvent(log)
+			fmt.Println("走到提现数据抓取了")
 		default:
 			// 未知事件类型
 			fmt.Println("Unknown event type")
@@ -127,15 +124,17 @@ func (el *EventController) PollAndProcessLogs(contractAddress common.Address, fr
 	return nil
 }
 
-// event Register(address registerAddress,address referrerAddress);
+// event Provide(address owner, uint256 amount, uint256 time, Expiration expiration);
 
-func (el *EventController) ProcessRegisterEvent(log types.Log) {
-	var registerEvent struct {
-		RegisterAddress common.Address
-		ReferrerAddress common.Address
+func (el *EventController) ProcessProvideEvent(log types.Log) {
+	var provideEvent struct {
+		Owner      common.Address
+		Amount     *big.Int
+		Time       *big.Int
+		Expiration uint8
 	}
 
-	err := el.contractABI.UnpackIntoInterface(&registerEvent, "Register", log.Data)
+	err := el.contractABI.UnpackIntoInterface(&provideEvent, "Provide", log.Data)
 	if err != nil {
 		fmt.Println("Error unpacking Register event:", err)
 		return
@@ -148,24 +147,24 @@ func (el *EventController) ProcessRegisterEvent(log types.Log) {
 	}
 
 	if !exists {
-		if err := el.dao.InsertRegisterEvent(registerEvent.RegisterAddress, registerEvent.ReferrerAddress, log.TxHash); err != nil {
+		if err := el.dao.InsertProvideEvent(provideEvent.Owner, provideEvent.Amount, provideEvent.Time, provideEvent.Expiration, log.TxHash); err != nil {
 			fmt.Println("Error inserting data into MySQL:", err)
 		}
 	}
 
 }
 
-// event CreateOption(address owner,uint256 amount,uint256 crateTime, Expiration expiration);
-func (el *EventController) ProcessCreateOptionEvent(log types.Log) {
-	// 解析 CreateOption 事件数据
-	var CreateOptionEvent struct {
-		Owner      common.Address
-		OptionId   *big.Int
-		Amount     *big.Int
-		CrateTime  *big.Int
-		Expiration uint8 // Solidity 枚举类型 "Expiration" 对应的 Go 类型为 uint8
+// event Withdraw(uint256 orderId, address receiver, address token, uint256 amount,uint256 time);
+func (el *EventController) ProcessWithdrawEvent(log types.Log) {
+	// 解析 withdraw 事件数据
+	var withdrawEvent struct {
+		OrderId  *big.Int
+		Receiver common.Address
+		Token    common.Address
+		Amount   *big.Int
+		Time     *big.Int
 	}
-	err := el.contractABI.UnpackIntoInterface(&CreateOptionEvent, "CreateOption", log.Data)
+	err := el.contractABI.UnpackIntoInterface(&withdrawEvent, "CreateOption", log.Data)
 	if err != nil {
 		fmt.Println("Error unpacking CreateOption event:", err)
 		return
@@ -181,56 +180,7 @@ func (el *EventController) ProcessCreateOptionEvent(log types.Log) {
 	// 如果不存在相同 txHash 的记录，则插入数据
 	if !exists {
 
-		if err := el.dao.InsertCreateOptionEvent(CreateOptionEvent.Owner, CreateOptionEvent.OptionId, CreateOptionEvent.Amount, CreateOptionEvent.CrateTime, CreateOptionEvent.Expiration, log.TxHash); err != nil {
-			fmt.Println("Error inserting data into MySQL:", err)
-		}
-	}
-
-}
-
-// event Withdraw(address owner,uint256 optionId,uint256 amount);
-func (el *EventController) ProcessWithdrawEvent(log types.Log) {
-	// 解析 Withdraw 事件数据
-	var event struct {
-		Owner    common.Address
-		OptionId *big.Int
-		Amount   *big.Int
-	}
-	err := el.contractABI.UnpackIntoInterface(&event, "Withdraw", log.Data)
-	if err != nil {
-		fmt.Println("Error unpacking Withdraw event:", err)
-		return
-	}
-
-	if err := el.dao.UpdateBalance(event.Owner, event.Amount); err != nil {
-		fmt.Println("Error inserting data into MySQL:", err)
-	}
-
-}
-
-// event ClaimWithPermit(address owner,uint256 amountBNB);
-func (el *EventController) ProcessClaimWithPermitEvent(log types.Log) {
-	// 解析 ClaimWithPermit 事件数据
-	var event struct {
-		Owner     common.Address
-		AmountBNB *big.Int
-	}
-	err := el.contractABI.UnpackIntoInterface(&event, "ClaimWithPermit", log.Data)
-	if err != nil {
-		fmt.Println("Error unpacking ClaimWithPermit event:", err)
-		return
-	}
-
-	// 检查 MySQL 表是否已经存在具有相同 txHash 的记录
-	exists, err := el.dao.CheckIfTxHashExistsAcrossTables(log.TxHash)
-	if err != nil {
-		fmt.Println("Error checking if txHash exists:", err)
-		return
-	}
-
-	// 如果不存在相同 txHash 的记录，则插入数据
-	if !exists {
-		if err := el.dao.InsertClaimWithPermitEvent(event.Owner, event.AmountBNB, log.TxHash); err != nil {
+		if err := el.dao.InsertWithdrawEvent(withdrawEvent.OrderId, withdrawEvent.Receiver, withdrawEvent.Token, withdrawEvent.Amount, withdrawEvent.Time, log.TxHash); err != nil {
 			fmt.Println("Error inserting data into MySQL:", err)
 		}
 	}
