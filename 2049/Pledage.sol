@@ -239,7 +239,6 @@ contract Pledage is PledageStorV1{
     struct Info{
         Option option;
         uint256 income;
-        uint256 staked;
     }
     event Register(address registerAddress,address referrerAddress);
     event CreateOption(address owner,uint256 optionId,uint256 amount,uint256 crateTime, Expiration expiration);
@@ -342,13 +341,20 @@ contract Pledage is PledageStorV1{
 
     function getUserOptions(address _user) external view returns(Info[] memory){
         Info[] memory infos = new Info[](optionIds[_user].length);
-        uint256 total;
         for(uint i=0; i<optionIds[_user].length; i++){
             Option memory option = optionInfo[optionIds[_user][i]];
-            if (!option.isUnstaking && option.amount > 0) total += option.amount;
-            infos[i] = Info(option,getOptionIncome(optionIds[_user][i]),total);
+
+            infos[i] = Info(option,getOptionIncome(optionIds[_user][i]));
         }
         return infos;
+    }
+
+    function getUserInfo(address _user) external  view returns (uint256 totalIncome,uint256 totalStaked){
+        for(uint i=0; i<optionIds[_user].length; i++){
+            Option memory option = optionInfo[optionIds[_user][i]];
+            if (option.amount > 0 && !option.isUnstaking) totalStaked += option.amount;
+            totalIncome += getOptionIncome(optionIds[_user][i]);
+        }
     }
 
     function claim(uint256 optionId,uint256 amountBNB) external{
@@ -397,5 +403,5 @@ contract Pledage is PledageStorV1{
 //init:0x6cBc50EE3cb957B5aD14dD1B4833B86296e77122
 //permit:0x7fcc706D37EDcf4EE81375D9FAe233857EEcFd45
 
-//logic:0xaAc43a24c4ce682e3Fd1B334B6374CcbDE403c9A
-//proxy:0xb5415c41b1c01a920a1F93F3f243C7befFCbCe6e
+//logic:0x5E657bd716C97e8f5047D5e9C1670e3d7aAC2151
+//proxy:0x27E375eF7B2Cf23B5cAaBF1B4b77cAB52C13f958
