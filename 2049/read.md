@@ -1,5 +1,5 @@
 ### 2049:0x33e0b24aaea62500ca79d33e26efe576bbf5bacf
-### pledage:0xb5415c41b1c01a920a1F93F3f243C7befFCbCe6e
+### pledage:0x27E375eF7B2Cf23B5cAaBF1B4b77cAB52C13f958
 ### 初始邀请人:0x6cBc50EE3cb957B5aD14dD1B4833B86296e77122
 
 
@@ -41,7 +41,6 @@ enum Expiration{
 struct Info{
         Option option; //上述订单信息
         uint256 income; //当前订单的可提取收益
-        uint256 total; //当前用户所有有效订单的总质押量
     }
 
 4.获取用户所有的订单信息
@@ -64,4 +63,6 @@ function claimWithPermit(SignatureInfo.Content calldata content) external
 function referrer(address _user) external view returns(address);
 8.参数传入2049的数量，下面函数会返回对应价格数量的bnb
 function calculateIncomeBNB(uint256 amount) public view returns(uint256)
+9.获取用户所有订单静态总收益和总质押量
+function getUserInfo(address _user) external  view returns (uint256 totalIncome,uint256 totalStaked)
 ```
