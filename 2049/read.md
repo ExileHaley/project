@@ -61,4 +61,6 @@ struct Content {
 function claimWithPermit(SignatureInfo.Content calldata content) external
 7.获取邀请人地址，传入用户的地址返回邀请人地址
 function referrer(address _user) external view returns(address);
+8.参数传入2049的数量，下面函数会返回对应价格数量的bnb
+function calculateIncomeBNB(uint256 amount) public view returns(uint256)
 ```
