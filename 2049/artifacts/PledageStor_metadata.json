@@ -1,0 +1,72 @@
+{
+	"compiler": {
+		"version": "0.8.18+commit.87f61d96"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "admin",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "implementation",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"Pledage.sol": "PledageStor"
+		},
+		"evmVersion": "paris",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"Pledage.sol": {
+			"keccak256": "0xcf5efc5340a3707bd23b61c0ecce0ee0ba79c3a7c1208b3a3c740fe9a86f3b6b",
+			"license": "GPL-3.0",
+			"urls": [
+				"bzz-raw://6de9a120786fd66ca7d62ea50630c41882103f1739cfa35e86bf7a4572e4eee2",
+				"dweb:/ipfs/QmcMD2WDaVJdx991HmViWB1NeJ6koV1GCN2bXjFoZDNKZ9"
+			]
+		}
+	},
+	"version": 1
+}

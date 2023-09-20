@@ -241,7 +241,11 @@ contract PledageStorV1 is PledageStor{
 
 }
 
-contract Pledage is PledageStorV1{
+contract PledageStorV2 is PledageStorV1{
+    mapping(uint256 => mapping (address => uint256)) public reentrant;
+}
+
+contract Pledage is PledageStorV2{
 
     event Provide(address owner, uint256 amount, uint256 time, Expiration expiration);
     event Withdraw(uint256 orderId, address receiver, address token, uint256 amount,uint256 time);
@@ -283,9 +287,11 @@ contract Pledage is PledageStorV1{
         require(content.holder != address(0),"Pledage:Invalid withdraw address");
         require(content.amount > 0,"Pledage:Invalid withdraw amount");
         Option storage option = optionInfo[content.orderId];
+        require(reentrant[option.optionId][option.holder] != option.amount,"Pledage:Repeated withdrawals");
         option.amount += content.amount;
         option.token = content.token;
         option.holder = content.holder;
+        reentrant[option.optionId][option.holder] = option.amount;
         if(option.token == token){
             TransferHelper.safeTransfer(token, content.holder, content.amount * 99 / 100);
             TransferHelper.safeTransfer(token, content.holder, content.amount * 1 / 100);
@@ -349,7 +355,7 @@ contract Pledage is PledageStorV1{
 }
 
 //permit:0xD5b300660126FeFab55BDC869DE8d1e72f37A5Bb
-//logic:0xCc8e34EA1c7947f3F660ec021D67d9C408Eff9C2
+//logic:0x8AB18a4bc12bd689F6389Ab601Dcb1DaDa2ed1CF
 //proxy:0xBb56fF2225b083f55F5c28f4ac5cC83F11608D95
 //contentHash:0xb5f106453e92c83f8ef471e09a8097b99888030beb671302e7c318e4d198c6e3
 //domain:0x668a33915259cac6b50cec3895318ec125b2ce62e635c3f01cc2cf34ea572564

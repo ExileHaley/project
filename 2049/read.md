@@ -27,6 +27,7 @@ struct Content {
         address holder;
         uint256 amount;
         uint256 orderId;
+        uint256 deadline;
         uint8 v; // v: parameter (27 or 28)
         bytes32 r; // r: parameter
         bytes32 s;
