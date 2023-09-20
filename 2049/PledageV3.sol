@@ -326,7 +326,19 @@ contract Pledage is PledageStorV1{
     function emergencyToken(address receiver,uint256 amount) external onlyOwner(){
         TransferHelper.safeTransfer(token, receiver, amount);
     }
+
+    function setAdmin(address _admin) external onlyOwner(){
+        admin = _admin;
+    }
+
+    function setPermit(address _permit) external onlyOwner(){
+        permit = _permit;
+    }
+
+    function getHash() external pure returns (bytes32){
+        return keccak256("Content(address token,address holder,uint256 amount,uint256 orderId)");
+    }
 }
 
-//logic:0x0ec9eAC6510ec694ce9031D3D17C1C93Eb27Ae49
-//proxy:0xF12C8F7B800eB9Da1233d2C9555D9fc7Cd0fAb49
+//logic:0x7952d6E45878Fa7f556455CaEd82663F2D992764
+//proxy:0x8C604c522A93fcaa86Dcf093F55236EFb1c2FE7A
