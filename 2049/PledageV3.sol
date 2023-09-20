@@ -67,7 +67,7 @@ interface IUniswapV2Pair {
 
 library SignatureInfo {
     bytes32 constant CONTENT_HASH =
-        0x58e2f0ec35eb789493367bbd774d478d0e7e6916118069574ff2690b38004245;
+        0xb5f106453e92c83f8ef471e09a8097b99888030beb671302e7c318e4d198c6e3;
 
     struct Content {
         address token;
