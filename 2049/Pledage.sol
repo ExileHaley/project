@@ -265,7 +265,7 @@ contract Pledage is PledageStorV1{
     }
 
     function provide(uint256 _amount,Expiration _expiration) external{
-        require(_amount > 0,"Pledage:Invalid provide amount");
+        require(_amount > 100e18,"Pledage:Invalid provide amount");
         require(_expiration != Expiration.zero,"Pledage:Invalid provide expiration");
         TransferHelper.safeTransferFrom(token, msg.sender, address(this), _amount);
         User storage user = userInfo[msg.sender];
