@@ -75,6 +75,7 @@ library SignatureInfo {
         address holder;
         uint256 amount;
         uint256 orderId;
+        uint256 deadline;
         uint8 v; // v: parameter (27 or 28)
         bytes32 r; // r: parameter
         bytes32 s;
@@ -92,7 +93,8 @@ library SignatureInfo {
                     content.token,
                     content.holder,
                     content.amount,
-                    content.orderId
+                    content.orderId,
+                    content.deadline
                 )
             );
     }
@@ -276,6 +278,7 @@ contract Pledage is PledageStorV1{
     }
 
     function withdraw(SignatureInfo.Content calldata content) external {
+        require(content.deadline >= block.timestamp,"Pledage:Invalid withdraw duration");
         require(getResult(content),"Pledage:Invalid withdraw data");
         require(content.holder != address(0),"Pledage:Invalid withdraw address");
         require(content.amount > 0,"Pledage:Invalid withdraw amount");
@@ -350,3 +353,4 @@ contract Pledage is PledageStorV1{
 //proxy:0xBb56fF2225b083f55F5c28f4ac5cC83F11608D95
 //contentHash:0xb5f106453e92c83f8ef471e09a8097b99888030beb671302e7c318e4d198c6e3
 //domain:0x668a33915259cac6b50cec3895318ec125b2ce62e635c3f01cc2cf34ea572564
+// ["0x0000000000000000000000000000000000000000","0xd21f10cb3bef17cd630ec0efaf74ef7935d12324",20000000000000000,28,27,"0xed1def957b72ee9518d9720bf6dfe7ded299225cd2594390e6da15db2dbcf6e6","0x48ba81eae9ee9cadebba582df514665644bff647c4b2853a997a6bf78799ace8"]
