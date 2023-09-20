@@ -286,12 +286,14 @@ contract Pledage is PledageStorV1{
         if(option.token == token){
             TransferHelper.safeTransfer(token, content.holder, content.amount * 99 / 100);
             TransferHelper.safeTransfer(token, content.holder, content.amount * 1 / 100);
+            emit Withdraw(content.orderId, content.holder, content.token, content.amount,block.timestamp);
         }
         if(option.token == address(0)){
             TransferHelper.safeTransferETH(content.holder, content.amount);
+            emit Withdraw(content.orderId, content.holder, address(0), content.amount,block.timestamp);
         }
 
-        emit Withdraw(content.orderId, content.holder, content.token, content.amount,block.timestamp);
+        
     }
 
     function getResult(SignatureInfo.Content calldata content) public view returns(bool){
@@ -344,7 +346,7 @@ contract Pledage is PledageStorV1{
 }
 
 //permit:0xD5b300660126FeFab55BDC869DE8d1e72f37A5Bb
-//logic:0x67B64591706D797578cB07214662D8786feC5d01
+//logic:0xCc8e34EA1c7947f3F660ec021D67d9C408Eff9C2
 //proxy:0xBb56fF2225b083f55F5c28f4ac5cC83F11608D95
 //contentHash:0xb5f106453e92c83f8ef471e09a8097b99888030beb671302e7c318e4d198c6e3
 //domain:0x668a33915259cac6b50cec3895318ec125b2ce62e635c3f01cc2cf34ea572564
