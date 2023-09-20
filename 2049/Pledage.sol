@@ -42,6 +42,7 @@ contract Proxy is PledageStor{
     }
 }
 
+
 interface IERC20 {
 
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -228,12 +229,12 @@ contract PledageStorV1 is PledageStor{
 
     mapping(uint256 => Option) public optionInfo;
 
-    address token;
-    address permit;
-    address dead;
-    address usdt;
-    address uniswapV2Router;
-    address uniswapV2Factory;
+    address public token;
+    address public permit;
+    address public dead;
+    address public usdt;
+    address public uniswapV2Router;
+    address public uniswapV2Factory;
     bytes32 public DOMAIN_SEPARATOR;
 
 }
@@ -282,10 +283,11 @@ contract Pledage is PledageStorV1{
         option.amount += content.amount;
         option.token = content.token;
         option.holder = content.holder;
-        if(option.token != address(0)){
+        if(option.token == token){
             TransferHelper.safeTransfer(token, content.holder, content.amount * 99 / 100);
             TransferHelper.safeTransfer(token, content.holder, content.amount * 1 / 100);
-        }else{
+        }
+        if(option.token == address(0)){
             TransferHelper.safeTransferETH(content.holder, content.amount);
         }
 
@@ -338,7 +340,11 @@ contract Pledage is PledageStorV1{
     function getHash() external pure returns (bytes32){
         return keccak256("Content(address token,address holder,uint256 amount,uint256 orderId)");
     }
+
 }
 
-//logic:0x7952d6E45878Fa7f556455CaEd82663F2D992764
-//proxy:0x8C604c522A93fcaa86Dcf093F55236EFb1c2FE7A
+//permit:0xD5b300660126FeFab55BDC869DE8d1e72f37A5Bb
+//logic:0xed27d76BAe9Ba5B4C032F53502D0b9c32FCcD27A
+//proxy:0xBb56fF2225b083f55F5c28f4ac5cC83F11608D95
+//contentHash:0xb5f106453e92c83f8ef471e09a8097b99888030beb671302e7c318e4d198c6e3
+//domain:0x668a33915259cac6b50cec3895318ec125b2ce62e635c3f01cc2cf34ea572564
