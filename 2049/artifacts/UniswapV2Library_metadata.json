@@ -33,11 +33,11 @@
 	},
 	"sources": {
 		"Pledage.sol": {
-			"keccak256": "0xcf5efc5340a3707bd23b61c0ecce0ee0ba79c3a7c1208b3a3c740fe9a86f3b6b",
+			"keccak256": "0x26bcd6693e6cc534744b64e81dae22a27ecb65f1688d945c360a81df54704b98",
 			"license": "GPL-3.0",
 			"urls": [
-				"bzz-raw://6de9a120786fd66ca7d62ea50630c41882103f1739cfa35e86bf7a4572e4eee2",
-				"dweb:/ipfs/QmcMD2WDaVJdx991HmViWB1NeJ6koV1GCN2bXjFoZDNKZ9"
+				"bzz-raw://606793c0312ca21127f3857931845446e3b7eb1be20268d64f1184ed5db1b759",
+				"dweb:/ipfs/QmTsFQjNPuaVpPc5U8gLLkfn47K1fGriw3Xt2e6GMfMWng"
 			]
 		}
 	},
