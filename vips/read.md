@@ -1,7 +1,7 @@
 
 //更新代币地址和vips地址作为正式版本
 #### deep address:0x9Df349c98dd4bB0f18FFA5aE33a5ea2F08ff1A29
-#### vips 合约地址:0x1C5b4F504F42bB94dA4888368f618A0cBE59FB6c
+#### vips 合约地址:0x148126Cd99f719f21eeb10bcd77d847127FEcbD9
 #### 初始邀请地址:0x9828624b952b41f2A5742681E3F4A1A312cb6Dd4
 #### vips abi:同级目录下membership.json
 
