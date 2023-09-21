@@ -32,24 +32,18 @@ struct Content {
 2.提现，参数就是上面这个结构体
 function withdraw(SignatureInfo.Content calldata content) external
 
-
-接口列表：
-{
-     "token":""
-     "holder":""
-     "amount":""
-     "orderId":""
-}
 post json传参
 {
     "token":"0x33e0b24aaea62500ca79d33e26efe576bbf5bacf",
     "holder":"0x33e0b24aaea62500ca79d33e26efe576bbf5bacf",
     "amount":"100000000000",
-    "orderId":"1"
+    "orderId":"1",
+    "deadline":"162922332"
 }
-http://localhost:8080/sign
-get 路径传参currency=bnb
-http://localhost:8080/getPrice?currency=bnb
-http://localhost:8080/getPrice?currency=token
+传参格式如上
+1.http://localhost:8080/sign
+2.get方式请求 路径传参currency=bnb
+- http://localhost:8080/getPrice?currency=bnb
+- http://localhost:8080/getPrice?currency=token
 
 ```
