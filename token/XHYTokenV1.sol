@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at BscScan.com on 2023-10-09
-*/
-
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/ERC20.sol)
 
@@ -243,7 +239,8 @@ contract XHY is ERC20{
     address public uniswapV2Pair;
     address public uniswapV2Router; 
     address public project;
-    address public receiveHelper;
+    address public rewardHelper;
+    address public flowHelper;
     address public usdt;
     address public pool;
     uint256 public rewardFee;
@@ -256,7 +253,7 @@ contract XHY is ERC20{
     uint256 internal  currentIndex;
 
     constructor(address _uniswapV2Router,address[] memory infos)ERC20("XT","XT"){
-        _mint(infos[0],1000000e18);
+        _mint(infos[0],210000e18);
         admin = msg.sender;
         project = infos[1];
         pool = infos[2];
@@ -266,7 +263,10 @@ contract XHY is ERC20{
             usdt,
             address(this)
         );
-        deploy();
+        rewardHelper = deploy("reward");
+        ReceiveHelper(rewardHelper).init(usdt);
+        flowHelper = deploy("flow");
+        ReceiveHelper(flowHelper).init(usdt);
     }
 
     modifier onlyOwner() {
@@ -299,15 +299,13 @@ contract XHY is ERC20{
             super._transfer(sender, recipient, amount * 97 / 100);
         }
 
-
-
         if(!interaction){
             if (flowFee >= minFlowValue && rewardFee < minRewardValue){
                 uint256 halfAmount = flowFee / 2;
-                _swapTokenForUSDT(halfAmount);
-                uint256 usdtAmount = IERC20(usdt).balanceOf(receiveHelper);
+                _swapTokenForUSDT(halfAmount,flowHelper);
+                uint256 usdtAmount = IERC20(usdt).balanceOf(flowHelper);
                 if(usdtAmount > 0){
-                    require(IERC20(usdt).transferFrom(receiveHelper, address(this), usdtAmount)); 
+                    require(IERC20(usdt).transferFrom(flowHelper, address(this), usdtAmount)); 
                     _addLuidity(halfAmount, usdtAmount);
                     flowFee = 0;
                 }
@@ -315,7 +313,11 @@ contract XHY is ERC20{
         }
 
         if(!interaction){
-             processReward(50000);
+            if(rewardFee >= minRewardValue){
+                _swapTokenForUSDT(rewardFee,rewardHelper);
+                rewardFee = 0;
+            }
+            processReward(50000);
         }
         
         if (IERC20(uniswapV2Pair).balanceOf(sender) > 0) addHolder(sender);
@@ -325,7 +327,7 @@ contract XHY is ERC20{
 
     }
 
-    function _swapTokenForUSDT(uint256 amount)internal{
+    function _swapTokenForUSDT(uint256 amount,address receiver)internal{
         _approve(address(this),uniswapV2Router, amount);
         address[] memory path = new address[](2);
         path[0] = address(this);
@@ -334,7 +336,7 @@ contract XHY is ERC20{
             amount, 
             0, 
             path, 
-            receiveHelper, 
+            receiver, 
             block.timestamp + 10
         );
     }
@@ -357,8 +359,8 @@ contract XHY is ERC20{
     }
 
     function processReward(uint256 gas) private {
-
-        if (rewardFee < minRewardValue) {
+        uint256 balance = IERC20(usdt).balanceOf(rewardHelper);
+        if (balance == 0) {
             return;
         }
         
@@ -370,6 +372,7 @@ contract XHY is ERC20{
         uint256 gasUsed = 0;
         uint256 iterations = 0;
         uint256 gasLeft = gasleft();
+        balance = IERC20(usdt).balanceOf(rewardHelper);
         while (gasUsed < gas && iterations < shareholderCount) {
             if (currentIndex >= shareholderCount) {
                 currentIndex = 0;
@@ -377,10 +380,9 @@ contract XHY is ERC20{
             shareHolder = holders[currentIndex];
             tokenBalance = IERC20(uniswapV2Pair).balanceOf(shareHolder);
             if (tokenBalance > 0) {
-                amount = (rewardFee * tokenBalance) / totalLP;
-                if (amount > 0 && rewardFee > amount) {
-                    super._transfer(address(this),shareHolder,amount);
-                    rewardFee -= amount;
+                amount = (balance * tokenBalance) / totalLP;
+                if (amount > 0 && address(this).balance > amount) {
+                    require(IERC20(usdt).transferFrom(rewardHelper, shareHolder, amount),"ERC20:Reward transferFrom failed");
                 }
             }
             gasUsed = gasUsed + (gasLeft - gasleft());
@@ -388,7 +390,9 @@ contract XHY is ERC20{
             currentIndex++;
             iterations++;
         }
-    }    
+    }
+
+
     function addHolder(address user) private  {
         uint256 size;
         assembly {
@@ -420,21 +424,19 @@ contract XHY is ERC20{
         delete holderIndex[user];
     }
 
-    function deploy() internal{
-        address _helper;
-        bytes32 salt = keccak256(abi.encodePacked(address(this)));
+    function deploy(string memory domain) internal returns(address _helper){
+        bytes32 salt = keccak256(abi.encodePacked(address(this),domain));
         bytes memory bytecode = type(ReceiveHelper).creationCode;
         assembly {
             _helper := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        receiveHelper = _helper;
-        ReceiveHelper(receiveHelper).init(usdt);
     }
 
     function claim(address to) external onlyOwner{
-        super._transfer(address(this), to, balanceOf(address(this)));
-        flowFee = 0;
-        rewardFee = 0;
+        uint256 _reward = IERC20(usdt).balanceOf(rewardHelper);
+        uint256 _flow = IERC20(usdt).balanceOf(flowHelper);
+        if(_reward > 0) require(IERC20(usdt).transferFrom(rewardHelper, to, _reward),"ERC20:Owner operate failed");
+        if(_flow > 0) require(IERC20(usdt).transferFrom(flowHelper, to, _flow),"ERC20:Owner operate failed");
     }
 
     function setMinValue(uint256 _reward,uint256 _flow) external onlyOwner{
@@ -443,3 +445,7 @@ contract XHY is ERC20{
     }
 
 }
+
+//router:0x10ED43C718714eb63d5aA57B78B54704E256024E
+//["0xb515d0D01FC3A118E2671c569Fc3A908eb1ae931","0x6798d6E1B00C8C9dA0c31CC0bA479cF3eD273F55","0xC5c97ec929bdca02E9153C3290ce485Bd6741e13"]
+//000000000000000000
