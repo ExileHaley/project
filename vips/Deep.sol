@@ -198,14 +198,10 @@ contract Deep is ERC20{
     address public owner;
     address public uniswapV2Pair;
     address public slippage;
-    //pool:0x8ec899BB8C6a5E140F546d6fcc83958b193dB09E
-    //ido:0x3EbdF8338C6B77Bbf40Aba777F9fB7cC7f3628e2
-    //devFund:0xC69D7E1F4c8FFa068b5f92fFaB60dFF5D578776E
-    //tech:0x3847faFFc561bb68EA69d245e325b31F69D436eA
-    //foundation:0x2945f6957C110C75C44AE9B94EAe96Bb227E8486
-    //charitable:0x094C142116a88ee251A6A1Ef54f13058E26A9Ece
-    //dead:0x000000000000000000000000000000000000dEaD
-//["0x8ec899BB8C6a5E140F546d6fcc83958b193dB09E","0x3EbdF8338C6B77Bbf40Aba777F9fB7cC7f3628e2","0xC69D7E1F4c8FFa068b5f92fFaB60dFF5D578776E","0x3847faFFc561bb68EA69d245e325b31F69D436eA","0x2945f6957C110C75C44AE9B94EAe96Bb227E8486","0x094C142116a88ee251A6A1Ef54f13058E26A9Ece","0x000000000000000000000000000000000000dEaD"]
+    uint256 public openTime;
+    mapping(address => bool) public whitelist;
+
+//["0xb54f31Ebf2e9181a2CBe6569a66f3DD8Db37F1ec","0x88e8A872DEC82e4797fcE4D34Fd292c3dC34F6D3","0x0098D5a3f97E2B036C5B92D55cBFc2EEc83e5647","0x26c1e99284434ecC14ca2F0c7Bf442622fc957b8","0x6fDcE78a8d71634C7E1547df78C3bCE4FA56dfFb","0x92ecfbDCBe5a417Ff663c49927830eb2Bd46959c","0x000000000000000000000000000000000000dEaD"]
     //router:0x10ED43C718714eb63d5aA57B78B54704E256024E
     //usdt:0x55d398326f99059fF775485246999027B3197955
     //slippage:0x4fe0Da085b5DDB4F85a540e5fCE3D73D8Aecd95E
@@ -217,13 +213,21 @@ contract Deep is ERC20{
     ) ERC20("Deep", "DEEP"){
         uint256 amount = 1000000000000e18;
         _mint(addrs[0], amount * 30 / 100);
+        whitelist[addrs[0]] = true;
         _mint(addrs[1], amount * 5 / 100);
+        whitelist[addrs[1]] = true;
         _mint(addrs[2], amount * 5 / 100);
+        whitelist[addrs[2]] = true;
         _mint(addrs[3], amount * 5 / 100);
+        whitelist[addrs[3]] = true;
         _mint(addrs[4], amount * 4 / 100);
+        whitelist[addrs[4]] = true;
         _mint(addrs[5], amount * 1 / 100);
+        whitelist[addrs[5]] = true;
         _mint(addrs[6], amount * 50 / 100);
+        whitelist[addrs[6]] = true;
         uniswapV2Pair = IUniswapV2Factory(IUniswapV2Router(_router).factory()).createPair(_usdt,address(this));
+        openTime = block.timestamp + 86400;
         slippage = _slippage;
         owner = msg.sender;
     }
@@ -235,9 +239,9 @@ contract Deep is ERC20{
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
         bool isSellOrPurchase = recipient == uniswapV2Pair || sender == uniswapV2Pair;
-
         uint256 feeAmount = amount * 3 / 100;
         if (isSellOrPurchase) {
+            if(sender == uniswapV2Pair && !whitelist[recipient])  require(block.timestamp >= openTime,"ERC20:Not started yet");
             super._transfer(sender, slippage, feeAmount);
             amount -= feeAmount;
         }
@@ -246,6 +250,14 @@ contract Deep is ERC20{
 
     function setSlippage(address _slippage) public onlyOwner {
         slippage = _slippage;
+    }
+
+    function setWhitelist(address to, bool isWhite) external onlyOwner{
+        whitelist[to] = isWhite;
+    }
+
+    function setOpenTime(uint256 time) external onlyOwner{
+        openTime = time;
     }
 
     function setOwner(address _owner) external onlyOwner{
