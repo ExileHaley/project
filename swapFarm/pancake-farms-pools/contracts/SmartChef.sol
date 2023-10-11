@@ -33,7 +33,7 @@ contract SmartChef is Ownable, ReentrancyGuard {
     // CAKE tokens created per block.
     uint256 public rewardPerBlock;
 
-    // The precision factor
+    // The precision factor 精度
     uint256 public PRECISION_FACTOR;
 
     // The reward token
