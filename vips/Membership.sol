@@ -144,6 +144,7 @@ contract MemberStorV1 is MemberStor{
     address   public fourPercent;
     uint256   public fixedPrice;
     uint8     public maxLooked;
+    bool      public isDiscount;
 }
 
 
@@ -202,10 +203,10 @@ contract MemberShip is MemberStorV1{
         uint256 reward = _amount * 66 / 100;
         uint256 toTwenty = _amount * 20 / 100;
         uint256 toTen = _amount * 10 / 100;
-
+        
+        if(!isDiscount) TransferHelper.safeTransferFrom(token, _user, tenPercent, toTen);
         TransferHelper.safeTransferFrom(token, _user, address(this), reward);
         TransferHelper.safeTransferFrom(token, _user, twentyPercent, toTwenty);
-        TransferHelper.safeTransferFrom(token, _user, tenPercent, toTen);
         TransferHelper.safeTransferFrom(token, _user, fourPercent, _amount - reward - toTwenty - toTen);  
         updateInviter(_user,_amount);
         user.isVip = true;
@@ -312,6 +313,10 @@ contract MemberShip is MemberStorV1{
         admin = _admin;
     }
 
+    function setDiscount(bool _discount) external onlyOwner{
+        isDiscount = _discount;
+    }
+
 
 }
 
@@ -323,7 +328,11 @@ contract MemberShip is MemberStorV1{
 //10:0x3de09d761BF70F95b29f97f3Dc14386795B6A376
 //20:0xB6b25D0972359197864abbAA2328Df80680d9C93
 
+//old
 //logic:0xaee7cA4Bf8932ABaFe3ceB7ed28fbdb5d1611B7d
 //proxy:0x3eedE8bFa2B15aC8EaF060FF2bCfa6d8d54b6CEe
 
+//new
+//logic:0x9Bf278611D089deBB0587221aDA2f2d0F58A899f
+//proxy:0x8620d34EED90b869Ae4a0B837e25C7a860d6baF0
 
