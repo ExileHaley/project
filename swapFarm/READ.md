@@ -1,8 +1,0 @@
-WETH:0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
-router:
-fatory:
-
-
-挖矿合约地址:0x73feaa1eE314F8c655E354234017bE2193C9E24E
-部署合约地址:
-查看pancake文档查找对应的地址查看部署情况
