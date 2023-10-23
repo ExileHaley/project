@@ -13,5 +13,22 @@ function provide() external
 function getUserIncome(address _user) public view returns(uint256 _income)
 4.lt提现，_user用户地址，_amount要提现的数量，数量根据上述getUserIncome获取
 function withdraw(address _user,uint256 _amount) external
+5.获取当前用户的邀请记录
+struct Record{
+        address beInvited;
+        uint256 time;
+}
+//返回结果是热records数组
+function getUserInviteRecords(address _user) external view returns (Record[] memory)
+6.获取用户详情
+struct User{
+        bool    whetherStaking; //是否参与质押
+        uint256 stakingTime; //质押时间，这个可以不展示
+        uint256 inviterNum; //邀请人数
+        address inviter; //当前地址的推荐人地址
+        uint256 income; //这个忽略
+    }
+//返回结果是上述结构体
+function userInfo(address _user)external view returns(User memory)
 
 ```

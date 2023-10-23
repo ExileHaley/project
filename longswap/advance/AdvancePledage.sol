@@ -111,6 +111,10 @@ contract AdvancePledage is AdvanceV1{
         stakingBase = _stakingBase;
     }
 
+    function getUserInviteRecords(address _user) external view returns (Record[] memory){
+        return recordInfos[_user];
+    }
+
     function bind(address _inviter) external{
         if (_inviter != initialInviter) require(userInfo[_inviter].whetherStaking != false,"Not eligible for invitation");
         User storage user = userInfo[msg.sender];
@@ -157,7 +161,7 @@ contract AdvancePledage is AdvanceV1{
     }
 }
 
-//logic:0x17d146a8CDC8A8EefcceC1bcb23B0452A2288dc6
+//logic:0x4253617E8CC45bdE7F888371EB5B11609B6668bc
 //proxy:0x7eA65FcefFED446F452799d93654A921B8905D02
 
 //long:0xfc8774321ee4586af183baca95a8793530056353
