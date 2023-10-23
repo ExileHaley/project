@@ -18,7 +18,7 @@ struct Record{
         address beInvited;
         uint256 time;
 }
-//返回结果是热records数组
+//返回结果是records数组
 function getUserInviteRecords(address _user) external view returns (Record[] memory)
 6.获取用户详情
 struct User{
