@@ -697,7 +697,7 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
+                hex'f4dee42dd278f3f8d9eee646a5d7efad8405b7b621381f50d11b6b2dfece7dfe' // init code hash
             ))));
     }
 
@@ -783,7 +783,13 @@ library TransferHelper {
     }
 }
 
-// Arg [0] : _factory (address): 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f
-// Arg [1] : _WETH (address): 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
-// Yes with 999999 runs
-// istanbul EvmVersion, GNU GPLv3 license
+
+
+//weth:0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
+//factory:0xCAB63d343b615e2f6e28629E03F1ce6621e05870
+//router:0x2DDca661339CDa020786Ad14916aFa3E1e039011
+//multicall:0x464f4784c9d2911DF6986e195F01dcFE93f3CE95
+//init_code:0xf4dee42dd278f3f8d9eee646a5d7efad8405b7b621381f50d11b6b2dfece7dfe
+
+//longToken:
+//sy

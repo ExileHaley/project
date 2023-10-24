@@ -79,9 +79,10 @@ contract AdvanceV1 is Advance{
     mapping(address => User) public userInfo;
     address public stakingToken;
     address public earningToken;
-    address public initialInviter;
+    address public dead;
     uint256 public baseRate;
     uint256 public stakingBase;
+
 }
 
 contract AdvancePledage is AdvanceV1{
@@ -94,9 +95,9 @@ contract AdvancePledage is AdvanceV1{
         _;
     }
 
-    function initialize(address _staking,address _initial) external onlyAdmin(){
+    function initialize(address _staking) external onlyAdmin(){
+        dead = 0x000000000000000000000000000000000000dEaD;
         stakingToken = _staking;
-        initialInviter = _initial;
         baseRate = 10e18;
         stakingBase = 1e17;
     }
@@ -116,7 +117,6 @@ contract AdvancePledage is AdvanceV1{
     }
 
     function bind(address _inviter) external{
-        if (_inviter != initialInviter) require(userInfo[_inviter].whetherStaking != false,"Not eligible for invitation");
         User storage user = userInfo[msg.sender];
         require(user.inviter == address(0),"Duplicate binding is not allowed");
         user.inviter = _inviter;
@@ -126,7 +126,7 @@ contract AdvancePledage is AdvanceV1{
         User storage user = userInfo[msg.sender];
         require(user.inviter != address(0),"Invalid inviter address");
         require(user.whetherStaking != true,"Duplicate staking is not allowed");
-        TransferHelper.safeTransferFrom(stakingToken, msg.sender, address(this), stakingBase);
+        TransferHelper.safeTransferFrom(stakingToken, msg.sender, dead, stakingBase);
         user.whetherStaking = true;
         user.stakingTime = block.timestamp;
         updateSuperior(msg.sender);
@@ -148,7 +148,8 @@ contract AdvancePledage is AdvanceV1{
     function getUserIncome(address _user) public view returns(uint256 _income){
         User memory user = userInfo[_user];
         if(user.whetherStaking != false){
-            _income = (block.timestamp - user.stakingTime) * (baseRate / 86400) *(user.inviterNum + 1) + user.income;
+            uint256 addBaseRate = baseRate + user.inviterNum;
+            _income = (block.timestamp - user.stakingTime) * (addBaseRate / 86400) + user.income;
         }
     }
 
@@ -157,7 +158,7 @@ contract AdvancePledage is AdvanceV1{
         require(_income >= _amount, "Invalid withdraw amount");
         updateIncome(_user);
         userInfo[_user].income -= _amount;
-        // TransferHelper.safeTransfer(earningToken, _user, _amount);
+        TransferHelper.safeTransfer(earningToken, _user, _amount);
     }
 }
 
