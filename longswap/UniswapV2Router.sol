@@ -697,7 +697,7 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'f4dee42dd278f3f8d9eee646a5d7efad8405b7b621381f50d11b6b2dfece7dfe' // init code hash
+                hex'488e20a0f427aded8af569dd4bb2df1f6a91dc1edd5522a683ebcba7c5c49827' // init code hash
             ))));
     }
 
@@ -786,10 +786,11 @@ library TransferHelper {
 
 
 //weth:0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
-//factory:0xCAB63d343b615e2f6e28629E03F1ce6621e05870
-//router:0x2DDca661339CDa020786Ad14916aFa3E1e039011
+//factory:0x1C4Fb0c9367a458F83A82D8413Fb3a1E7aae18c7
+//router:0x407050bA8b1B3926a98f3B792eaF719be944ddE2
 //multicall:0x464f4784c9d2911DF6986e195F01dcFE93f3CE95
-//init_code:0xf4dee42dd278f3f8d9eee646a5d7efad8405b7b621381f50d11b6b2dfece7dfe
+//init_code:0x488e20a0f427aded8af569dd4bb2df1f6a91dc1edd5522a683ebcba7c5c49827
 
-//longToken:
-//sy
+//longToken:0xEcA5d6c2B0dA11C42A4d9Cd9A24711e470a28F1B
+//SyrupBar:0x7Ad95995cF7693976798F1631a6a678ff8Ec3032
+//MasterChef:0xAc3F97F3b86a63ea4F14663d2Bd550cC3f96cF09

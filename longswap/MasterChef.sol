@@ -935,7 +935,7 @@ contract BEP20 is Context, IBEP20, Ownable {
 }
 
 // CakeToken with Governance.
-contract CakeToken is BEP20('Longswap Token', 'LT') {
+contract LongToken is BEP20('Longswap Token', 'LT') {
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
@@ -1187,22 +1187,22 @@ contract SyrupBar is BEP20('SyrupBar Token', 'SYRUP') {
     }
 
     // The CAKE TOKEN!
-    CakeToken public cake;
+    LongToken public long;
 
 
     constructor(
-        CakeToken _cake
+        LongToken _long
     ) public {
-        cake = _cake;
+        long = _long;
     }
 
     // Safe cake transfer function, just in case if rounding error causes pool to not have enough CAKEs.
     function safeCakeTransfer(address _to, uint256 _amount) public onlyOwner {
-        uint256 cakeBal = cake.balanceOf(address(this));
+        uint256 cakeBal = long.balanceOf(address(this));
         if (_amount > cakeBal) {
-            cake.transfer(_to, cakeBal);
+            long.transfer(_to, cakeBal);
         } else {
-            cake.transfer(_to, _amount);
+            long.transfer(_to, _amount);
         }
     }
 
@@ -1488,7 +1488,7 @@ contract MasterChef is Ownable {
     }
 
     // The CAKE TOKEN!
-    CakeToken public cake;
+    LongToken public cake;
     // The SYRUP TOKEN!
     SyrupBar public syrup;
     // Dev address.
@@ -1514,7 +1514,7 @@ contract MasterChef is Ownable {
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
 
     constructor(
-        CakeToken _cake,
+        LongToken _cake,
         SyrupBar _syrup,
         address _devaddr,
         uint256 _cakePerBlock,
