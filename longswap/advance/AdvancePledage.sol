@@ -112,6 +112,13 @@ contract AdvancePledage is AdvanceStorageV1{
         stakingBase = _stakingBase;
     }
 
+    function emergency(address token,address to) external  onlyAdmin(){
+         (bool success,bytes memory data) = token.staticcall(abi.encodeWithSelector(0x70a08231,address(this)));
+        require(success,"Recharge: failed to get balance.");
+        uint256 amount = abi.decode(data, (uint256));
+        if(amount > 0) TransferHelper.safeTransfer(token, to, amount);
+    }
+
     function getUserInviteRecords(address _user) external view returns (Record[] memory){
         return recordInfos[_user];
     }
@@ -160,7 +167,11 @@ contract AdvancePledage is AdvanceStorageV1{
         userInfo[_user].income -= _amount;
         // TransferHelper.safeTransfer(earningToken, _user, _amount);
     }
+
+
 }
+
+
 
 //logic:0x42E7C74B14331d8CcBa66EB49ba2C9BbCf0CB5f2
 //proxy:0x13683d942700561bd2d002d992A5B74405404090
