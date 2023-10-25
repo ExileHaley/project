@@ -3,12 +3,12 @@
 pragma solidity ^0.8.0;
 
 
-contract Advance{
+contract AdvanceStorage{
     address public admin;
     address public implementation;
 }
 
-contract Proxy is Advance{
+contract Proxy is AdvanceStorage{
     receive() external payable {}
     constructor() {
         admin = msg.sender;
@@ -60,7 +60,7 @@ library TransferHelper {
     }
 }
 
-contract AdvanceV1 is Advance{
+contract AdvanceStorageV1 is AdvanceStorage{
 
     struct Record{
         address beInvited;
@@ -85,7 +85,7 @@ contract AdvanceV1 is Advance{
 
 }
 
-contract AdvancePledage is AdvanceV1{
+contract AdvancePledage is AdvanceStorageV1{
     constructor(){
         admin = msg.sender;
     }
@@ -148,7 +148,7 @@ contract AdvancePledage is AdvanceV1{
     function getUserIncome(address _user) public view returns(uint256 _income){
         User memory user = userInfo[_user];
         if(user.whetherStaking != false){
-            uint256 addBaseRate = baseRate + user.inviterNum;
+            uint256 addBaseRate = baseRate + user.inviterNum * 1e18;
             _income = (block.timestamp - user.stakingTime) * (addBaseRate / 86400) + user.income;
         }
     }
@@ -158,12 +158,12 @@ contract AdvancePledage is AdvanceV1{
         require(_income >= _amount, "Invalid withdraw amount");
         updateIncome(_user);
         userInfo[_user].income -= _amount;
-        TransferHelper.safeTransfer(earningToken, _user, _amount);
+        // TransferHelper.safeTransfer(earningToken, _user, _amount);
     }
 }
 
-//logic:0x4253617E8CC45bdE7F888371EB5B11609B6668bc
-//proxy:0x7eA65FcefFED446F452799d93654A921B8905D02
+//logic:0x42E7C74B14331d8CcBa66EB49ba2C9BbCf0CB5f2
+//proxy:0x13683d942700561bd2d002d992A5B74405404090
 
 //long:0xfc8774321ee4586af183baca95a8793530056353
 //init:0x7E0134FE4992D9A3ad519164C5AFF691112b7bd2
