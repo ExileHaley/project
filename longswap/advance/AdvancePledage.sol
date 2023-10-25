@@ -165,16 +165,21 @@ contract AdvancePledage is AdvanceStorageV1{
         require(_income >= _amount, "Invalid withdraw amount");
         updateIncome(_user);
         userInfo[_user].income -= _amount;
-        // TransferHelper.safeTransfer(earningToken, _user, _amount);
+        TransferHelper.safeTransfer(earningToken, _user, _amount);
     }
 
 
 }
 
 
-
+//test version
 //logic:0x42E7C74B14331d8CcBa66EB49ba2C9BbCf0CB5f2
 //proxy:0x13683d942700561bd2d002d992A5B74405404090
+
+
+//online version
+//logic:0x2Ce4EdcfC3Ce7D6f9151bd5d706A4A520d0E8a2e
+//proxy:0x6757d5E4C081bFEC63C7A1761B576555Ff2068d0
 
 //long:0xfc8774321ee4586af183baca95a8793530056353
 //init:0x7E0134FE4992D9A3ad519164C5AFF691112b7bd2
