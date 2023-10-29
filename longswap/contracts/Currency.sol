@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
+
 library SafeMath {
 
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -411,12 +412,85 @@ interface IUniswapV2Router {
         address to,
         uint deadline
     ) external returns (uint amountA, uint amountB, uint liquidity);
+
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 }
 
 
-contract LongToken is BEP20('Longswap Token', 'LT') {
+contract LongToken is BEP20('Longswap Token', 'LT0') {
+    address public marketing;
+    address public reflow;
     address public uniswapV2Router;
     address public uniswapV2Pair;
+    address public admin;
+    bool    public feeOn;
+    address public dead;
+    // uint256 public heap;
+    mapping (address => bool) public whitelist;
+
+// 接收地址 0xDa3F3fb73F460F59C943aB62137180E65537120F
+// 营销钱包 0x66bfDA4288c9416b3211CA172A3D15A8B0089Bfb
+// LP钱包 0xeC5bA5423DA2Ed44B7B954f5c4CEb4d444f717Fe 
+
+// 白名单地址 
+// 0xDa3F3fb73F460F59C943aB62137180E65537120F
+// 0x66bfDA4288c9416b3211CA172A3D15A8B0089Bfb
+// 0xeC5bA5423DA2Ed44B7B954f5c4CEb4d444f717Fe
+// 0xF19629D4059BBe9B3fC665b03cd454746676082c
+// 0x4017DF1a4cd246a6be00662BCb182F07222d7Db9
+// 3%手续费钱包
+// 0x8E5aF38D8ad8064dD4a30C89563F554d24793Ea6
+
+
+//router:0x407050bA8b1B3926a98f3B792eaF719be944ddE2
+//["0xDa3F3fb73F460F59C943aB62137180E65537120F","0x66bfDA4288c9416b3211CA172A3D15A8B0089Bfb","0xeC5bA5423DA2Ed44B7B954f5c4CEb4d444f717Fe","0xF19629D4059BBe9B3fC665b03cd454746676082c","0x4017DF1a4cd246a6be00662BCb182F07222d7Db9"]
+
+    constructor(address _router,address[] memory users)public {
+        _mint(users[0], 150000000e18);
+        // TODO test
+        _mint(msg.sender, 100000e18);
+        marketing = users[1];
+        reflow = users[2];
+        admin = msg.sender;
+        uniswapV2Router = _router;
+        dead = 0x000000000000000000000000000000000000dEaD;
+        feeOn = true;
+        for (uint i=0; i<users.length; i++){
+            whitelist[users[i]] = true;
+        }
+        uniswapV2Pair = IUniswapV2Factory(IUniswapV2Router(uniswapV2Router).factory()).createPair(
+            address(this),
+            IUniswapV2Router(uniswapV2Router).WETH()
+        );
+    }
+
+    receive() external payable{}
+
+    modifier onlyAdmin(){
+        require(admin == msg.sender,"Caller is not owner");
+        _;
+    }
+
+    function setAdmin(address _admin) external  onlyAdmin{
+        admin = _admin;
+    }
+
+    function setFee(bool _feeOn) external  onlyAdmin{
+        feeOn = _feeOn;
+    }
+
+    function setReceiver(address _marketing,address _reflow) external onlyAdmin{
+        marketing = _marketing;
+        reflow = _reflow;
+    }
+
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
@@ -429,7 +503,6 @@ contract LongToken is BEP20('Longswap Token', 'LT') {
     // Which is copied and modified from COMPOUND:
     // https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/Comp.sol
 
-  
     mapping (address => address) internal _delegates;
 
     /// @notice A checkpoint for marking number of votes from a given block
@@ -468,8 +541,66 @@ contract LongToken is BEP20('Longswap Token', 'LT') {
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
+        bool isPair = (sender == uniswapV2Pair) || (recipient == uniswapV2Pair);
+        bool isRouter = (sender == uniswapV2Router) || (recipient == uniswapV2Router);
+        bool isWhite = whitelist[sender] || whitelist[recipient];
+        uint256 fee;
         
+        if (isPair && !isWhite && feeOn && sender != address(this)){
+            uint256 fee0 = amount * 2 / 100;
+            uint256 fee1 = amount  * 1 / 100;
+            if (sender == uniswapV2Pair){
+                super._transfer(sender, marketing, fee0);
+                super._transfer(sender, dead, fee0 + fee1);
+            }else {
+                super._transfer(sender, address(this), fee0);
+                super._transfer(sender, marketing, fee0);
+                super._transfer(sender, dead, fee1);
+            }
+            fee = fee0 * 2 + fee1; 
+        }
+        super._transfer(sender, recipient, amount - fee);
+        
+
+        uint256 _toFlow = balanceOf(address(this));
+        if (!isPair && !isRouter && _toFlow> 0) {
+            uint256 half = _toFlow / 2;
+            _swapTokenForBNB(half, address(this));
+            uint256 balance = address(this).balance;
+            _addLuidity(half,balance);
+        }
     }
+
+
+    function _swapTokenForBNB(uint256 amount,address receiver)internal{
+        _approve(address(this),uniswapV2Router, amount);
+        address[] memory path = new address[](2);
+        path[0] = address(this);
+        path[1] = IUniswapV2Router(uniswapV2Router).WETH();
+        IUniswapV2Router(uniswapV2Router).swapExactTokensForETHSupportingFeeOnTransferTokens(
+            amount, 
+            0, 
+            path, 
+            receiver, 
+            block.timestamp + 10
+        );
+    }
+
+    function _addLuidity(uint256 amount,uint256 balance) internal{
+
+        _approve(address(this),uniswapV2Router, amount);
+        IUniswapV2Router(uniswapV2Router).addLiquidityETH{value:balance}(
+            address(this),
+            amount,
+            0,
+            0,
+            reflow,
+            block.timestamp + 5
+        );
+
+    }
+
+
 
     function delegate(address delegatee) external {
         return _delegate(msg.sender, delegatee);
