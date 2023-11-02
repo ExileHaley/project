@@ -68,7 +68,7 @@ contract AdvanceStorageV1 is AdvanceStorage{
     }
 
     struct User{
-        bool    whetherStaking;
+        uint256 amount;
         uint256 stakingTime;
         uint256 inviterNum;
         address inviter;
@@ -81,8 +81,6 @@ contract AdvanceStorageV1 is AdvanceStorage{
     address public earningToken;
     address public dead;
     uint256 public baseRate;
-    uint256 public stakingBase;
-
 }
 
 contract AdvancePledage is AdvanceStorageV1{
@@ -98,8 +96,7 @@ contract AdvancePledage is AdvanceStorageV1{
     function initialize(address _staking) external onlyAdmin(){
         dead = 0x000000000000000000000000000000000000dEaD;
         stakingToken = _staking;
-        baseRate = 10e18;
-        stakingBase = 1e17;
+        baseRate = 10;
     }
 
     function setAddress(address _staking,address _earning) external onlyAdmin(){
@@ -107,9 +104,8 @@ contract AdvancePledage is AdvanceStorageV1{
         earningToken = _earning;
     }
 
-    function setBase(uint256 _baseRate,uint256 _stakingBase) external onlyAdmin(){
+    function setBase(uint256 _baseRate) external onlyAdmin(){
         baseRate = _baseRate;
-        stakingBase = _stakingBase;
     }
 
     function emergency(address token,address to) external  onlyAdmin(){
@@ -129,12 +125,13 @@ contract AdvancePledage is AdvanceStorageV1{
         user.inviter = _inviter;
     }
 
-    function provide() external {
+    function provide(uint256 amount) external{
         User storage user = userInfo[msg.sender];
         require(user.inviter != address(0),"Invalid inviter address");
-        require(user.whetherStaking != true,"Duplicate staking is not allowed");
-        TransferHelper.safeTransferFrom(stakingToken, msg.sender, dead, stakingBase);
-        user.whetherStaking = true;
+        require(amount >= 1e17 && user.amount + amount <= 10e18,"Invalid provide amount");
+        TransferHelper.safeTransferFrom(stakingToken, msg.sender, dead, amount);
+        user.income = getUserIncome(msg.sender);
+        user.amount += amount;
         user.stakingTime = block.timestamp;
         updateSuperior(msg.sender);
     }
@@ -146,16 +143,16 @@ contract AdvancePledage is AdvanceStorageV1{
         userInfo[user.inviter].inviterNum++;
     }
 
-    function updateIncome(address _upper) internal {
-        uint256 _income = getUserIncome(_upper);
-        userInfo[_upper].income = _income;
-        userInfo[_upper].stakingTime = block.timestamp;
+    function updateIncome(address _user) internal {
+        uint256 _income = getUserIncome(_user);
+        userInfo[_user].income = _income;
+        userInfo[_user].stakingTime = block.timestamp;
     }
 
     function getUserIncome(address _user) public view returns(uint256 _income){
         User memory user = userInfo[_user];
-        if(user.whetherStaking != false){
-            uint256 addBaseRate = baseRate + user.inviterNum * 1e18;
+        if(user.amount > 0){
+            uint256 addBaseRate = (user.amount * baseRate) + user.inviterNum * 1e18;
             _income = (block.timestamp - user.stakingTime) * (addBaseRate / 86400) + user.income;
         }
     }
