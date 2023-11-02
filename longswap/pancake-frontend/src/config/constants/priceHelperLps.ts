@@ -9,6 +9,13 @@ const priceHelperLps: SerializedFarmConfig[] = [
    * Prices are then fetched for all farms (masterchef + priceHelperLps).
    * Before storing to redux, farms without a PID are filtered out.
    */
+  /**
+   * 这些 LP 仅用于帮助计算 MasterChef LP (farms.ts) 的价格。
+   * 该列表被添加到 MasterChefLps 并传递到 fetchFarm。仍然会调用获取有关 LP 中 token/quoteToken 的合约信息。
+   * 缺少 PID 意味着该农场将跳过 masterchef 合约调用。
+   * 然后获取所有农场的价格（masterchef + PriceHelperLps）。
+   * 在存储到 redux 之前，没有 PID 的农场会被过滤掉。
+   */
   {
     pid: null,
     lpSymbol: 'QSD-BNB LP',

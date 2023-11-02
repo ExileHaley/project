@@ -434,6 +434,8 @@ contract LongToken is BEP20('Longswap Token', 'LT0') {
     address public dead;
     // uint256 public heap;
     mapping (address => bool) public whitelist;
+    mapping (address => bool) public blacklist;
+    uint256 public startBlock;
 
 // 接收地址 0xDa3F3fb73F460F59C943aB62137180E65537120F
 // 营销钱包 0x66bfDA4288c9416b3211CA172A3D15A8B0089Bfb
@@ -454,7 +456,6 @@ contract LongToken is BEP20('Longswap Token', 'LT0') {
 
     constructor(address _router,address[] memory users)public {
         _mint(users[0], 150000000e18);
-        // TODO test
         _mint(msg.sender, 100000e18);
         marketing = users[1];
         reflow = users[2];
@@ -462,6 +463,7 @@ contract LongToken is BEP20('Longswap Token', 'LT0') {
         uniswapV2Router = _router;
         dead = 0x000000000000000000000000000000000000dEaD;
         feeOn = true;
+        whitelist[address(this)] = true;
         for (uint i=0; i<users.length; i++){
             whitelist[users[i]] = true;
         }
@@ -540,18 +542,21 @@ contract LongToken is BEP20('Longswap Token', 'LT0') {
         return _delegates[delegator];
     }
 
+
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
+        require(!blacklist[sender],"ERC20:Not allowed");
+        if(startBlock == 0 && IBEP20(uniswapV2Pair).totalSupply() > 0) startBlock = block.number;
         bool isPair = (sender == uniswapV2Pair) || (recipient == uniswapV2Pair);
         bool isRouter = (sender == uniswapV2Router) || (recipient == uniswapV2Router);
         bool isWhite = whitelist[sender] || whitelist[recipient];
         uint256 fee;
-        
-        if (isPair && !isWhite && feeOn && sender != address(this)){
+        if (isPair && !isWhite && feeOn){
             uint256 fee0 = amount * 2 / 100;
             uint256 fee1 = amount  * 1 / 100;
             if (sender == uniswapV2Pair){
                 super._transfer(sender, marketing, fee0);
                 super._transfer(sender, dead, fee0 + fee1);
+                if(startBlock + 30 > block.number && !whitelist[recipient] && recipient != uniswapV2Router) blacklist[recipient] = true;
             }else {
                 super._transfer(sender, address(this), fee0);
                 super._transfer(sender, marketing, fee0);
@@ -569,6 +574,7 @@ contract LongToken is BEP20('Longswap Token', 'LT0') {
             uint256 balance = address(this).balance;
             _addLuidity(half,balance);
         }
+
     }
 
 
@@ -995,3 +1001,4 @@ contract SyrupBar is BEP20('SyrupBar Token', 'SYRUP') {
         return chainId;
     }
 }
+

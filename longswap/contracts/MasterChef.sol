@@ -384,3 +384,9 @@ contract MasterChef is Ownable {
 // Arg [4] : _startBlock (uint256): 703820
 
 //Yes with 5000 runs
+
+//请将syup和lt的owner转移给masterchef
+
+//long token:0x7d8B9dca9F312ACE9DBe0D82511336e9cb656E73
+//syrup:0xA252bdAb5AD7151c7a5674d856e6fE3821BDC884
+//masterChef:0x39115497A1B717479547B71c6Dbc432014d9De98
