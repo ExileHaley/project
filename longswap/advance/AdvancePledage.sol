@@ -136,6 +136,7 @@ contract AdvancePledage is AdvanceStorageV1{
 
     function bind(address _inviter) external{
         User storage user = userInfo[msg.sender];
+        if(getIsMapping(msg.sender)) require(user.isMap,"Please complete data mapping first");
         require(user.inviter == address(0),"Duplicate binding is not allowed");
         user.inviter = _inviter;
     }
@@ -218,4 +219,4 @@ contract AdvancePledage is AdvanceStorageV1{
 //long:0xfc8774321ee4586af183baca95a8793530056353
 //before:0x6757d5E4C081bFEC63C7A1761B576555Ff2068d0
 //proxy:0xfC0475CbF48f4754AC2b3F44CCF3d9F14590913c
-//logic:0x3496BDBD57C79917bD6E58FFB3F161cC01c47eaC
+//logic:0xB27D4A6A6F9f4933E78C298c62249c9CE1ccfbfB
