@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0
+/// SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
 
@@ -80,14 +80,6 @@ contract AdvanceStorageV1 is AdvanceStorage{
         bool    isMap;
     }
 
-    struct UserRecord{
-        bool    whetherStaking;
-        uint256 stakingTime;
-        uint256 inviterNum;
-        address inviter;
-        uint256 income;
-    }
-
     mapping(address => Record[]) public recordInfos;
     mapping(address => User) public userInfo;
     address public stakingToken;
@@ -96,6 +88,8 @@ contract AdvanceStorageV1 is AdvanceStorage{
     address public dead;
     uint256 public baseRate;
 }
+
+
 
 contract AdvancePledage is AdvanceStorageV1{
     constructor(){
@@ -151,14 +145,18 @@ contract AdvancePledage is AdvanceStorageV1{
     function execute(address _user) external {
         User storage user = userInfo[_user];
         if(getIsMapping(_user)) {
-            (bool staking,uint256 time,uint256 num,address inv,uint256 income) = IPledage(beforePledage).userInfo(_user);
-            if(staking) {
-                user.amount += 1e17;
-                user.stakingTime = time;
+            (bool whetherStaking,uint256 time,uint256 num,address inv,uint256 income) = IPledage(beforePledage).userInfo(_user);
+            if(whetherStaking) {
+                user.amount = 1e17;
             }
+            user.stakingTime = time;
             user.inviterNum += num;
             user.inviter = inv;
             user.income = income;
+            Record[] memory records = AdvancePledage(beforePledage).getUserInviteRecords(_user);
+            for (uint i=0; i<records.length; i++){
+                recordInfos[_user].push(records[i]);
+            }
             user.isMap = true;
         }
 
@@ -218,5 +216,5 @@ contract AdvancePledage is AdvanceStorageV1{
 //new online version
 //long:0xfc8774321ee4586af183baca95a8793530056353
 //before:0x6757d5E4C081bFEC63C7A1761B576555Ff2068d0
-//proxy:0xfC0475CbF48f4754AC2b3F44CCF3d9F14590913c
-//logic:0xB27D4A6A6F9f4933E78C298c62249c9CE1ccfbfB
+//proxy:0x5d25eAc9dB260975a5eE10089A640DD96261A4E0
+//logic:0x9fE87dD95d6E76CF63741627836BC41c44FE781E
