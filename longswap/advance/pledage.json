@@ -31,6 +31,19 @@
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "beforePledage",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -85,6 +98,38 @@
 		"name": "emergency",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
+		"name": "execute",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_user",
+				"type": "address"
+			}
+		],
+		"name": "getIsMapping",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "isMap",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -155,6 +200,11 @@
 			{
 				"internalType": "address",
 				"name": "_staking",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "_before",
 				"type": "address"
 			}
 		],
@@ -283,6 +333,11 @@
 				"internalType": "uint256",
 				"name": "income",
 				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isMap",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
