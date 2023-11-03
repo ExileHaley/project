@@ -432,7 +432,7 @@ contract LongToken is BEP20('Longswap Token', 'LT0') {
     address public admin;
     bool    public feeOn;
     address public dead;
-    // uint256 public heap;
+
     mapping (address => bool) public whitelist;
     mapping (address => bool) public blacklist;
     uint256 public startBlock;
@@ -440,7 +440,6 @@ contract LongToken is BEP20('Longswap Token', 'LT0') {
 // 接收地址 0xDa3F3fb73F460F59C943aB62137180E65537120F
 // 营销钱包 0x66bfDA4288c9416b3211CA172A3D15A8B0089Bfb
 // LP钱包 0xeC5bA5423DA2Ed44B7B954f5c4CEb4d444f717Fe 
-
 // 白名单地址 
 // 0xDa3F3fb73F460F59C943aB62137180E65537120F
 // 0x66bfDA4288c9416b3211CA172A3D15A8B0089Bfb
@@ -450,13 +449,12 @@ contract LongToken is BEP20('Longswap Token', 'LT0') {
 // 3%手续费钱包
 // 0x8E5aF38D8ad8064dD4a30C89563F554d24793Ea6
 
-
 //router:0x407050bA8b1B3926a98f3B792eaF719be944ddE2
 //["0xDa3F3fb73F460F59C943aB62137180E65537120F","0x66bfDA4288c9416b3211CA172A3D15A8B0089Bfb","0xeC5bA5423DA2Ed44B7B954f5c4CEb4d444f717Fe","0xF19629D4059BBe9B3fC665b03cd454746676082c","0x4017DF1a4cd246a6be00662BCb182F07222d7Db9"]
 
     constructor(address _router,address[] memory users)public {
-        _mint(users[0], 150000000e18);
-        _mint(msg.sender, 100000e18);
+        mint(users[0], 150000000e18);
+        mint(msg.sender, 100000e18);
         marketing = users[1];
         reflow = users[2];
         admin = msg.sender;
