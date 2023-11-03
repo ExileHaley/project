@@ -1,5 +1,5 @@
 
-### pledage contract:0xcE77b3b936EBb881CF73781094B5B9B2A7D089A4
+### pledage contract:0xfC0475CbF48f4754AC2b3F44CCF3d9F14590913c
 ### long token:0xfc8774321ee4586af183baca95a8793530056353
 
 
@@ -31,5 +31,12 @@ struct User{
     }
 //返回结果是上述结构体
 function userInfo(address _user)external view returns(User memory)
+//判断当前用户是否需要进行映射，true标识需要映射，false则不需要
+function getIsMapping(address _user) public view returns(bool isMap)
+//执行映射，需要映射
+function execute(address _user) external
+
+
+注：请更新质押合约地址，另外判断如果需要映射，弹窗强行让用户进行映射，映射完成才可以参与其他的
 
 ```
