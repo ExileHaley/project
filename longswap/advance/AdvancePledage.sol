@@ -96,7 +96,7 @@ contract AdvancePledage is AdvanceStorageV1{
     function initialize(address _staking) external onlyAdmin(){
         dead = 0x000000000000000000000000000000000000dEaD;
         stakingToken = _staking;
-        baseRate = 10;
+        baseRate = 100;
     }
 
     function setAddress(address _staking,address _earning) external onlyAdmin(){
@@ -184,3 +184,7 @@ contract AdvancePledage is AdvanceStorageV1{
 //new version
 //proxy:0xcE77b3b936EBb881CF73781094B5B9B2A7D089A4
 //logic:0xd800E376CE4Db7Eb1CeDA01F77419288c5FaA733
+
+//end version
+//logic:0xd09023A03c5d4062e65A7F93D3B334A46C8bEb0f
+//proxy:0x9C4a84cF4a96578C7Db919CCE33f8222faf1d41d
