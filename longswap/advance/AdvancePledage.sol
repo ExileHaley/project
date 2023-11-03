@@ -60,6 +60,10 @@ library TransferHelper {
     }
 }
 
+interface IPledage {
+    function userInfo(address _user) external view returns(bool staking,uint256 time,uint256 num,address inv,uint256 income);
+}
+
 contract AdvanceStorageV1 is AdvanceStorage{
 
     struct Record{
@@ -73,12 +77,22 @@ contract AdvanceStorageV1 is AdvanceStorage{
         uint256 inviterNum;
         address inviter;
         uint256 income;
+        bool    isMap;
+    }
+
+    struct UserRecord{
+        bool    whetherStaking;
+        uint256 stakingTime;
+        uint256 inviterNum;
+        address inviter;
+        uint256 income;
     }
 
     mapping(address => Record[]) public recordInfos;
     mapping(address => User) public userInfo;
     address public stakingToken;
     address public earningToken;
+    address public beforePledage;
     address public dead;
     uint256 public baseRate;
 }
@@ -93,10 +107,11 @@ contract AdvancePledage is AdvanceStorageV1{
         _;
     }
 
-    function initialize(address _staking) external onlyAdmin(){
+    function initialize(address _staking,address _before) external onlyAdmin(){
         dead = 0x000000000000000000000000000000000000dEaD;
         stakingToken = _staking;
-        baseRate = 100;
+        beforePledage = _before;
+        baseRate = 10;
     }
 
     function setAddress(address _staking,address _earning) external onlyAdmin(){
@@ -125,8 +140,32 @@ contract AdvancePledage is AdvanceStorageV1{
         user.inviter = _inviter;
     }
 
+    function getIsMapping(address _user) public view returns(bool isMap){
+       (bool staking,,uint256 num,address inv,) = IPledage(beforePledage).userInfo(_user);
+       bool contion = staking || num > 0 || inv != address(0);
+       User memory user = userInfo[_user];
+       if (contion && !user.isMap) isMap = true;
+    }
+
+    function execute(address _user) external {
+        User storage user = userInfo[_user];
+        if(getIsMapping(_user)) {
+            (bool staking,uint256 time,uint256 num,address inv,uint256 income) = IPledage(beforePledage).userInfo(_user);
+            if(staking) {
+                user.amount += 1e17;
+                user.stakingTime = time;
+            }
+            user.inviterNum += num;
+            user.inviter = inv;
+            user.income = income;
+            user.isMap = true;
+        }
+
+    }
+
     function provide(uint256 amount) external{
         User storage user = userInfo[msg.sender];
+        if(getIsMapping(msg.sender)) require(user.isMap,"Please complete data mapping first");
         require(user.inviter != address(0),"Invalid inviter address");
         require(amount >= 1e17 && user.amount + amount <= 10e18,"Invalid provide amount");
         TransferHelper.safeTransferFrom(stakingToken, msg.sender, dead, amount);
@@ -169,22 +208,14 @@ contract AdvancePledage is AdvanceStorageV1{
 }
 
 
-//test version
-//logic:0x42E7C74B14331d8CcBa66EB49ba2C9BbCf0CB5f2
-//proxy:0x13683d942700561bd2d002d992A5B74405404090
-
-
 //online version
 //logic:0x2Ce4EdcfC3Ce7D6f9151bd5d706A4A520d0E8a2e
 //proxy:0x6757d5E4C081bFEC63C7A1761B576555Ff2068d0
-
 //long:0xfc8774321ee4586af183baca95a8793530056353
-//init:0x7E0134FE4992D9A3ad519164C5AFF691112b7bd2
 
-//new version
-//proxy:0xcE77b3b936EBb881CF73781094B5B9B2A7D089A4
-//logic:0xd800E376CE4Db7Eb1CeDA01F77419288c5FaA733
 
-//end version
-//logic:0xd09023A03c5d4062e65A7F93D3B334A46C8bEb0f
-//proxy:0x9C4a84cF4a96578C7Db919CCE33f8222faf1d41d
+//new online version
+//long:0xfc8774321ee4586af183baca95a8793530056353
+//before:0x6757d5E4C081bFEC63C7A1761B576555Ff2068d0
+//proxy:0xfC0475CbF48f4754AC2b3F44CCF3d9F14590913c
+//logic:0x3496BDBD57C79917bD6E58FFB3F161cC01c47eaC
