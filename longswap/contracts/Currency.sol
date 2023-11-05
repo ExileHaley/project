@@ -430,12 +430,12 @@ contract LongToken is BEP20('Long Token', 'LT1') {
     address public uniswapV2Router;
     address public uniswapV2Pair;
     address public admin;
-    bool    public feeOn;
+    bool    public feeTo;
     address public dead;
-
+    address public syrup;
     mapping (address => bool) public whitelist;
     mapping (address => bool) public blacklist;
-    uint256 public startBlock;
+    uint256 public openBlock;
 
 // 接收地址 0xDa3F3fb73F460F59C943aB62137180E65537120F
 // 营销钱包 0x66bfDA4288c9416b3211CA172A3D15A8B0089Bfb
@@ -460,7 +460,7 @@ contract LongToken is BEP20('Long Token', 'LT1') {
         admin = msg.sender;
         uniswapV2Router = _router;
         dead = 0x000000000000000000000000000000000000dEaD;
-        feeOn = true;
+        feeTo = true;
         whitelist[address(this)] = true;
         for (uint i=0; i<users.length; i++){
             whitelist[users[i]] = true;
@@ -482,13 +482,17 @@ contract LongToken is BEP20('Long Token', 'LT1') {
         admin = _admin;
     }
 
-    function setFee(bool _feeOn) external  onlyAdmin{
-        feeOn = _feeOn;
+    function setFee(bool _feeTo) external  onlyAdmin{
+        feeTo = _feeTo;
     }
 
     function setReceiver(address _marketing,address _reflow) external onlyAdmin{
         marketing = _marketing;
         reflow = _reflow;
+    }
+
+    function setSyrupAddress(address _syrup) external  onlyAdmin{
+        syrup = _syrup;
     }
 
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
@@ -543,18 +547,18 @@ contract LongToken is BEP20('Long Token', 'LT1') {
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
         require(!blacklist[sender],"ERC20:Not allowed");
-        if(startBlock == 0 && IBEP20(uniswapV2Pair).totalSupply() > 0) startBlock = block.number;
+        if(openBlock == 0 && IBEP20(uniswapV2Pair).totalSupply() > 0) openBlock = block.number;
         bool isPair = (sender == uniswapV2Pair) || (recipient == uniswapV2Pair);
         bool isRouter = (sender == uniswapV2Router) || (recipient == uniswapV2Router);
         bool isWhite = whitelist[sender] || whitelist[recipient];
         uint256 fee;
-        if (isPair && !isWhite && feeOn){
+        if (isPair && !isWhite && feeTo){
             uint256 fee0 = amount * 2 / 100;
             uint256 fee1 = amount  * 1 / 100;
             if (sender == uniswapV2Pair){
                 super._transfer(sender, marketing, fee0);
                 super._transfer(sender, dead, fee0 + fee1);
-                if(startBlock + 30 > block.number && !whitelist[recipient] && recipient != uniswapV2Router) blacklist[recipient] = true;
+                if(openBlock + 30 > block.number && !whitelist[recipient] && recipient != uniswapV2Router) blacklist[recipient] = true;
             }else {
                 super._transfer(sender, address(this), fee0);
                 super._transfer(sender, marketing, fee0);
@@ -563,10 +567,10 @@ contract LongToken is BEP20('Long Token', 'LT1') {
             fee = fee0 * 2 + fee1; 
         }
         super._transfer(sender, recipient, amount - fee);
-        
-
         uint256 _toFlow = balanceOf(address(this));
-        if (!isPair && !isRouter && _toFlow> 0) {
+        bool isFlow = !isPair && !isRouter && (_toFlow > 0) && sender != syrup && feeTo;
+        
+        if (isFlow) {
             uint256 half = _toFlow / 2;
             _swapTokenForBNB(half, address(this));
             uint256 balance = address(this).balance;
