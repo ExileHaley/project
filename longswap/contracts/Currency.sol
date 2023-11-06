@@ -424,7 +424,7 @@ interface IUniswapV2Router {
 }
 
 
-contract LongToken is BEP20('Long Token', 'LT8') {
+contract LongToken is BEP20('Long Token', 'LT4') {
     address public marketing;
     address public reflow;
     address public uniswapV2Router;
