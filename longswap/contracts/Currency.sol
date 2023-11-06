@@ -591,9 +591,6 @@ contract LongToken is BEP20('Long Token', 'LT8') {
         isReflow = !pair && !router && (_toFlow > 0) && feeTo && sender != syrup;
     }
 
-    function testBlacklist(address addr,bool black) external onlyAdmin{
-        blacklist[addr] = black;
-    }
 
     function _swapTokenForBNB(uint256 amount,address receiver)internal{
         _approve(address(this),uniswapV2Router, amount);
