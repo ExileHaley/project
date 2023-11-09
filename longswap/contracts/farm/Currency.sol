@@ -424,7 +424,7 @@ interface IUniswapV2Router {
 }
 
 
-contract LongToken is BEP20('Long Token', 'LT4') {
+contract LongToken is BEP20('Long Token', 'LT5') {
     address public marketing;
     address public reflow;
     address public uniswapV2Router;
@@ -557,18 +557,21 @@ contract LongToken is BEP20('Long Token', 'LT4') {
                 super._transfer(sender, dead, fee0 + fee1);
                 if(whetherSetBlacklist(recipient)) blacklist[recipient] = true;
             }else {
-                super._transfer(sender, address(this), fee0);
-                super._transfer(sender, marketing, fee0);
+                super._transfer(sender, address(this), fee0 * 2);
                 super._transfer(sender, dead, fee1);
             }
             fee = fee0 * 2 + fee1; 
         }
         super._transfer(sender, recipient, amount - fee);
+
          
         if (whetherReflow(sender,recipient)){
-            uint256 half = balanceOf(address(this)) / 2;
-            _swapTokenForBNB(half, address(this));
-            uint256 balance = address(this).balance;
+            uint256 onehalf = balanceOf(address(this)) * 75 / 100;
+            _swapTokenForBNB(onehalf, address(this));
+            uint256 half = onehalf / 75 * 25;
+            uint256 balance = address(this).balance * 25 / 100;
+            uint256 balanceToMarketing = balance / 25 * 50;
+            payable(marketing).transfer(balanceToMarketing);
             _addLuidity(half,balance);
         }
 
@@ -1015,3 +1018,6 @@ contract SyrupBar is BEP20('SyrupBar Token', 'SYRUP') {
 }
 
 
+//long test:0x42FF0fa7B5F42460b94A18bAf8b0e4eAee7bC44E
+
+//0x5B38Da6a701c568545dCfcB03FcB875f56beddC4
