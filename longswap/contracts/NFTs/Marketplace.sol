@@ -1,7 +1,47 @@
-// SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v5.0.0) (token/ERC721/ERC721.sol)
+// SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
+
+
+abstract contract Storage{
+    address public admin;
+    address public implementation;
+}
+
+contract Proxy is Storage{
+    receive() external payable {}
+    constructor() {
+        admin = msg.sender;
+    }
+
+    modifier onlyOwner(){
+        require(admin == msg.sender,"Proxy:Caller is not owner");
+        _;
+    }
+
+    function _updateAdmin(address _admin) public onlyOwner{
+        admin = _admin;
+    }
+
+    function setImplementation(address newImplementation) public onlyOwner{  
+        implementation = newImplementation;
+    }
+
+    fallback() payable external {
+        // delegate all other functions to current implementation
+        (bool success, ) = implementation.delegatecall(msg.data);
+
+        assembly {
+              let free_mem_ptr := mload(0x40)
+              returndatacopy(free_mem_ptr, 0, returndatasize())
+
+              switch success
+              case 0 { revert(free_mem_ptr, returndatasize()) }
+              default { return(free_mem_ptr, returndatasize()) }
+        }
+    }
+}
+
 
 interface IERC721 {
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
@@ -37,8 +77,8 @@ library TransferHelper {
     }
 }
 
-contract Marketplace{
-    enum State{
+contract StorageV1 is Storage{
+     enum State{
         sold,
         sellIn,
         cancelled
@@ -68,22 +108,35 @@ contract Marketplace{
 
     mapping(address => bool) public supported;
     address public nfts;
-    address public owner;
     address dead;
     uint256 public feeRate = 50;
     uint256 public initNum = 1;
+}
+
+
+
+contract Marketplace is StorageV1{
+   
 
     event Create(uint256 optionId, address holder, address payment, uint256 tokenId, uint256 price);
     event Operate(uint256 optionId, address operator, uint256 tokenId);
 
     constructor(){
-        owner = msg.sender;
-        dead = 0x000000000000000000000000000000000000dEaD;
+        admin = msg.sender;
     }
 
     modifier onlyOwner() {
-        require(owner == msg.sender,"Caller is not owner");
+        require(admin == msg.sender,"Caller is not owner");
         _;
+    }
+
+    function initialize(address _nfts,address _long,address _lt) external onlyOwner(){
+        nfts = _nfts;
+        dead = 0x000000000000000000000000000000000000dEaD;
+        initNum = 1;
+        feeRate = 50;
+        supported[_long] = true;
+        supported[_lt] = true;
     }
 
     function setFeeRate(uint256 _feeRate) external onlyOwner{
@@ -98,9 +151,6 @@ contract Marketplace{
         supported[token] = isSupport;
     }
 
-    function setOwner(address _owner) external onlyOwner{
-        owner = _owner;
-    }
 
     function createOption(uint256 tokenId, address payment,uint256 price) external {
         require(price > 0, "Invalid price params.");
@@ -151,7 +201,6 @@ contract Marketplace{
         }
     }
 
-
     function getOptions() external view returns(Option[] memory){
         return options;
     }
@@ -166,3 +215,6 @@ contract Marketplace{
 
 
 }
+
+//market:0xbde1dA26e5B8F3724668A446692d4029DeCb8012
+//proxy:0x1fdeecC40f5A2B3d2F0DCA8E00393cb5e48819f4

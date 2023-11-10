@@ -524,6 +524,10 @@ contract Long is ERC721{
         _;
     }
 
+    function getUserHoldInfo(address user) external view returns(uint256[] memory){
+        return holdInfo[user];
+    }
+
     function setBaseURI(string calldata _uri) external onlyOwner{
         uri = _uri;
     }
@@ -551,10 +555,10 @@ contract Long is ERC721{
     }
 
     function _update(address to, uint256 tokenId, address auth) internal virtual override returns (address) {
-        address from = ownerOf(tokenId);
-        _removeHoldInfo(from, tokenId);
         _addHoldInfo(to, tokenId);
-        return super._update(to,tokenId,auth);
+        address from = super._update(to,tokenId,auth);
+        if (from != address(0)) _removeHoldInfo(from, tokenId);
+        return from;
     }
 
 }
