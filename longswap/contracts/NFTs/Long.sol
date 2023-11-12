@@ -525,6 +525,10 @@ contract Long is ERC721{
         _;
     }
 
+    function setOwner(address _owner) external onlyOwner{
+        owner = _owner;
+    }
+
     function getUserHoldInfo(address user) external view override  returns(uint256[] memory){
         return holdInfo[user];
     }

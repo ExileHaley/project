@@ -77,7 +77,24 @@ library TransferHelper {
     }
 }
 
-contract StorageV1 is Storage{
+interface IERC721Receiver {
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4);
+}
+
+
+abstract contract ERC721Holder is IERC721Receiver {
+    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+}
+
+contract StorageV1 is Storage, ERC721Holder{
      enum State{
         sold,
         sellIn,
@@ -216,5 +233,7 @@ contract Marketplace is StorageV1{
 
 }
 
-//market:0xbde1dA26e5B8F3724668A446692d4029DeCb8012
+//market:0xD170ad5d89fe2bCFF2fd5D9cCc57C18061251148
 //proxy:0x1fdeecC40f5A2B3d2F0DCA8E00393cb5e48819f4
+
+
