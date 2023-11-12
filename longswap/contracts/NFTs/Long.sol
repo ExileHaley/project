@@ -21,6 +21,7 @@ interface IERC721 is IERC165 {
     function setApprovalForAll(address operator, bool approved) external;
     function getApproved(uint256 tokenId) external view returns (address operator);
     function isApprovedForAll(address owner, address operator) external view returns (bool);
+    function getUserHoldInfo(address user) external view returns(uint256[] memory);
 }
 
 interface IERC721Metadata is IERC721 {
@@ -524,7 +525,7 @@ contract Long is ERC721{
         _;
     }
 
-    function getUserHoldInfo(address user) external view returns(uint256[] memory){
+    function getUserHoldInfo(address user) external view override  returns(uint256[] memory){
         return holdInfo[user];
     }
 
