@@ -110,7 +110,7 @@ contract StorageV1 is Storage, ERC721Holder{
         State   state;
     }
     mapping(uint256 => Option) public optionInfo;
-    mapping(address => Option[]) userOptions;
+    mapping(address => uint256[]) userOptionIds;
 
     struct Record{
         uint256 optionId;
@@ -120,7 +120,7 @@ contract StorageV1 is Storage, ERC721Holder{
     }
     mapping(address => Record[]) userRecords;
     
-    Option[] options;
+    uint256[] optionIds;
     mapping(uint256 => uint256) index;
 
     mapping(address => bool) public supported;
@@ -175,9 +175,9 @@ contract Marketplace is StorageV1{
         IERC721(nfts).safeTransferFrom(msg.sender, address(this), tokenId);
         Option memory option = Option(initNum, msg.sender, tokenId, payment, price, State.sellIn);
         optionInfo[initNum] = option;
-        userOptions[msg.sender].push(option);
-        options.push(option);
-        index[tokenId] = options.length - 1;
+        userOptionIds[msg.sender].push(initNum);
+        optionIds.push(initNum);
+        index[tokenId] = optionIds.length - 1;
         emit Create(initNum, msg.sender, payment, tokenId, price);
         initNum++;
     }
@@ -207,8 +207,8 @@ contract Marketplace is StorageV1{
     }
 
     function _removeOption(uint256 optionId) internal{
-        options[index[optionId]] = options[options.length - 1];
-        options.pop();
+        optionIds[index[optionId]] = optionIds[optionIds.length - 1];
+        optionIds.pop();
         delete index[optionId];
     }
 
@@ -219,11 +219,21 @@ contract Marketplace is StorageV1{
     }
 
     function getOptions() external view returns(Option[] memory){
+        Option[] memory options = new Option[](optionIds.length);
+        for(uint i=0; i<optionIds.length; i++){
+            Option memory option = optionInfo[optionIds[i]];
+            options[i] = Option(option.optionId,option.holder,option.tokenId,option.payment,option.price,option.state);
+        }
         return options;
     }
 
     function getUserOptions(address user) external view returns(Option[] memory){
-        return userOptions[user];
+        Option[] memory options = new Option[](userOptionIds[user].length);
+        for(uint i=0; i<userOptionIds[user].length; i++){
+            Option memory option = optionInfo[userOptionIds[user][i]];
+            options[i] = Option(option.optionId,option.holder,option.tokenId,option.payment,option.price,option.state);
+        }
+        return options;
     }
 
     function getUserIncomeRecords(address user) external view returns(Record[] memory){
@@ -233,7 +243,10 @@ contract Marketplace is StorageV1{
 
 }
 
-//market:0xD170ad5d89fe2bCFF2fd5D9cCc57C18061251148
-//proxy:0x1fdeecC40f5A2B3d2F0DCA8E00393cb5e48819f4
+//market:0xb093D0CE34D2c12854E79dD035CFC149e4351800
+//proxy:0x2d26F3A488178C45E664caB22Ee3fB380bb2044A
 
 
+//NFT:0x44d56654383E6c5F06E5072Bf4B20de6ce28365E
+//LT:0xD633d265dCA799104A15642Dc15c86a5660d9d23
+//Long:0xfC8774321Ee4586aF183bAca95A8793530056353
