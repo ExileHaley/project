@@ -172,7 +172,7 @@ contract Marketplace is StorageV1{
     function createOption(uint256 tokenId, address payment,uint256 price) external {
         require(price > 0, "Invalid price params.");
         require(supported[payment],"Invalid payment address.");
-        // IERC721(nfts).safeTransferFrom(msg.sender, address(this), tokenId);
+        IERC721(nfts).safeTransferFrom(msg.sender, address(this), tokenId);
         Option memory option = Option(initNum, msg.sender, tokenId, payment, price, State.sellIn);
         optionInfo[initNum] = option;
         userOptionIds[msg.sender].push(initNum);
@@ -200,7 +200,7 @@ contract Marketplace is StorageV1{
         Option storage option = optionInfo[optionId];
         require(option.state == State.sellIn, "Invalid option state.");
         require(option.holder == msg.sender, "Invalid operator.");
-        // IERC721(nfts).safeTransferFrom(address(this), msg.sender, option.tokenId);
+        IERC721(nfts).safeTransferFrom(address(this), msg.sender, option.tokenId);
         option.state = State.cancelled;
         _removeOption(optionId);
         emit Operate(optionId, msg.sender, option.tokenId);
