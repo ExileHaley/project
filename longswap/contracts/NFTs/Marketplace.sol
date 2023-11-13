@@ -172,12 +172,12 @@ contract Marketplace is StorageV1{
     function createOption(uint256 tokenId, address payment,uint256 price) external {
         require(price > 0, "Invalid price params.");
         require(supported[payment],"Invalid payment address.");
-        IERC721(nfts).safeTransferFrom(msg.sender, address(this), tokenId);
-        Option memory option = Option(initNum, msg.sender, tokenId, payment, price, State.sellIn);
-        optionInfo[initNum] = option;
+        IERC721(nfts).transferFrom(msg.sender, address(this), tokenId);
+        require(IERC721(nfts).ownerOf(tokenId) == address(this),"TransferFrom nfts failed.");
+        optionInfo[initNum] = Option(initNum, msg.sender, tokenId, payment, price, State.sellIn);
         userOptionIds[msg.sender].push(initNum);
         optionIds.push(initNum);
-        index[tokenId] = optionIds.length - 1;
+        index[initNum] = optionIds.length - 1;
         emit Create(initNum, msg.sender, payment, tokenId, price);
         initNum++;
     }
@@ -187,30 +187,31 @@ contract Marketplace is StorageV1{
         require(option.state == State.sellIn, "Invalid option state.");
         require(option.holder != msg.sender, "Invalid buyer.");
         uint256 fee = option.price * feeRate / 1000;
-        TransferHelper.safeTransferFrom(option.payment, msg.sender, dead, fee);
-        TransferHelper.safeTransferFrom(option.payment, msg.sender, option.holder, option.price - fee);
-        IERC721(nfts).safeTransferFrom(address(this), msg.sender, option.tokenId);
         option.state = State.sold;
         _removeOption(optionId);
+
+        TransferHelper.safeTransferFrom(option.payment, msg.sender, dead, fee);
+        TransferHelper.safeTransferFrom(option.payment, msg.sender, option.holder, option.price - fee);
+        IERC721(nfts).transferFrom(address(this), msg.sender, option.tokenId);
+        require(IERC721(nfts).ownerOf(option.tokenId) == msg.sender,"TransferFrom nfts failed.");
         userRecords[option.holder].push(Record(optionId,option.payment,option.price,block.timestamp));
-        emit Operate(optionId, msg.sender, option.tokenId);
+        emit Operate(option.tokenId, msg.sender, option.tokenId);
     }
 
     function cancelOption(uint256 optionId) external {
         Option storage option = optionInfo[optionId];
         require(option.state == State.sellIn, "Invalid option state.");
         require(option.holder == msg.sender, "Invalid operator.");
-        IERC721(nfts).safeTransferFrom(address(this), msg.sender, option.tokenId);
         option.state = State.cancelled;
         _removeOption(optionId);
+        IERC721(nfts).transferFrom(address(this), msg.sender, option.tokenId);
+        require(IERC721(nfts).ownerOf(option.tokenId) == msg.sender,"TransferFrom nfts failed.");
         emit Operate(optionId, msg.sender, option.tokenId);
     }
 
     function _removeOption(uint256 optionId) internal{
-        //index update
         uint256 lastOptionId = optionIds[optionIds.length - 1];
         index[lastOptionId] = index[optionId];
-        //content update
         optionIds[index[lastOptionId]] = lastOptionId;
         optionIds.pop();
         delete index[optionId];
@@ -244,17 +245,17 @@ contract Marketplace is StorageV1{
         return userRecords[user];
     }
 
+    function getOptionIds() external   view returns(uint256[] memory){
+        return optionIds;
+    }
 
 }
 
-//market:0xe35A99d4e5aD6Ed2c993271431E73EEC663071F6
-//proxy:0x8aCfbBEA0B2F3b1c06C580BBC961D4d106283859
+//market:0x14D1A39F9B4B89564B04DF7c6d43fbFd084CF713
+//proxy:0xDb80FC0968D0cd5418B059e432367d1415f59252
 
 
-//NFT:0x1c78d66577894e84502A1a87E3B5Ccc30DB44C04
+//NFT:
 
-
-
-
-//LT:0xD633d265dCA799104A15642Dc15c86a5660d9d23
+//LT:
 //Long:0xfC8774321Ee4586aF183bAca95A8793530056353
