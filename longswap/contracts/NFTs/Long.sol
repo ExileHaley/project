@@ -537,9 +537,9 @@ contract Long is ERC721{
         uri = _uri;
     }
 
-    function batchMint(address[] calldata users) external onlyOwner{
-        for(uint i=0; i<users.length; i++){
-            _mint(users[i], count);
+    function batchMint(address user, uint256 amount) external onlyOwner{
+        for(uint i=0; i<amount; i++){
+            _mint(user, count);
             count++;
         }
     }
