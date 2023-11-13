@@ -186,7 +186,7 @@ contract Marketplace is StorageV1{
         Option storage option = optionInfo[optionId];
         require(option.state == State.sellIn, "Invalid option state.");
         require(option.holder != msg.sender, "Invalid buyer.");
-        uint256 fee = option.price + feeRate / 1000;
+        uint256 fee = option.price * feeRate / 1000;
         TransferHelper.safeTransferFrom(option.payment, msg.sender, dead, fee);
         TransferHelper.safeTransferFrom(option.payment, msg.sender, option.holder, option.price - fee);
         IERC721(nfts).safeTransferFrom(address(this), msg.sender, option.tokenId);
