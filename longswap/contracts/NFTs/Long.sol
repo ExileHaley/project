@@ -512,11 +512,11 @@ contract Long is ERC721{
 
     address public owner;
     uint256 public count = 1;
-    mapping(address => uint256[]) public holdInfo;
+    mapping(address => uint256[]) holdInfo;
     mapping(address => mapping(uint256 => uint256)) index;
     string public uri;
 
-    constructor()ERC721("",""){
+    constructor()ERC721("Long","LONG"){
         owner = msg.sender;
     }
 
@@ -554,11 +554,14 @@ contract Long is ERC721{
     }
 
     function _removeHoldInfo(address holder,uint256 tokenId) internal{
+        uint256 lastId = holdInfo[holder][holdInfo[holder].length - 1];
+        index[holder][lastId] = index[holder][tokenId];
         holdInfo[holder][index[holder][tokenId]] = holdInfo[holder][holdInfo[holder].length - 1];
         holdInfo[holder].pop();
         delete index[holder][tokenId];
     }
 
+   
     function _update(address to, uint256 tokenId, address auth) internal virtual override returns (address) {
         _addHoldInfo(to, tokenId);
         address from = super._update(to,tokenId,auth);
@@ -567,4 +570,5 @@ contract Long is ERC721{
     }
 
 }
+
 

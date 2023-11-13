@@ -121,7 +121,7 @@ contract StorageV1 is Storage, ERC721Holder{
     mapping(address => Record[]) userRecords;
     
     uint256[] optionIds;
-    mapping(uint256 => uint256) index;
+    mapping(uint256 => uint256) public index;
 
     mapping(address => bool) public supported;
     address public nfts;
@@ -172,7 +172,7 @@ contract Marketplace is StorageV1{
     function createOption(uint256 tokenId, address payment,uint256 price) external {
         require(price > 0, "Invalid price params.");
         require(supported[payment],"Invalid payment address.");
-        IERC721(nfts).safeTransferFrom(msg.sender, address(this), tokenId);
+        // IERC721(nfts).safeTransferFrom(msg.sender, address(this), tokenId);
         Option memory option = Option(initNum, msg.sender, tokenId, payment, price, State.sellIn);
         optionInfo[initNum] = option;
         userOptionIds[msg.sender].push(initNum);
@@ -200,13 +200,14 @@ contract Marketplace is StorageV1{
         Option storage option = optionInfo[optionId];
         require(option.state == State.sellIn, "Invalid option state.");
         require(option.holder == msg.sender, "Invalid operator.");
-        IERC721(nfts).safeTransferFrom(address(this), msg.sender, option.tokenId);
+        // IERC721(nfts).safeTransferFrom(address(this), msg.sender, option.tokenId);
         option.state = State.cancelled;
         _removeOption(optionId);
         emit Operate(optionId, msg.sender, option.tokenId);
     }
 
     function _removeOption(uint256 optionId) internal{
+        index[optionIds[optionIds.length - 1]] = index[optionId];
         optionIds[index[optionId]] = optionIds[optionIds.length - 1];
         optionIds.pop();
         delete index[optionId];
@@ -243,10 +244,14 @@ contract Marketplace is StorageV1{
 
 }
 
-//market:0xb093D0CE34D2c12854E79dD035CFC149e4351800
-//proxy:0x2d26F3A488178C45E664caB22Ee3fB380bb2044A
+//market:0x52a884f4CD72d1dDEFC967E6a90fB57cD712f2D2
+//proxy:0xa2917088CE71cCc8b8C78F1DF00d9bd3b9477B56
 
 
-//NFT:0x44d56654383E6c5F06E5072Bf4B20de6ce28365E
+//NFT:0x1c78d66577894e84502A1a87E3B5Ccc30DB44C04
+
+
+
+
 //LT:0xD633d265dCA799104A15642Dc15c86a5660d9d23
 //Long:0xfC8774321Ee4586aF183bAca95A8793530056353
