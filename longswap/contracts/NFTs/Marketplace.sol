@@ -207,8 +207,11 @@ contract Marketplace is StorageV1{
     }
 
     function _removeOption(uint256 optionId) internal{
-        index[optionIds[optionIds.length - 1]] = index[optionId];
-        optionIds[index[optionId]] = optionIds[optionIds.length - 1];
+        //index update
+        uint256 lastOptionId = optionIds[optionIds.length - 1];
+        index[lastOptionId] = index[optionId];
+        //content update
+        optionIds[index[lastOptionId]] = lastOptionId;
         optionIds.pop();
         delete index[optionId];
     }
@@ -244,8 +247,8 @@ contract Marketplace is StorageV1{
 
 }
 
-//market:0x52a884f4CD72d1dDEFC967E6a90fB57cD712f2D2
-//proxy:0xa2917088CE71cCc8b8C78F1DF00d9bd3b9477B56
+//market:0xe35A99d4e5aD6Ed2c993271431E73EEC663071F6
+//proxy:0x8aCfbBEA0B2F3b1c06C580BBC961D4d106283859
 
 
 //NFT:0x1c78d66577894e84502A1a87E3B5Ccc30DB44C04

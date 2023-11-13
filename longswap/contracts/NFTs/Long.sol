@@ -554,9 +554,11 @@ contract Long is ERC721{
     }
 
     function _removeHoldInfo(address holder,uint256 tokenId) internal{
-        uint256 lastId = holdInfo[holder][holdInfo[holder].length - 1];
-        index[holder][lastId] = index[holder][tokenId];
-        holdInfo[holder][index[holder][tokenId]] = holdInfo[holder][holdInfo[holder].length - 1];
+        //update index
+        uint256 lastTokenId = holdInfo[holder][holdInfo[holder].length - 1];
+        index[holder][lastTokenId] = index[holder][tokenId];
+        //update content
+        holdInfo[holder][index[holder][lastTokenId]] = lastTokenId;
         holdInfo[holder].pop();
         delete index[holder][tokenId];
     }
@@ -570,5 +572,4 @@ contract Long is ERC721{
     }
 
 }
-
 
