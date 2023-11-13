@@ -194,8 +194,8 @@ contract Marketplace is StorageV1{
         TransferHelper.safeTransferFrom(option.payment, msg.sender, option.holder, option.price - fee);
         IERC721(nfts).transferFrom(address(this), msg.sender, option.tokenId);
         require(IERC721(nfts).ownerOf(option.tokenId) == msg.sender,"TransferFrom nfts failed.");
-        userRecords[option.holder].push(Record(optionId,option.payment,option.price,block.timestamp));
-        emit Operate(option.tokenId, msg.sender, option.tokenId);
+        userRecords[option.holder].push(Record(option.tokenId,option.payment,option.price,block.timestamp));
+        emit Operate(optionId, msg.sender, option.tokenId);
     }
 
     function cancelOption(uint256 optionId) external {
