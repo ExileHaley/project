@@ -20,5 +20,9 @@
     "address":{
         "contract":"0x1C4Fb0c9367a458F83A82D8413Fb3a1E7aae18c7",
         "feeWallet":"0x8E5aF38D8ad8064dD4a30C89563F554d24793Ea6"
+    },
+    "duration":{
+        "balance":100,
+        "logs":30
     }
 }
