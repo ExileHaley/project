@@ -1,0 +1,24 @@
+{
+    "rpc": {
+        "url": "",
+        "timeout": 30,
+        "gaslimit":"3000000",
+        "multiple":"2"
+    },
+    "mysql": {
+        "host": "",
+        "port": "3306",
+        "user": "longswap",
+        "password": "",
+        "database": "longswap",
+        "showSql":true
+    },
+    "gin": {
+        "port": "8080",
+        "mode": "release"
+    },
+    "address":{
+        "contract":"0x1C4Fb0c9367a458F83A82D8413Fb3a1E7aae18c7",
+        "feeWallet":"0x8E5aF38D8ad8064dD4a30C89563F554d24793Ea6"
+    }
+}
