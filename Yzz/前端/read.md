@@ -30,8 +30,8 @@
         uint256 _weeklyRemove,
         address[] memory _subordinates)
 
-//获取邀请列表或移除流动性列表，target传0代表获取全网当日直推的地址列表，传1代表获取全网一周移除的流动性lp的地址列表。
+- 获取邀请列表或移除流动性列表，target传0代表获取全网当日直推的地址列表，传1代表获取全网一周移除的流动性lp的地址列表。
 7. function getRankings(Target target) external view returns(address[] memory)
 
-//返回幸运奖信息，lucky是截止目前最后参与的30个人的地址，lastTime最后一个人的参与时间
+- 返回幸运奖信息，lucky是截止目前最后参与的30个人的地址，lastTime最后一个人的参与时间
 8. function getLuckyRankings() external view returns(address[] memory lucky, uint256 lastTime);
