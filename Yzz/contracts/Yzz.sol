@@ -196,7 +196,7 @@ contract Yzz is ERC20{
     address public dead = 0x000000000000000000000000000000000000dEaD;
     address public uniswapV2Pair;
     constructor(address _receiver,address _membership)ERC20("YZZ","YZZ"){
-        _mint(_receiver,1000000e18);
+        _mint(_receiver,100000e18);
         membership = _membership;
         admin = msg.sender;
         address usdt = 0x55d398326f99059fF775485246999027B3197955;

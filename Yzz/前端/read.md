@@ -1,5 +1,6 @@
-### YZZ:
-### Membership:
+### lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
+### Membership:0x6b21acf565c6b36B624bc9d4BF006Bd0a2a325AE
+### usdt:0x55d398326f99059fF775485246999027B3197955
 
 ### membership func list
 //邀请用户，_inviter邀请地址，_member当前用户
