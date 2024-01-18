@@ -1,0 +1,16 @@
+{
+    "rpc": {
+        "url": "https://api.dognode.com/bsc/f41cc1e2d6d6ebfc7fff88c46af3618e",
+        "timeout": 30,
+        "gaslimit":"3000000",
+        "multiple":"2"
+    },
+    "gin": {
+        "port": "8080",
+        "mode": "release"
+    },
+    "contract":{
+        "membership":"",
+        "privateKey":""
+    }
+}
