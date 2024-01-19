@@ -3,6 +3,7 @@
 ### usdt:0x55d398326f99059fF775485246999027B3197955
 
 ### membership func list
+```javascript
 - 邀请用户，_inviter邀请地址，_member当前用户
 1. function invite(address _inviter, address _member) external;
 
@@ -35,3 +36,4 @@
 
 - 返回幸运奖信息，lucky是截止目前最后参与的30个人的地址，lastTime最后一个人的参与时间
 8. function getLuckyRankings() external view returns(address[] memory lucky, uint256 lastTime);
+```
