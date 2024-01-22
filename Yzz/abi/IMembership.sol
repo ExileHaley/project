@@ -15,6 +15,6 @@ interface IMembership{
     function multiGetMemberGrades(Target target,address[] memory member) external view returns(Assemble[] memory);
 
     function distributeRankings(address[] memory members,Target target,string memory mark) external;
-    function extractedMark(string memory mark) external view returns(bool);
+    function transactionMark(string memory mark) external view returns(bool);
 }
 

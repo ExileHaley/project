@@ -94,13 +94,25 @@ interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
+library TransferHelper {
+    function safeTransfer(address token, address to, uint value) internal {
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FAILED');
+    }
 
+    function safeTransferFrom(address token, address from, address to, uint value) internal {
+        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
+        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
+    }
+
+}
 
 contract StoreV1 is Store{
 
     enum Target{
-        INVITE,
-        REMOVE
+        DAILYINVITE,
+        WEEKLYINVITE,
+        WEEKLYREMOVE
     }
 
     //token
@@ -125,11 +137,12 @@ contract StoreV1 is Store{
         uint256 staking;
         uint256 property;
 
-        mapping(uint256 => uint256) dailyGrades;
+        mapping(uint256 => uint256) dailyInvite;
         mapping(uint256 => uint256) weeklyRemove;
-
+        mapping(uint256 => uint256) weeklyInvite;
+        
+        address[] inviteForms;
         address[] subordinates;
-
     }
     mapping(address => User) public userInfo;
 
@@ -139,14 +152,19 @@ contract StoreV1 is Store{
 
     //Ranking
     //remove Ranking
-    mapping(uint256 => address[]) public removeRankings;
-    mapping(uint256 => mapping (address => bool)) removeDataAlreadyAdd;
-    uint256 public removeCurrentTime;
+    mapping(uint256 => address[]) public weeklyRemoveRankings;
+    mapping(uint256 => mapping (address => bool)) weeklyRemoveDataAlreadyAdd;
+    uint256 public weeklyRemoveCurrentTime;
 
     //invite Ranking
-    mapping(uint256 => address[]) public inviteRankings;
-    mapping(uint256 => mapping (address => bool)) inviteDataAlreadyAdd;
-    uint256 public inviteCurrentTime;
+    mapping(uint256 => address[]) public dailyInviteRankings;
+    mapping(uint256 => mapping (address => bool)) dailyInviteDataAlreadyAdd;
+    uint256 public dailyInviteCurrentTime;
+
+    //weekly invite rakings
+    mapping(uint256 => address[]) public weeklyInviteRankings;
+    mapping(uint256 => mapping (address => bool)) weeklyInviteDataAlreadyAdd;
+    uint256 public weeklyInviteCurrentTime;
 
     //data
     uint256 public totalMembers;
@@ -156,7 +174,7 @@ contract StoreV1 is Store{
     uint256 public surplus;
 
     //withdraw
-    mapping(string => bool) public extractedMark;
+    mapping(string => bool) public transactionMark;
 
     //manager
     address public operator;
@@ -167,10 +185,16 @@ contract StoreV1 is Store{
         address member;
         uint256 amount;
     }
+
+    mapping(Target => uint256) public round;
+    mapping(Target => mapping(uint256 => Assemble[])) public history;
 }
 
+contract MembershipV3 is StoreV1{
+    constructor(){
+        admin = msg.sender;
+    }
 
-contract Membership is StoreV1{
     modifier onlyOperator() {
         require(msg.sender == operator,"Membership:Invalid operator address");
         _;
@@ -185,25 +209,45 @@ contract Membership is StoreV1{
         operator = _operator;
     }
 
+    function setOwner(address _owner) external onlyOwner(){
+        admin = _owner;
+    }
+
     function initialize(address _token,address _lp,address _leader,address _operator) external onlyOwner(){
         token = _token;
         lp = _lp;
         leader = _leader;
         operator = _operator;
-        inviteCurrentTime = block.timestamp;
-        removeCurrentTime = block.timestamp;
+        dailyInviteCurrentTime = block.timestamp;
+        weeklyInviteCurrentTime = block.timestamp;
+        weeklyRemoveCurrentTime = block.timestamp;
         lastFortunesTime = block.timestamp;
         usdt = 0x55d398326f99059fF775485246999027B3197955;
         uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
         dead = 0x000000000000000000000000000000000000dEaD;
         totalMembers += 1;
+        round[Target.DAILYINVITE] = 1;
+        round[Target.WEEKLYREMOVE] = 1;
+        round[Target.WEEKLYINVITE] = 1;
     }
 
+    function updateInviteList(address _inviter) public{
+        if(!dailyInviteDataAlreadyAdd[dailyInviteCurrentTime][_inviter] && _inviter != address(0)){
+            dailyInviteRankings[dailyInviteCurrentTime].push(_inviter);
+            dailyInviteDataAlreadyAdd[dailyInviteCurrentTime][_inviter] = true;
+        } 
+
+        if(!weeklyInviteDataAlreadyAdd[weeklyInviteCurrentTime][_inviter] && _inviter != address(0)){
+            weeklyInviteRankings[weeklyInviteCurrentTime].push(_inviter);
+            weeklyInviteDataAlreadyAdd[weeklyInviteCurrentTime][_inviter] = true;
+        }
+    }
 
     function invite(address _inviter, address _member) external{
         if(_inviter != leader) require(userInfo[_inviter].inviter != address(0),"MemberShip: Invalid inviter address");
         require(userInfo[_member].inviter == address(0),"MemberShip: Invalid member address");
         userInfo[_member].additionalInviter = _inviter;
+        userInfo[_inviter].inviteForms.push(_member);
         totalMembers += 1;
         recursiveInvite(_inviter, _member);
     }
@@ -278,6 +322,8 @@ contract Membership is StoreV1{
     function _reward(address member, uint256 amountStake, uint256 amountLP) public {
         address inviter = userInfo[member].additionalInviter;
         User storage upper = userInfo[inviter];
+        upper.dailyInvite[dailyInviteCurrentTime] += amountStake;
+        upper.weeklyInvite[weeklyInviteCurrentTime] += amountStake;
         uint256 totalPart = amountLP * 40 / 100;
 
         if (upper.staking == 0) {
@@ -306,7 +352,6 @@ contract Membership is StoreV1{
         return iterations;
     }
 
-
     function _distributeLuckyRankings(address[] memory rankings) internal {
         uint256 totalReward = surplus / 100;
         uint256 thirtyPercent = totalReward * 30 / 100;
@@ -328,15 +373,6 @@ contract Membership is StoreV1{
         }
     }
 
-    function updateInviteList(address member, uint256 amount) public{
-        address _inviter = userInfo[member].additionalInviter;
-        userInfo[_inviter].dailyGrades[inviteCurrentTime] += amount;
-        if(!inviteDataAlreadyAdd[inviteCurrentTime][_inviter] && _inviter != address(0)){
-            inviteRankings[inviteCurrentTime].push(_inviter);
-            inviteDataAlreadyAdd[inviteCurrentTime][_inviter] = true;
-        } 
-    }
-
     function _distributeLuckyReward(address member) public{
         if(block.timestamp >= lastFortunesTime + 86400 && fortunes.length > 0){
             _distributeLuckyRankings(fortunes);
@@ -349,21 +385,15 @@ contract Membership is StoreV1{
     function provide(address member, uint256 amount) external {
         User storage user = userInfo[member];
         if(member != leader) require(user.inviter != address(0),"Membership: Invalid inviter address");
-        require(getAccessAmount(amount),"Membership: Invalid provide amount");
-
+        // require(getAccessAmount(amount),"Membership: Invalid provide amount");
         TransferHelper.safeTransferFrom(usdt, member, address(this), amount);
         user.staking += amount;
         _swapUSDTForToken(amount / 2);
-
         uint256 amountUSDT = IERC20(usdt).balanceOf(address(this));
         uint256 amountToken = IERC20(token).balanceOf(address(this));
         (uint _amountToken, ,uint _luidity)=_addLuidity(amountToken, amountUSDT);
-
         TransferHelper.safeTransfer(token, dead, amountToken - _amountToken);
-
-
         user.property += _luidity * 40 / 100;
-
         totalUsdts += amount;
 
         _reward(member,amount,_luidity);
@@ -372,10 +402,9 @@ contract Membership is StoreV1{
         uint256 pre = _luidity * 2 / 1000;
         surplus = surplus + (hierarchy - pre * index);
 
-        updateInviteList(member, amount);
-
         _distributeLuckyReward(member);
     }
+
 
     function withdraw(address member,uint256 amount) external{
         require(userInfo[member].property >= amount,"MemberShip: Invalid withdraw lp`s amount");
@@ -383,12 +412,11 @@ contract Membership is StoreV1{
         TransferHelper.safeTransfer(lp, member, amount);
     }
 
-    function managerWithdraw(address target,address receiver, uint256 amount) external onlyOwner(){
+    function managerWithdraw(address target,address receiver, uint256 amount) external onlyOperator(){
         uint256 total = IERC20(target).balanceOf(address(this));
         require(total >= amount,"MemberShip: Invalid manager withdraw lp`s amount");
         TransferHelper.safeTransfer(target, receiver, amount);
     }
-
 
     function removeLuidity(address member, uint256 amount) external {
         User storage user = userInfo[member];
@@ -396,10 +424,10 @@ contract Membership is StoreV1{
         uint256 targetAmount = amount * 97 / 100;
         user.property -= amount;
         surplus += (amount - targetAmount);
-        user.weeklyRemove[removeCurrentTime] += amount;
-        if (!removeDataAlreadyAdd[removeCurrentTime][member]) {
-            removeRankings[removeCurrentTime].push(member);
-            removeDataAlreadyAdd[removeCurrentTime][member] = true;
+        user.weeklyRemove[weeklyRemoveCurrentTime] += amount;
+        if (!weeklyRemoveDataAlreadyAdd[weeklyRemoveCurrentTime][member]) {
+            weeklyRemoveRankings[weeklyRemoveCurrentTime].push(member);
+            weeklyRemoveDataAlreadyAdd[weeklyRemoveCurrentTime][member] = true;
         }
         address[] memory path = new address[](2);
         path[0] = usdt;
@@ -414,33 +442,6 @@ contract Membership is StoreV1{
             member, 
             block.timestamp + 10
         );
-    }
-
-    function getMemberGrades(Target target,address member) external view returns(uint256){
-        if (target == Target.INVITE) return userInfo[member].dailyGrades[inviteCurrentTime];
-        else return userInfo[member].weeklyRemove[removeCurrentTime];
-    }
-
-    function multiGetMemberGrades(Target target,address[] memory member) external view returns(Assemble[] memory){
-        Assemble[] memory grades = new Assemble[](member.length);
-        if (target == Target.INVITE){
-            for(uint i=0; i<grades.length; i++){
-                grades[i] = Assemble(member[i],userInfo[member[i]].dailyGrades[inviteCurrentTime]);
-            }
-        }
-
-        if (target == Target.REMOVE){
-            for(uint i=0; i<grades.length; i++){
-                grades[i] = Assemble(member[i],userInfo[member[i]].weeklyRemove[removeCurrentTime]);
-            }
-        }
-        return grades;
-    }
-
-
-    function getRankings(Target target) external view returns(address[] memory){
-        if (Target.INVITE == target) return inviteRankings[inviteCurrentTime];
-        else return removeRankings[removeCurrentTime];
     }
 
     function getLuckyRankings() external view returns(address[] memory lucky, uint256 lastTime) {
@@ -459,15 +460,66 @@ contract Membership is StoreV1{
         lastTime = lastFortunesTime;
     }
 
+   
+    function getRankings(Target target) external view returns(address[] memory){
+        if (Target.DAILYINVITE == target) return dailyInviteRankings[dailyInviteCurrentTime];
+        else if(Target.WEEKLYINVITE == target) return weeklyInviteRankings[weeklyInviteCurrentTime];
+        else return weeklyRemoveRankings[weeklyRemoveCurrentTime];
+    }
 
-    event Rate(uint256 percent);
+    function getMemberGrades(Target target,address member) external view returns(uint256){
+        if (target == Target.DAILYINVITE) return userInfo[member].dailyInvite[dailyInviteCurrentTime];
+        else if(target == Target.WEEKLYINVITE) return userInfo[member].weeklyInvite[weeklyInviteCurrentTime];
+        else return userInfo[member].weeklyRemove[weeklyRemoveCurrentTime];
+    }
+
+    function multiGetMemberGrades(Target target,address[] memory member) external view returns(Assemble[] memory){
+        Assemble[] memory grades = new Assemble[](member.length);
+        if (target == Target.DAILYINVITE){
+            for(uint i=0; i<grades.length; i++){
+                grades[i] = Assemble(member[i],userInfo[member[i]].dailyInvite[dailyInviteCurrentTime]);
+            }
+        }
+
+        if (target == Target.WEEKLYREMOVE){
+            for(uint i=0; i<grades.length; i++){
+                grades[i] = Assemble(member[i],userInfo[member[i]].weeklyRemove[weeklyRemoveCurrentTime]);
+            }
+        }
+
+        if (target == Target.WEEKLYINVITE){
+            for(uint i=0; i<grades.length; i++){
+                grades[i] = Assemble(member[i],userInfo[member[i]].weeklyInvite[weeklyInviteCurrentTime]);
+            }
+        }
+        return grades;
+    }
 
     function distributeRankings(address[] memory members,Target target,string memory mark) external onlyOperator(){
-
-        uint256 percent = (target == Target.REMOVE) ? 2 : 7;
-        emit Rate(percent);
-        if(target == Target.REMOVE) removeCurrentTime = block.timestamp;
-        else inviteCurrentTime = block.timestamp;
+        uint256 percent;
+        if (Target.DAILYINVITE == target) {
+            percent = 5;   
+            for(uint i=0; i<members.length; i++){
+                history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].dailyInvite[dailyInviteCurrentTime]));
+            }
+            dailyInviteCurrentTime = block.timestamp;
+        }
+        if(Target.WEEKLYINVITE == target) {
+            percent = 2;
+            for(uint i=0; i<members.length; i++){
+                history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].weeklyInvite[weeklyInviteCurrentTime]));
+            }
+            weeklyInviteCurrentTime = block.timestamp;
+        }
+        if(Target.WEEKLYREMOVE == target) {
+            percent = 2;     
+            for(uint i=0; i<members.length; i++){
+                history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].weeklyRemove[weeklyRemoveCurrentTime]));
+            }
+            weeklyRemoveCurrentTime = block.timestamp;
+        }
+        round[target]++;
+        require(percent > 0,"Membership:Invalid percent!");
         uint256 totalReward = surplus * percent / 100;
         uint256 thirtyPercent = totalReward * 30 / 100;
         uint256 twentyPercent = totalReward * 20 / 100;
@@ -486,43 +538,36 @@ contract Membership is StoreV1{
             userInfo[members[i]].property += share;
             surplus -= share;
         }
-        extractedMark[mark] = true;
+        transactionMark[mark] = true;
     }
-
+    
 
     function getUserInfo(address member) external view returns(
         address _inviter,
         address _additionalInviter,
         uint256 _staking, 
         uint256 _property,
-        uint256 _dailyGrades,
+        uint256 _dailyInvite,
+        uint256 _weeklyInvite,
         uint256 _weeklyRemove,
-        address[] memory _subordinates){
+        address[] memory _subordinates,
+        address[] memory _inviteForms,
+        uint256 _inviteNum){
             _inviter = userInfo[member].inviter;
             _additionalInviter = userInfo[member].additionalInviter;
             _staking = userInfo[member].staking;
             _property = userInfo[member].property;
-            _dailyGrades = userInfo[member].dailyGrades[inviteCurrentTime];
-            _weeklyRemove = userInfo[member].weeklyRemove[removeCurrentTime];
+            _dailyInvite = userInfo[member].dailyInvite[dailyInviteCurrentTime];
+            _weeklyInvite = userInfo[member].weeklyInvite[weeklyInviteCurrentTime];
+            _weeklyRemove = userInfo[member].weeklyRemove[weeklyRemoveCurrentTime];
             _subordinates = userInfo[member].subordinates;
-    }
-}
-
-
-library TransferHelper {
-    function safeTransfer(address token, address to, uint value) internal {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FAILED');
-    }
-
-    function safeTransferFrom(address token, address from, address to, uint value) internal {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
+            _inviteForms = userInfo[member].inviteForms;
+            _inviteNum = userInfo[member].inviteForms.length;
     }
 
 }
 
-//proxy:0x6b21acf565c6b36B624bc9d4BF006Bd0a2a325AE
-//membership:0x1C4722A0e75f1deE91165Cb714F14Af918BAab71
+//proxy:0x6839a000A061bdB10f92F6ca886A133E6cc04da4
+//membership:0x7FAB2fb85EC61a9FBAd1Ca273A6cFAbDB7BbaA72
 //yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
 //lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
