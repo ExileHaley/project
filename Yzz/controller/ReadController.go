@@ -80,7 +80,7 @@ func (mc *MembershipController) GetExtractedResult(ctx *gin.Context) {
 		utils.Failed(ctx, "GetExtractedResult get 请求参数解析失败!")
 		return
 	}
-	input, err := mc.contractABI.Pack("extractedMark", _mark)
+	input, err := mc.contractABI.Pack("transactionMark", _mark)
 	if err != nil {
 		utils.Failed(ctx, "组装extractedMark查询参数失败!")
 		return
@@ -98,7 +98,7 @@ func (mc *MembershipController) GetExtractedResult(ctx *gin.Context) {
 		return
 	}
 
-	output, err := mc.contractABI.Unpack("extractedMark", result)
+	output, err := mc.contractABI.Unpack("transactionMark", result)
 	if err != nil {
 		utils.Failed(ctx, "extractedMark查询结果解析失败!")
 		return
