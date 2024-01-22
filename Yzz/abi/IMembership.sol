@@ -18,3 +18,4 @@ interface IMembership{
     function transactionMark(string memory mark) external view returns(bool);
 }
 
+//solc --abi IMembership.sol | awk '/JSON ABI/{x=1;next}x' > IMembership.abi

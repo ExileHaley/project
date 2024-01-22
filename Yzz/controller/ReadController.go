@@ -118,7 +118,7 @@ func (mc *MembershipController) GetMemberGrades(ctx *gin.Context) {
 		utils.Failed(ctx, "getMemberGrades函数string转uint8失败!")
 	}
 
-	input, err := mc.contractABI.Pack("extractedMark", target, common.HexToAddress(param.Member))
+	input, err := mc.contractABI.Pack("getMemberGrades", target, common.HexToAddress(param.Member))
 	if err != nil {
 		utils.Failed(ctx, "组装getMemberGrades查询参数失败!")
 		return

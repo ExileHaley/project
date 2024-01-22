@@ -1,6 +1,6 @@
 {
     "rpc": {
-        "url": "https://api.dognode.com/bsc/f41cc1e2d6d6ebfc7fff88c46af3618e",
+        "url": "https://api.dognode.com/bsc/eee1b0b8db5179b949c0cd2981e0b02e",
         "timeout": 30,
         "gaslimit":"3000000",
         "multiple":"2"
@@ -10,7 +10,7 @@
         "mode": "release"
     },
     "contract":{
-        "membership":"",
+        "membership":"0x6839a000A061bdB10f92F6ca886A133E6cc04da4",
         "privateKey":""
     }
 }
