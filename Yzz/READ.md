@@ -57,3 +57,7 @@ struct Assemble{
 10. function history(Target target, uint256 round) public view returns(Assemble[]);
 
 ```
+
+
+#### error
+- 新增一个返回支持数量的方法，目前只判断了是否支持
