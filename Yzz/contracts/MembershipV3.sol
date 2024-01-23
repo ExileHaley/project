@@ -308,24 +308,17 @@ contract MembershipV3 is StoreV1{
         );
     }
 
-    function getAccessAmount(uint256 amount) public view returns(bool supp) {
+    function getAccessAmount(uint256 totalMembers, uint256 amount) public pure returns(bool supp) {
         uint256 middleDiv = totalMembers / 1000;
-        uint256 middleMod = totalMembers % 1000;
-    
-        supp = middleMod > 0 && (
+        supp = 
             (middleDiv <= 2 && amount == (middleDiv + 1) * 1e20) ||
-            (middleDiv >= 3 && amount % 100e18 == 0)
-        );
+            (middleDiv >= 3 && amount % 100e18 == 0);
     }
 
 
-    function getAccessAmountIn() public view returns(uint256 amountIn) {
+    function getAccessAmountIn(uint256 totalMembers) public pure returns(uint256 amountIn) {
         uint256 middleDiv = totalMembers / 1000;
-        uint256 middleMod = totalMembers % 1000;
-    
-        if (middleMod > 0) {
-            amountIn = (middleDiv <= 2) ? (middleDiv + 1) * 1e20 : 0;
-        }
+        amountIn = (middleDiv <= 2) ? (middleDiv + 1) * 1e20 : 0; 
     }
 
 
