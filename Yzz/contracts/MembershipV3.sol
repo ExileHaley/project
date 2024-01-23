@@ -308,7 +308,7 @@ contract MembershipV3 is StoreV1{
         );
     }
 
-    function getAccessAmount(uint256 totalMembers, uint256 amount) public pure returns(bool supp) {
+    function getAccessAmount(uint256 amount) public pure returns(bool supp) {
         uint256 middleDiv = totalMembers / 1000;
         supp = 
             (middleDiv <= 2 && amount == (middleDiv + 1) * 1e20) ||
@@ -316,7 +316,7 @@ contract MembershipV3 is StoreV1{
     }
 
 
-    function getAccessAmountIn(uint256 totalMembers) public pure returns(uint256 amountIn) {
+    function getAccessAmountIn() public pure returns(uint256 amountIn) {
         uint256 middleDiv = totalMembers / 1000;
         amountIn = (middleDiv <= 2) ? (middleDiv + 1) * 1e20 : 0; 
     }
