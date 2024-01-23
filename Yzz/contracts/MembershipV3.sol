@@ -314,8 +314,7 @@ contract MembershipV3 is StoreV1{
 
         if (middleMod > 0){
             if (middleDiv == 0)  supp = amount == 1e20;
-            else  if(middleDiv == 1) supp = amount == (middleDiv + 1) * 1e20;
-            else  if(middleDiv == 2) supp = amount == (middleDiv + 1) * 1e20;
+            else  if(middleDiv < 3) supp = amount == (middleDiv + 1) * 1e20;
             else supp = amount % 100e18 == 0;
         }
     }
@@ -326,8 +325,7 @@ contract MembershipV3 is StoreV1{
 
         if (middleMod > 0){
             if (middleDiv == 0)  amountIn == 1e20;
-            else  if(middleDiv == 1) amountIn = (middleDiv + 1) * 1e20;
-            else  if(middleDiv == 2) amountIn = (middleDiv + 1) * 1e20;
+            else  if(middleDiv < 3) amountIn = (middleDiv + 1) * 1e20;
             else amountIn  = 0;
         }
     }
