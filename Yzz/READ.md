@@ -56,6 +56,9 @@ struct Assemble{
 - 根据上述方法拿到轮次，在当前方法中传入target，以及轮次round，返回历史开奖信息结构体Assemble
 10. function history(Target target, uint256 round) public view returns(Assemble[]);
 
+- 计算当前合约准入数量，返回100e18/200e18/300e18以及0，0则代表数量没有限制
+function getAccessAmountIn() public view returns(uint256 amountIn)
+
 ```
 
 
