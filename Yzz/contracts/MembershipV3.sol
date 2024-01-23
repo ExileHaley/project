@@ -241,7 +241,7 @@ contract MembershipV3 is StoreV1{
         round[Target.WEEKLYINVITE] = 1;
     }
 
-    function updateInviteList(address _inviter) public{
+    function updateInviteList(address _inviter) internal{
         if(!dailyInviteDataAlreadyAdd[dailyInviteCurrentTime][_inviter] && _inviter != address(0)){
             dailyInviteRankings[dailyInviteCurrentTime].push(_inviter);
             dailyInviteDataAlreadyAdd[dailyInviteCurrentTime][_inviter] = true;
@@ -287,7 +287,7 @@ contract MembershipV3 is StoreV1{
         }
     }
 
-    function _swapUSDTForToken(uint256 amount)public{
+    function _swapUSDTForToken(uint256 amount)internal{
         IERC20(usdt).approve(uniswapV2Router, amount);
         address[] memory path = new address[](2);
         path[0] = usdt;
@@ -301,7 +301,7 @@ contract MembershipV3 is StoreV1{
         );
     }
 
-    function _addLuidity(uint256 usdtAmount, uint256 tokenAmount) public returns(uint amountUSDT,uint amountToken,uint luidity){
+    function _addLuidity(uint256 usdtAmount, uint256 tokenAmount) internal returns(uint amountUSDT,uint amountToken,uint luidity){
 
         IERC20(token).approve(uniswapV2Router, tokenAmount);
         IERC20(usdt).approve(uniswapV2Router, usdtAmount);
@@ -318,7 +318,7 @@ contract MembershipV3 is StoreV1{
         );
     }
 
-    function _run() public returns (uint256) {
+    function _run() internal returns (uint256) {
         uint256 balance = IERC20(usdt).balanceOf(address(this));
         _swapUSDTForToken(balance / 2);
         uint256 amountUSDT = IERC20(usdt).balanceOf(address(this));
@@ -342,7 +342,7 @@ contract MembershipV3 is StoreV1{
     }
 
 
-    function _reward(address member, uint256 amountStake, uint256 amountLP) public {
+    function _reward(address member, uint256 amountStake, uint256 amountLP) internal {
         address inviter = userInfo[member].additionalInviter;
         User storage upper = userInfo[inviter];
         upper.dailyInvite[dailyInviteCurrentTime] += amountStake;
@@ -360,7 +360,7 @@ contract MembershipV3 is StoreV1{
         }
     }
 
-    function _loopReward(address member, uint256 amountLP) public returns (uint256) {
+    function _loopReward(address member, uint256 amountLP) internal returns (uint256) {
         address _loop = userInfo[member].inviter;
         uint256 iterations = 0;
         for (uint256 i = 0; i < 100 && _loop != address(0); i++) {
@@ -375,7 +375,7 @@ contract MembershipV3 is StoreV1{
         return iterations;
     }
 
-    function _distributeLuckyRankings(address[] memory rankings) public {
+    function _distributeLuckyRankings(address[] memory rankings) internal {
         uint256 totalReward = surplus / 100;
         uint256 thirtyPercent = totalReward * 30 / 100;
         uint256 twentyPercent = totalReward * 20 / 100;
@@ -396,7 +396,7 @@ contract MembershipV3 is StoreV1{
         }
     }
 
-    function _distributeLuckyReward(address member) public{
+    function _distributeLuckyReward(address member) internal{
         if(block.timestamp >= lastFortunesTime + 86400 && fortunes.length > 0){
             _distributeLuckyRankings(fortunes);
         }else{
@@ -588,7 +588,7 @@ contract MembershipV3 is StoreV1{
 
 }
 
-//proxy:
-//membership:
+//proxy:0x06922Cac3dff6C83ea00175E17Ff7d73Cd6056D6
+//membership:0x2Ccf9712DDfD08809aFF9FA7dcE42D482bC00764
 //yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
 //lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
