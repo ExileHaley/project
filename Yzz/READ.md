@@ -57,10 +57,10 @@ struct Assemble{
 10. function history(Target target, uint256 round) public view returns(Assemble[]);
 
 - 计算当前合约准入数量，返回100e18/200e18/300e18以及0，0则代表数量没有限制，但getAccessAmount要求输入的数量能被100e18整除。
-function getAccessAmountIn() public pure returns(uint256 amountIn);
+11. function getAccessAmountIn() public pure returns(uint256 amountIn);
 
 ```
 
 
 #### 新增
-- 新增一个返回支持数量的方法，目前只判断了是否支持
+- 新增一个返回支持数量的方法11；
