@@ -319,6 +319,17 @@ contract MembershipV3 is StoreV1{
         }
     }
 
+    function getAccessAmountIn() public view returns(uint256 amountIn) {
+        uint256 middleDiv = totalMembers / 1000;
+        uint256 middleMod = totalMembers % 1000;
+
+        if (middleMod > 0){
+            if (middleDiv == 0)  amountIn = 1e20;
+            else  if(middleDiv < 3) amountIn = middleDiv * 1e20;
+            else amountIn = 0;
+        }
+    }
+
     function _reward(address member, uint256 amountStake, uint256 amountLP) public {
         address inviter = userInfo[member].additionalInviter;
         User storage upper = userInfo[inviter];
