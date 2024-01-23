@@ -315,7 +315,7 @@ contract MembershipV3 is StoreV1{
         if (middleMod > 0){
             if (middleDiv == 0)  supp = amount == 1e20;
             else  if(middleDiv < 3) supp = amount == middleDiv * 1e20;
-            else return amount % 100e18 = 0;
+            else return amount % 100e18 == 0;
         }
     }
 
