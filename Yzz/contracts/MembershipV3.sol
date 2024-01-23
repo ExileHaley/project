@@ -311,13 +311,13 @@ contract MembershipV3 is StoreV1{
     function getAccessAmount(uint256 amount) public view returns(bool supp) {
         uint256 middleDiv = totalMembers / 1000;
         uint256 middleMod = totalMembers % 1000;
-
-        if (middleMod > 0){
-            if (middleDiv == 0)  supp = amount == 1e20;
-            else  if(middleDiv < 3) supp = amount == (middleDiv + 1) * 1e20;
-            else supp = amount % 100e18 == 0;
-        }
+    
+        supp = middleMod > 0 && (
+            (middleDiv <= 2 && amount == (middleDiv + 1) * 1e20) ||
+            (middleDiv >= 3 && amount % 100e18 == 0)
+        );
     }
+
 
     function getAccessAmountIn() public view returns(uint256 amountIn) {
         uint256 middleDiv = totalMembers / 1000;
