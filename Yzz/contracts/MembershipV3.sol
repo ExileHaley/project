@@ -188,11 +188,21 @@ contract StoreV1 is Store{
 
     mapping(Target => uint256) public round;
     mapping(Target => mapping(uint256 => Assemble[])) public history;
+
+    bool internal  locked;
+
 }
 
 contract MembershipV3 is StoreV1{
     constructor(){
         admin = msg.sender;
+    }
+
+    modifier noReentrancy() {
+        require(!locked, "Reentrant call detected");
+        locked = true;
+        _;
+        locked = false;
     }
 
     modifier onlyOperator() {
@@ -277,7 +287,7 @@ contract MembershipV3 is StoreV1{
         }
     }
 
-    function _swapUSDTForToken(uint256 amount)internal{
+    function _swapUSDTForToken(uint256 amount)public{
         IERC20(usdt).approve(uniswapV2Router, amount);
         address[] memory path = new address[](2);
         path[0] = usdt;
@@ -291,7 +301,7 @@ contract MembershipV3 is StoreV1{
         );
     }
 
-    function _addLuidity(uint256 tokenAmount,uint256 usdtAmount) internal returns(uint amountUSDT,uint amountToken,uint luidity){
+    function _addLuidity(uint256 usdtAmount, uint256 tokenAmount) public returns(uint amountUSDT,uint amountToken,uint luidity){
 
         IERC20(token).approve(uniswapV2Router, tokenAmount);
         IERC20(usdt).approve(uniswapV2Router, usdtAmount);
@@ -308,7 +318,17 @@ contract MembershipV3 is StoreV1{
         );
     }
 
-    function getAccessAmount(uint256 amount) public pure returns(bool supp) {
+    function _run() public returns (uint256) {
+        uint256 balance = IERC20(usdt).balanceOf(address(this));
+        _swapUSDTForToken(balance / 2);
+        uint256 amountUSDT = IERC20(usdt).balanceOf(address(this));
+        uint256 amountToken = IERC20(token).balanceOf(address(this));
+        (, uint _amountToken,uint _luidity)=_addLuidity(amountUSDT, amountToken);
+        TransferHelper.safeTransfer(token, dead, amountToken - _amountToken);
+        return  _luidity;
+    }
+
+    function getAccessAmount(uint256 amount) public view returns(bool supp) {
         uint256 middleDiv = totalMembers / 1000;
         supp = 
             (middleDiv <= 2 && amount == (middleDiv + 1) * 1e20) ||
@@ -316,7 +336,7 @@ contract MembershipV3 is StoreV1{
     }
 
 
-    function getAccessAmountIn() public pure returns(uint256 amountIn) {
+    function getAccessAmountIn() public view returns(uint256 amountIn) {
         uint256 middleDiv = totalMembers / 1000;
         amountIn = (middleDiv <= 2) ? (middleDiv + 1) * 1e20 : 0; 
     }
@@ -355,7 +375,7 @@ contract MembershipV3 is StoreV1{
         return iterations;
     }
 
-    function _distributeLuckyRankings(address[] memory rankings) internal {
+    function _distributeLuckyRankings(address[] memory rankings) public {
         uint256 totalReward = surplus / 100;
         uint256 thirtyPercent = totalReward * 30 / 100;
         uint256 twentyPercent = totalReward * 20 / 100;
@@ -385,21 +405,19 @@ contract MembershipV3 is StoreV1{
         }
     }
 
-    function provide(address member, uint256 amount) external {
+    function provide(address member, uint256 amount) external noReentrancy{
         User storage user = userInfo[member];
         if(member != leader) require(user.inviter != address(0),"Membership: Invalid inviter address");
         // require(getAccessAmount(amount),"Membership: Invalid provide amount");
-        TransferHelper.safeTransferFrom(usdt, member, address(this), amount);
+        TransferHelper.safeTransferFrom(usdt, member, address(this), amount); 
+        require(IERC20(usdt).balanceOf(address(this)) >= amount, "Membership: Insufficient token balance");
         user.staking += amount;
-        _swapUSDTForToken(amount / 2);
-        uint256 amountUSDT = IERC20(usdt).balanceOf(address(this));
-        uint256 amountToken = IERC20(token).balanceOf(address(this));
-        (uint _amountToken, ,uint _luidity)=_addLuidity(amountToken, amountUSDT);
-        TransferHelper.safeTransfer(token, dead, amountToken - _amountToken);
+        uint256 _luidity = _run();
         user.property += _luidity * 40 / 100;
         totalUsdts += amount;
 
         _reward(member,amount,_luidity);
+
         uint256 index = _loopReward(member, _luidity);
         uint256 hierarchy = _luidity * 20 / 100;
         uint256 pre = _luidity * 2 / 1000;
@@ -570,7 +588,7 @@ contract MembershipV3 is StoreV1{
 
 }
 
-//proxy:0x6839a000A061bdB10f92F6ca886A133E6cc04da4
-//membership:0x7FAB2fb85EC61a9FBAd1Ca273A6cFAbDB7BbaA72
+//proxy:
+//membership:
 //yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
 //lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
