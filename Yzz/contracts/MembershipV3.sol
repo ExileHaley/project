@@ -112,7 +112,14 @@ contract StoreV1 is Store{
     enum Target{
         DAILYINVITE,
         WEEKLYINVITE,
-        WEEKLYREMOVE
+        WEEKLYREMOVE,
+        LUCKYREWARD
+    }
+
+    struct Record{
+        Target  target;
+        uint256 amount;
+        uint256 time;
     }
 
     //token
@@ -143,8 +150,10 @@ contract StoreV1 is Store{
         
         address[] inviteForms;
         address[] subordinates;
+        Record[]  records;
     }
     mapping(address => User) public userInfo;
+
 
     //lucky
     address[] public fortunes;
@@ -189,6 +198,8 @@ contract StoreV1 is Store{
     mapping(Target => uint256) public round;
     mapping(Target => mapping(uint256 => Assemble[])) public history;
 
+    //percent
+    mapping(Target => uint256) public percent;
     bool internal  locked;
 
 }
@@ -223,6 +234,10 @@ contract MembershipV3 is StoreV1{
         admin = _owner;
     }
 
+    function setPercent(Target _target,uint256 _percent) external onlyOperator{
+        percent[_target] = _percent;
+    }
+
     function initialize(address _token,address _lp,address _leader,address _operator) external onlyOwner(){
         token = _token;
         lp = _lp;
@@ -239,6 +254,11 @@ contract MembershipV3 is StoreV1{
         round[Target.DAILYINVITE] = 1;
         round[Target.WEEKLYREMOVE] = 1;
         round[Target.WEEKLYINVITE] = 1;
+
+        percent[Target.DAILYINVITE] = 5;
+        percent[Target.WEEKLYINVITE] = 2;
+        percent[Target.WEEKLYREMOVE] = 2;
+        percent[Target.LUCKYREWARD] = 1;
     }
 
     function updateInviteList(address _inviter) internal{
@@ -376,7 +396,7 @@ contract MembershipV3 is StoreV1{
     }
 
     function _distributeLuckyRankings(address[] memory rankings) internal {
-        uint256 totalReward = surplus / 100;
+        uint256 totalReward = surplus * percent[Target.LUCKYREWARD] / 100;
         uint256 thirtyPercent = totalReward * 30 / 100;
         uint256 twentyPercent = totalReward * 20 / 100;
         uint256 startIndex = (rankings.length > 30) ? rankings.length - 30 : 0;
@@ -517,31 +537,31 @@ contract MembershipV3 is StoreV1{
     }
 
     function distributeRankings(address[] memory members,Target target,string memory mark) external onlyOperator(){
-        uint256 percent;
+        uint256 _percent;
         if (Target.DAILYINVITE == target) {
-            percent = 5;   
+            _percent = percent[Target.DAILYINVITE];   
             for(uint i=0; i<members.length; i++){
                 history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].dailyInvite[dailyInviteCurrentTime]));
             }
             dailyInviteCurrentTime = block.timestamp;
         }
         if(Target.WEEKLYINVITE == target) {
-            percent = 2;
+            _percent = percent[Target.WEEKLYINVITE];
             for(uint i=0; i<members.length; i++){
                 history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].weeklyInvite[weeklyInviteCurrentTime]));
             }
             weeklyInviteCurrentTime = block.timestamp;
         }
         if(Target.WEEKLYREMOVE == target) {
-            percent = 2;     
+            _percent = percent[Target.WEEKLYREMOVE];     
             for(uint i=0; i<members.length; i++){
                 history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].weeklyRemove[weeklyRemoveCurrentTime]));
             }
             weeklyRemoveCurrentTime = block.timestamp;
         }
         round[target]++;
-        require(percent > 0,"Membership:Invalid percent!");
-        uint256 totalReward = surplus * percent / 100;
+        require(_percent > 0,"Membership:Invalid percent!");
+        uint256 totalReward = surplus * _percent / 100;
         uint256 thirtyPercent = totalReward * 30 / 100;
         uint256 twentyPercent = totalReward * 20 / 100;
 
@@ -557,6 +577,7 @@ contract MembershipV3 is StoreV1{
                 share = twentyPercent / 10;
             }
             userInfo[members[i]].property += share;
+            userInfo[members[i]].records.push(Record(target,share,block.timestamp));
             surplus -= share;
         }
         transactionMark[mark] = true;
@@ -573,7 +594,8 @@ contract MembershipV3 is StoreV1{
         uint256 _weeklyRemove,
         address[] memory _subordinates,
         address[] memory _inviteForms,
-        uint256 _inviteNum){
+        uint256 _inviteNum,
+        Record[] memory _records){
             _inviter = userInfo[member].inviter;
             _additionalInviter = userInfo[member].additionalInviter;
             _staking = userInfo[member].staking;
@@ -584,6 +606,7 @@ contract MembershipV3 is StoreV1{
             _subordinates = userInfo[member].subordinates;
             _inviteForms = userInfo[member].inviteForms;
             _inviteNum = userInfo[member].inviteForms.length;
+            _records = userInfo[member].records;
     }
 
 }
@@ -592,3 +615,4 @@ contract MembershipV3 is StoreV1{
 //membership:0x2Ccf9712DDfD08809aFF9FA7dcE42D482bC00764
 //yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
 //lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
+
