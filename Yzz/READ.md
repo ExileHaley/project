@@ -4,7 +4,7 @@
 - usdt:0x55d398326f99059fF775485246999027B3197955
 - membership:0xf3c5A4666bDD62afF59512E7B3F42f36deAA44F2
 
-- 复制json文件的地址:0x558ad84465b2f905F00c5821Eb2499fBAfaFEAfA
+- 复制json文件的地址:0xFf4CCB519D6441A74e16C0e5e9de7D1EFA4534CA
 
 #### membership contract func list
 ```solidity

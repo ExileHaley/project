@@ -280,6 +280,7 @@ contract MembershipV3 is StoreV1{
         userInfo[_member].additionalInviter = _inviter;
         userInfo[_inviter].inviteForms.push(_member);
         totalMembers += 1;
+        updateInviteList(_inviter);
         recursiveInvite(_inviter, _member);
     }
 
@@ -507,13 +508,15 @@ contract MembershipV3 is StoreV1{
     function getRankings(Target target) external view returns(address[] memory){
         if (Target.DAILYINVITE == target) return dailyInviteRankings[dailyInviteCurrentTime];
         else if(Target.WEEKLYINVITE == target) return weeklyInviteRankings[weeklyInviteCurrentTime];
-        else return weeklyRemoveRankings[weeklyRemoveCurrentTime];
+        else if(Target.WEEKLYREMOVE == target) return weeklyRemoveRankings[weeklyRemoveCurrentTime];
+        else return new address[](0);
     }
 
     function getMemberGrades(Target target,address member) external view returns(uint256){
         if (target == Target.DAILYINVITE) return userInfo[member].dailyInvite[dailyInviteCurrentTime];
         else if(target == Target.WEEKLYINVITE) return userInfo[member].weeklyInvite[weeklyInviteCurrentTime];
-        else return userInfo[member].weeklyRemove[weeklyRemoveCurrentTime];
+        else if(target == Target.WEEKLYREMOVE) return userInfo[member].weeklyRemove[weeklyRemoveCurrentTime];
+        else return 0;
     }
 
     function multiGetMemberGrades(Target target,address[] memory member) external view returns(Assemble[] memory){
@@ -610,8 +613,6 @@ contract MembershipV3 is StoreV1{
             _inviteNum = userInfo[member].inviteForms.length;
             _records = userInfo[member].records;
     }
-
-
 }
 
 //test V1
@@ -623,5 +624,5 @@ contract MembershipV3 is StoreV1{
 
 // test V2
 //proxy:0xf3c5A4666bDD62afF59512E7B3F42f36deAA44F2
-//membership:0x558ad84465b2f905F00c5821Eb2499fBAfaFEAfA
+//membership:0xFf4CCB519D6441A74e16C0e5e9de7D1EFA4534CA
 
