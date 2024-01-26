@@ -439,7 +439,8 @@ contract MembershipV3 is StoreV1{
         uint256 _luidity = _run();
         user.property += _luidity * 40 / 100;
         totalUsdts += amount;
-
+        userInfo[user.additionalInviter].dailyInvite[dailyInviteCurrentTime] += amount;
+        userInfo[user.additionalInviter].dailyInvite[weeklyInviteCurrentTime] += amount;
         _reward(member,amount,_luidity);
 
         uint256 index = _loopReward(member, _luidity);
