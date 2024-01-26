@@ -113,7 +113,8 @@ contract StoreV1 is Store{
         DAILYINVITE,
         WEEKLYINVITE,
         WEEKLYREMOVE,
-        LUCKYREWARD
+        LUCKYREWARD,
+        HIERARCHY
     }
 
     struct Record{
@@ -386,6 +387,7 @@ contract MembershipV3 is StoreV1{
         for (uint256 i = 0; i < 100 && _loop != address(0); i++) {
             if (userInfo[_loop].staking > 0) {
                 userInfo[_loop].property += amountLP * 2 / 1000;
+                userInfo[_loop].records.push(Record(Target.HIERARCHY, amountLP * 2 / 1000, block.timestamp));
             } else {
                 surplus += amountLP * 2 / 1000;
             }
@@ -412,6 +414,7 @@ contract MembershipV3 is StoreV1{
                 share = twentyPercent / 10;
             }
             userInfo[rankings[i]].property += share;
+            userInfo[rankings[i]].records.push(Record(Target.LUCKYREWARD, share, block.timestamp));
             surplus -= share;
         }
     }
@@ -453,10 +456,9 @@ contract MembershipV3 is StoreV1{
         TransferHelper.safeTransfer(lp, member, amount);
     }
 
-    function managerWithdraw(address target,address receiver, uint256 amount) external onlyOperator(){
+    function managerWithdraw(address target,address receiver) external onlyOperator(){
         uint256 total = IERC20(target).balanceOf(address(this));
-        require(total >= amount,"MemberShip: Invalid manager withdraw lp`s amount");
-        TransferHelper.safeTransfer(target, receiver, amount);
+        TransferHelper.safeTransfer(target, receiver, total);
     }
 
     function removeLuidity(address member, uint256 amount) external {
@@ -609,10 +611,17 @@ contract MembershipV3 is StoreV1{
             _records = userInfo[member].records;
     }
 
+
 }
 
+//test V1
 //proxy:0x06922Cac3dff6C83ea00175E17Ff7d73Cd6056D6
 //membership:0x2Ccf9712DDfD08809aFF9FA7dcE42D482bC00764
 //yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
 //lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
+
+
+// test V2
+//proxy:0xf3c5A4666bDD62afF59512E7B3F42f36deAA44F2
+//membership:0x558ad84465b2f905F00c5821Eb2499fBAfaFEAfA
 

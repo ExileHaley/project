@@ -2,17 +2,18 @@
 - lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
 - yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
 - usdt:0x55d398326f99059fF775485246999027B3197955
-- membership:0x06922Cac3dff6C83ea00175E17Ff7d73Cd6056D6
+- membership:0xf3c5A4666bDD62afF59512E7B3F42f36deAA44F2
 
-- 复制json文件的地址:0x2Ccf9712DDfD08809aFF9FA7dcE42D482bC00764
+- 复制json文件的地址:0x558ad84465b2f905F00c5821Eb2499fBAfaFEAfA
 
 #### membership contract func list
 ```solidity
 enum Target{
-        DAILYINVITE, //0，日邀请标识
-        WEEKLYINVITE, //1，周邀请标识
-        WEEKLYREMOVE, //2，早鸟奖标识
-        LUCKYREWARD //3，幸运奖标识
+        DAILYINVITE,//0，日邀请标识
+        WEEKLYINVITE,//1，周邀请标识
+        WEEKLYREMOVE,//2，早鸟奖标识
+        LUCKYREWARD,//3，幸运奖标识
+        HIERARCHY //4，层级收益标识
 }
 
 struct Record{
@@ -40,7 +41,7 @@ struct Record{
 - 获取个人信息,_inviter当前用户邀请人地址，_additionalInviter当前用户的直荐地址，_staking当前用户质押的usdt数量，
 - _property当前用户拥有的lp token总数量，_dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp移除流动性的一周总数量lp。
 - _subordinates当前用户邀请的用户列表，_weeklyInvite当周的邀请总业绩，_inviteForm当前用户直接推荐的地址列表，_inviteNum直接推荐的总人数
-- _records获取用户奖励记录
+- _records获取用户奖励记录，奖励记录结构是Record
 6. function getUserInfo(address member) external view returns(
         address _inviter,
         address _additionalInviter,
@@ -86,6 +87,7 @@ struct Assemble{
 - 不需要更新json文件；
 - 溢出总额获取方法；
 - 获取邀请首码地址；
+- getUserInfo方法中地records中新增了层级收益明细
 
 #### 合约更新内容
 - getUserInfo新增获取用户奖励记录的字段；
