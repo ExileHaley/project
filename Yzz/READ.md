@@ -74,12 +74,20 @@ struct Assemble{
 - 计算当前合约准入数量，返回100e18/200e18/300e18以及0，0则代表数量没有限制，但要求输入的数量能被100e18整除。
 11. function getAccessAmountIn() public pure returns(uint256 amountIn);
 
+- 层级溢出 + 移除溢出 + 烧伤溢出 = surplus
+12. function surplus() external view returns(uint256);
 
-
+- 获取首码地址
+13. function leader() external view returns(address);
 ```
 
 
-#### 更新
+#### 前端更新
+- 不需要更新json文件；
+- 溢出总额获取方法；
+- 获取邀请首码地址；
+
+#### 合约更新内容
 - getUserInfo新增获取用户奖励记录的字段；
 - 奖池百分比由固定值修改为可配置；
 - 新增部分内容并未部署到链上
