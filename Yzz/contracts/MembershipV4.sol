@@ -114,11 +114,13 @@ contract StoreV1 is Store{
         WEEKLYINVITE,
         WEEKLYREMOVE,
         LUCKYREWARD,
-        HIERARCHY
+        HIERARCHY,
+        RECOMMEND
     }
 
     struct Record{
         Target  target;
+        address member;
         uint256 amount;
         uint256 time;
     }
@@ -189,23 +191,24 @@ contract StoreV1 is Store{
     //manager
     address public operator;
 
+    //percent
+    mapping(Target => uint256) public percent;
+    bool internal  locked;
 
-    //get data
     struct Assemble{
         address member;
         uint256 amount;
     }
 
-    mapping(Target => uint256) public round;
-    mapping(Target => mapping(uint256 => Assemble[])) public history;
-
-    //percent
-    mapping(Target => uint256) public percent;
-    bool internal  locked;
-
+    struct Whole{
+        Target  target;
+        uint256 amountRewrad;
+        uint256 members;
+        uint256 countTime;
+    }
 }
 
-contract MembershipV3 is StoreV1{
+contract MembershipV4 is StoreV1{
     constructor(){
         admin = msg.sender;
     }
@@ -252,9 +255,6 @@ contract MembershipV3 is StoreV1{
         uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
         dead = 0x000000000000000000000000000000000000dEaD;
         totalMembers += 1;
-        round[Target.DAILYINVITE] = 1;
-        round[Target.WEEKLYREMOVE] = 1;
-        round[Target.WEEKLYINVITE] = 1;
 
         percent[Target.DAILYINVITE] = 5;
         percent[Target.WEEKLYINVITE] = 2;
@@ -363,7 +363,6 @@ contract MembershipV3 is StoreV1{
         amountIn = (middleDiv <= 2) ? (middleDiv + 1) * 1e20 : 0; 
     }
 
-
     function _reward(address member, uint256 amountStake, uint256 amountLP) internal {
         address inviter = userInfo[member].additionalInviter;
         User storage upper = userInfo[inviter];
@@ -375,9 +374,11 @@ contract MembershipV3 is StoreV1{
             surplus += totalPart;
         }else if(upper.staking >= amountStake || upper.staking >= 300e18){
             upper.property += totalPart;
+            upper.records.push(Record(Target.RECOMMEND,member,totalPart,block.timestamp));
         }else{
             uint256 surplusLP = amountLP / (upper.staking / amountStake) * 40 / 100;
             upper.property += surplusLP;
+            upper.records.push(Record(Target.RECOMMEND,member,surplusLP,block.timestamp));
             surplus += totalPart - surplusLP ;
         }
     }
@@ -388,7 +389,7 @@ contract MembershipV3 is StoreV1{
         for (uint256 i = 0; i < 100 && _loop != address(0); i++) {
             if (userInfo[_loop].staking > 0) {
                 userInfo[_loop].property += amountLP * 2 / 1000;
-                userInfo[_loop].records.push(Record(Target.HIERARCHY, amountLP * 2 / 1000, block.timestamp));
+                userInfo[_loop].records.push(Record(Target.HIERARCHY, member, amountLP * 2 / 1000, block.timestamp));
             } else {
                 surplus += amountLP * 2 / 1000;
             }
@@ -415,7 +416,7 @@ contract MembershipV3 is StoreV1{
                 share = twentyPercent / 10;
             }
             userInfo[rankings[i]].property += share;
-            userInfo[rankings[i]].records.push(Record(Target.LUCKYREWARD, share, block.timestamp));
+            userInfo[rankings[i]].records.push(Record(Target.LUCKYREWARD, leader, share, block.timestamp));
             surplus -= share;
         }
     }
@@ -450,7 +451,6 @@ contract MembershipV3 is StoreV1{
 
         _distributeLuckyReward(member);
     }
-
 
     function withdraw(address member,uint256 amount) external{
         require(userInfo[member].property >= amount,"MemberShip: Invalid withdraw lp`s amount");
@@ -489,7 +489,7 @@ contract MembershipV3 is StoreV1{
         );
     }
 
-    function getLuckyRankings() external view returns(address[] memory lucky, uint256 lastTime) {
+    function getLuckyRankings() external view returns(address[] memory lucky, uint256 lastTime,uint256 count) {
         uint256 arrayLength = fortunes.length;
         uint256 startIndex;
         if (arrayLength <= 30) {
@@ -503,9 +503,9 @@ contract MembershipV3 is StoreV1{
             lucky[i] = fortunes[startIndex + i];
         }
         lastTime = lastFortunesTime;
+        count = lastTime + 86400 - block.timestamp;
     }
 
-   
     function getRankings(Target target) external view returns(address[] memory){
         if (Target.DAILYINVITE == target) return dailyInviteRankings[dailyInviteCurrentTime];
         else if(Target.WEEKLYINVITE == target) return weeklyInviteRankings[weeklyInviteCurrentTime];
@@ -546,26 +546,16 @@ contract MembershipV3 is StoreV1{
         uint256 _percent;
         if (Target.DAILYINVITE == target) {
             _percent = percent[Target.DAILYINVITE];   
-            for(uint i=0; i<members.length; i++){
-                history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].dailyInvite[dailyInviteCurrentTime]));
-            }
             dailyInviteCurrentTime = block.timestamp;
         }
         if(Target.WEEKLYINVITE == target) {
             _percent = percent[Target.WEEKLYINVITE];
-            for(uint i=0; i<members.length; i++){
-                history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].weeklyInvite[weeklyInviteCurrentTime]));
-            }
             weeklyInviteCurrentTime = block.timestamp;
         }
         if(Target.WEEKLYREMOVE == target) {
             _percent = percent[Target.WEEKLYREMOVE];     
-            for(uint i=0; i<members.length; i++){
-                history[target][round[target]].push(Assemble(members[i],userInfo[members[i]].weeklyRemove[weeklyRemoveCurrentTime]));
-            }
             weeklyRemoveCurrentTime = block.timestamp;
         }
-        round[target]++;
         require(_percent > 0,"Membership:Invalid percent!");
         uint256 totalReward = surplus * _percent / 100;
         uint256 thirtyPercent = totalReward * 30 / 100;
@@ -583,47 +573,39 @@ contract MembershipV3 is StoreV1{
                 share = twentyPercent / 10;
             }
             userInfo[members[i]].property += share;
-            userInfo[members[i]].records.push(Record(target,share,block.timestamp));
+            userInfo[members[i]].records.push(Record(target, leader, share, block.timestamp));
             surplus -= share;
         }
         transactionMark[mark] = true;
     }
     
+    function getWholeInfo() external view returns(Whole[] memory wholes){
+        wholes[0] = Whole(Target.DAILYINVITE, surplus * 5 / 100, dailyInviteRankings[dailyInviteCurrentTime].length, dailyInviteCurrentTime + 86400 - block.timestamp);
+        wholes[1] = Whole(Target.WEEKLYINVITE, surplus * 2 / 100, weeklyInviteRankings[weeklyInviteCurrentTime].length, weeklyInviteCurrentTime + 86400 - block.timestamp);
+        wholes[2] = Whole(Target.WEEKLYREMOVE, surplus * 2 / 100, weeklyRemoveRankings[weeklyRemoveCurrentTime].length, weeklyRemoveCurrentTime + 86400 - block.timestamp);
+        wholes[3] = Whole(Target.LUCKYREWARD, surplus * 1 / 100, 0, block.timestamp);
+    }
 
     function getUserInfo(address member) external view returns(
-        address _inviter,
-        address _additionalInviter,
-        uint256 _staking, 
-        uint256 _property,
-        uint256 _dailyInvite,
-        uint256 _weeklyInvite,
+        uint256 _dailyInvite, 
         uint256 _weeklyRemove,
-        address[] memory _subordinates,
+        uint256 _weeklyInvite,
         address[] memory _inviteForms,
-        uint256 _inviteNum,
-        Record[] memory _records){
-            _inviter = userInfo[member].inviter;
-            _additionalInviter = userInfo[member].additionalInviter;
-            _staking = userInfo[member].staking;
-            _property = userInfo[member].property;
-            _dailyInvite = userInfo[member].dailyInvite[dailyInviteCurrentTime];
-            _weeklyInvite = userInfo[member].weeklyInvite[weeklyInviteCurrentTime];
-            _weeklyRemove = userInfo[member].weeklyRemove[weeklyRemoveCurrentTime];
-            _subordinates = userInfo[member].subordinates;
-            _inviteForms = userInfo[member].inviteForms;
-            _inviteNum = userInfo[member].inviteForms.length;
-            _records = userInfo[member].records;
+        address[] memory _subordinates,
+        Record[] memory _records
+    ){
+        _dailyInvite = userInfo[member].dailyInvite[dailyInviteCurrentTime];
+        _weeklyRemove = userInfo[member].weeklyRemove[weeklyRemoveCurrentTime];
+        _weeklyInvite = userInfo[member].weeklyInvite[weeklyInviteCurrentTime];
+        _inviteForms = userInfo[member].inviteForms;
+        _subordinates = userInfo[member].subordinates;
+        _records = userInfo[member].records;
+
     }
+
 }
 
-//test V1
-//proxy:0x06922Cac3dff6C83ea00175E17Ff7d73Cd6056D6
-//membership:0x2Ccf9712DDfD08809aFF9FA7dcE42D482bC00764
-//yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
-//lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
-
-
-// test V2
-//proxy:0xf3c5A4666bDD62afF59512E7B3F42f36deAA44F2
-//membership:0xFf4CCB519D6441A74e16C0e5e9de7D1EFA4534CA
-
+//- lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
+// - yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
+//proxy:0x7370A9A6d256a7cf3f93BD91d99bDA87db045B41
+//membership:0xcFf27d11964Df7F912A09D5c46bb21Da5A2f2cFF
