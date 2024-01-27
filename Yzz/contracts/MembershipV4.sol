@@ -155,7 +155,7 @@ contract StoreV1 is Store{
         address[] subordinates;
         Record[]  records;
     }
-    mapping(address => User) public userInfo;
+    mapping(address => User)  userInfo;
 
 
     //lucky
@@ -580,10 +580,22 @@ contract MembershipV4 is StoreV1{
     }
     
     function getWholeInfo() external view returns(Whole[] memory wholes){
-        wholes[0] = Whole(Target.DAILYINVITE, surplus * 5 / 100, dailyInviteRankings[dailyInviteCurrentTime].length, dailyInviteCurrentTime + 86400 - block.timestamp);
-        wholes[1] = Whole(Target.WEEKLYINVITE, surplus * 2 / 100, weeklyInviteRankings[weeklyInviteCurrentTime].length, weeklyInviteCurrentTime + 86400 - block.timestamp);
-        wholes[2] = Whole(Target.WEEKLYREMOVE, surplus * 2 / 100, weeklyRemoveRankings[weeklyRemoveCurrentTime].length, weeklyRemoveCurrentTime + 86400 - block.timestamp);
-        wholes[3] = Whole(Target.LUCKYREWARD, surplus * 1 / 100, 0, block.timestamp);
+        uint256 dailyInviteCount;
+        uint256 weeklyInviteCount;
+        uint256 weeklyRemoveCount;
+        if(dailyInviteCurrentTime + 86400 > block.timestamp) {
+            dailyInviteCount = dailyInviteCurrentTime + 86400 - block.timestamp;
+        }
+        if(weeklyInviteCurrentTime + 86400 > block.timestamp){
+            weeklyInviteCount =  weeklyInviteCurrentTime + 86400 - block.timestamp;
+        }
+        if(weeklyRemoveCurrentTime + 86400 > block.timestamp){
+            weeklyRemoveCount =  weeklyRemoveCurrentTime + 86400 - block.timestamp;
+        }
+        wholes[0] = Whole(Target.DAILYINVITE, surplus * 5 / 100, dailyInviteRankings[dailyInviteCurrentTime].length, dailyInviteCount);
+        wholes[1] = Whole(Target.WEEKLYINVITE, surplus * 2 / 100, weeklyInviteRankings[weeklyInviteCurrentTime].length,weeklyInviteCount);
+        wholes[2] = Whole(Target.WEEKLYREMOVE, surplus * 2 / 100, weeklyRemoveRankings[weeklyRemoveCurrentTime].length,weeklyRemoveCount);
+        wholes[3] = Whole(Target.LUCKYREWARD, surplus / 100, 0, 0);
     }
 
     function getUserInfo(address member) external view returns(
@@ -603,9 +615,17 @@ contract MembershipV4 is StoreV1{
 
     }
 
+    function getBaseUserInfo(address member) external view returns(address _inviter,address _additionalInviter,uint256 _staking,uint256 _property){
+        _inviter = userInfo[member].inviter;
+        _additionalInviter = userInfo[member].additionalInviter;
+        _staking = userInfo[member].staking;
+        _property = userInfo[member].property;
+
+    }
+
 }
 
 //- lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
 // - yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
 //proxy:0x7370A9A6d256a7cf3f93BD91d99bDA87db045B41
-//membership:0xcFf27d11964Df7F912A09D5c46bb21Da5A2f2cFF
+//membership:0x9d3dF0FC4F0b60C70925DC323751B9b96476687A

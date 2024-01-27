@@ -63,7 +63,7 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
     )
 - 获取个人信息,_inviter当前用户邀请人地址，_additionalInviter当前用户的直荐地址，_staking当前用户质押的usdt数量，
 - _property当前用户拥有的lp token总数量
-7. function userInfo(address member) external view returns(address _inviter,address _additionalInvi, uint256 _staking, uint256 _property)
+7. function getBaseUserInfo(address member) external view returns(address _inviter,address _additionalInvi, uint256 _staking, uint256 _property)
 
 
 - 返回幸运奖信息，lucky是截止目前最后参与的30个人的地址，lastTime最后一个人的参与时间,count倒计时
@@ -81,15 +81,12 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 - 返回Whole结构体数组
 12. function getWholeInfo() external view returns(Whole[] memory wholes)
 
-- 
 ```
 
 
 #### 前端更新
-- 不需要更新json文件；
-- 溢出总额获取方法；
-- 获取邀请首码地址；
-- getUserInfo方法中地records中新增了层级收益明细
+- 重新复制一下json文件
+- userinfo更新为getBaseUserInfo方法
 
 #### 合约更新内容
 - getUserInfo新增获取用户奖励记录的字段；
