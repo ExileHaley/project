@@ -252,11 +252,12 @@ contract Subject is ERC20{
     mapping(address => bool) public blocklimit;
     uint256 public permitTime;
 
-    //0x10ED43C718714eb63d5aA57B78B54704E256024E
     //recevier:0x7165892ae2A237e11c049b485DB4855f51959824
+    //0x10ED43C718714eb63d5aA57B78B54704E256024E
+    
     //marketing:0xb78fFa48C0BcE1a8ecc24bA6890c97411F0906C0
     //reflow:0x5b9B0F128cF036dc04b007Aa72630ACF8DC6910b
-    //subject:0x539572031fb17c97b2809F78a70BC903e09db493
+    //subject:0x41b3a488c54ab541f9E1Dd460A28caBE08b7557d
     constructor(address _receiver,address _uniswapV2Router,address _marketking,address _reflow)ERC20("Subject 3","Subject 3"){
         _mint(_receiver, 150000000e18);
         uniswapV2Router = _uniswapV2Router;
@@ -312,13 +313,13 @@ contract Subject is ERC20{
         if(permitTime > 0 && isFull && block.timestamp < permitTime + 60) blocklimit[to] = true;
     }
 
-    function _run() public {
+    function _run() internal {
         uint256 amountToken = balanceOf(address(this));
         _tokenToBNB(amountToken * 75 / 100, address(this));
         _addLuidity(balanceOf(address(this)), address(this).balance * 33 / 100);
     }
 
-    function _tokenToBNB(uint256 amountIn,address to) public{
+    function _tokenToBNB(uint256 amountIn,address to) internal{
         _approve(address(this), uniswapV2Router, amountIn);
         address[] memory path = new address[](2);
         path[0] = address(this);
@@ -333,7 +334,7 @@ contract Subject is ERC20{
         );
     }
 
-    function _addLuidity(uint256 amountToken, uint256 amountBNB) public{
+    function _addLuidity(uint256 amountToken, uint256 amountBNB) internal{
         _approve(address(this), uniswapV2Router, amountToken);
         IUniswapV2Router(uniswapV2Router).addLiquidityETH{value:amountBNB}(
             address(this), 
