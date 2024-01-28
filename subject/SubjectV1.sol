@@ -1,37 +1,7 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/ERC20.sol)
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.0;
-
-interface IUniswapV2Factory {
-    function createPair(address tokenA, address tokenB) external returns (address pair);
-}
-
-interface IUniswapV2Router {
-    function factory() external pure returns (address);
-    function WETH() external pure returns (address);
-    function swapExactETHForTokensSupportingFeeOnTransferTokens(
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external payable;
-    function swapExactTokensForETHSupportingFeeOnTransferTokens(
-        uint amountIn,
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external;
-    function addLiquidityETH(
-        address token,
-        uint amountTokenDesired,
-        uint amountTokenMin,
-        uint amountETHMin,
-        address to,
-        uint deadline
-    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
-}
 
 interface IERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -41,12 +11,19 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
     function allowance(address owner, address spender) external view returns (uint256);
     function approve(address spender, uint256 amount) external returns (bool);
-    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
 }
 
 interface IERC20Metadata is IERC20 {
+
     function name() external view returns (string memory);
+
     function symbol() external view returns (string memory);
+
     function decimals() external view returns (uint8);
 }
 
@@ -111,7 +88,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         return true;
     }
 
-    function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public virtual override returns (bool) {
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
@@ -135,7 +116,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         return true;
     }
 
-    function _transfer(address from, address to, uint256 amount) internal virtual {
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
@@ -170,7 +155,6 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         _afterTokenTransfer(address(0), account, amount);
     }
 
-
     function _burn(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: burn from the zero address");
 
@@ -189,7 +173,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         _afterTokenTransfer(account, address(0), amount);
     }
 
-    function _approve(address owner, address spender, uint256 amount) internal virtual {
+    function _approve(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -197,7 +185,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         emit Approval(owner, spender, amount);
     }
 
-    function _spendAllowance(address owner, address spender, uint256 amount) internal virtual {
+    function _spendAllowance(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "ERC20: insufficient allowance");
@@ -207,34 +199,66 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         }
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual {}
-    function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual {}
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {}
+
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {}
 }
 
-contract Subject is ERC20{
+interface IUniswapV2Router {
+    function factory() external pure returns (address);
+    function WETH() external pure returns (address);
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external;
 
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+}
+
+interface IUniswapV2Factory {
+    function createPair(address tokenA, address tokenB) external returns (address pair);
+}
+
+
+contract Subject is ERC20{
     receive() external payable {}
-    
+
     address public uniswapV2Pair;
     address public uniswapV2Router;
     address public owner;
-
     address public marketking;
-
     address public reflow;
-
     address dead;
-
     mapping(address => bool) public blocklimit;
     uint256 public permitTime;
 
-    uint256 public marketkingSurplus;
-    uint256 public reflowSurplus;
-
     //0x10ED43C718714eb63d5aA57B78B54704E256024E
-    //0x1e6470e6538E2A1BB02655Cd62195c6FbebdEBb4
-    constructor(address _uniswapV2Router,address _marketking,address _reflow)ERC20("Subject 3","Subject"){
-        _mint(msg.sender, 150000000e18);
+    //recevier:0x7165892ae2A237e11c049b485DB4855f51959824
+    //marketing:0xb78fFa48C0BcE1a8ecc24bA6890c97411F0906C0
+    //reflow:0x5b9B0F128cF036dc04b007Aa72630ACF8DC6910b
+    //subject:0x539572031fb17c97b2809F78a70BC903e09db493
+    constructor(address _receiver,address _uniswapV2Router,address _marketking,address _reflow)ERC20("Subject 3","Subject 3"){
+        _mint(_receiver, 150000000e18);
         uniswapV2Router = _uniswapV2Router;
         marketking = _marketking;
         reflow = _reflow;
@@ -260,59 +284,48 @@ contract Subject is ERC20{
         reflow = _reflow;
     }
 
-    function _transfer(address from, address to, uint256 amount) internal virtual override{
-        require(!blocklimit[from],"ERC20:No permit!");
-        uint256 tokenAmount = amount;
-        if(from == uniswapV2Pair || to == uniswapV2Pair){
-            super._transfer(from, address(this), tokenAmount * 4 / 100);
-            super._transfer(from, dead, tokenAmount * 2 / 100);
-            tokenAmount -= (tokenAmount * 6 / 100);
-            reflowSurplus += amount * 2 / 100;
-            marketkingSurplus += amount * 2 / 100;
+
+    function _transfer(address from, address to, uint256 amount) internal override{
+        require(!blocklimit[from],"ERC20:Not permit!");
+        uint256 amountToken = amount;
+        bool isPair = from == uniswapV2Pair || to == uniswapV2Pair;
+        bool isRouter = from == uniswapV2Router || to == uniswapV2Router;
+
+        if(isPair && !isRouter && from != address(this)){
+            super._transfer(from, address(this), amountToken * 4 / 100);
+            super._transfer(from, dead, amountToken * 2 / 100);
+            amountToken = amountToken - (amountToken * 6 / 100);
         }
-        super._transfer(from, to, tokenAmount);
+
+        super._transfer(from, to, amountToken);
         limit(to);
-        if(from != uniswapV2Pair && from != uniswapV2Router && to != uniswapV2Pair && to != uniswapV2Router) _run();
-    }
-
-    function _run() public  {
-      
-        if (IERC20(uniswapV2Pair).totalSupply() > 0) {
-            uint256 reflowHalf = reflowSurplus / 2;
-            uint256 marketkingAmount = marketkingSurplus;
-            
-            // Swap half of reflowSurplus to BNB
-            _swapToBNB(reflowHalf, address(this));
-            
-            // Add liquidity with the swapped BNB and remaining reflowSurplus
-            _addLuidity(reflowHalf, address(this).balance, reflow);
-            
-            // Reset reflowSurplus
-            reflowSurplus -= reflowHalf * 2;
-
-            // Swap marketkingSurplus to BNB
-            _swapToBNB(marketkingAmount, marketking);
-
-            // Reset marketkingSurplus
-            marketkingSurplus -= marketkingAmount;
+        if (!isPair && !isRouter) {
+            _run();
+            payable(marketking).transfer(address(this).balance);
         }
-    
-    } 
-
+    }
 
     function limit(address to) internal{
-        if(permitTime == 0 && IERC20(uniswapV2Pair).totalSupply()>0) permitTime = block.timestamp;
-        if(block.timestamp < permitTime + 60 && permitTime > 0 && to != address(this)) blocklimit[to] = true;
+        bool isFull = to != uniswapV2Pair && to != uniswapV2Router;
+        bool timelimit = IERC20(uniswapV2Pair).totalSupply()>0 && permitTime == 0;
+        if(timelimit) permitTime = block.timestamp;
+        if(permitTime > 0 && isFull && block.timestamp < permitTime + 60) blocklimit[to] = true;
     }
 
-    function _swapToBNB(uint256 amount, address to) public{
-        approve(uniswapV2Router, amount);
+    function _run() public {
+        uint256 amountToken = balanceOf(address(this));
+        _tokenToBNB(amountToken * 75 / 100, address(this));
+        _addLuidity(balanceOf(address(this)), address(this).balance * 33 / 100);
+    }
+
+    function _tokenToBNB(uint256 amountIn,address to) public{
+        _approve(address(this), uniswapV2Router, amountIn);
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = IUniswapV2Router(uniswapV2Router).WETH();
 
         IUniswapV2Router(uniswapV2Router).swapExactTokensForETHSupportingFeeOnTransferTokens(
-            amount,
+            amountIn, 
             0, 
             path, 
             to, 
@@ -320,14 +333,14 @@ contract Subject is ERC20{
         );
     }
 
-    function _addLuidity(uint256 amountToken, uint256 amountBNB, address to) public{
-        approve(uniswapV2Router, amountToken);
+    function _addLuidity(uint256 amountToken, uint256 amountBNB) public{
+        _approve(address(this), uniswapV2Router, amountToken);
         IUniswapV2Router(uniswapV2Router).addLiquidityETH{value:amountBNB}(
             address(this), 
             amountToken, 
             0, 
             0, 
-            to, 
+            reflow, 
             block.timestamp
         );
     }
