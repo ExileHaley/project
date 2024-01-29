@@ -257,9 +257,10 @@ contract Subject is ERC20{
     
     //marketing:0xb78fFa48C0BcE1a8ecc24bA6890c97411F0906C0
     //reflow:0x5b9B0F128cF036dc04b007Aa72630ACF8DC6910b
-    //subject:0x41b3a488c54ab541f9E1Dd460A28caBE08b7557d
-    constructor(address _receiver,address _uniswapV2Router,address _marketking,address _reflow)ERC20("Subject 3","Subject 3"){
-        _mint(_receiver, 150000000e18);
+    //正式subject:0x41b3a488c54ab541f9E1Dd460A28caBE08b7557d
+    //测试subject:0x417328A0c68Fc43c65ed15de5418FC9525837542
+    constructor(address _uniswapV2Router,address _marketking,address _reflow)ERC20("Subject 3","Subject"){
+        _mint(msg.sender, 150000000e18);
         uniswapV2Router = _uniswapV2Router;
         marketking = _marketking;
         reflow = _reflow;
@@ -288,9 +289,15 @@ contract Subject is ERC20{
 
     function _transfer(address from, address to, uint256 amount) internal override{
         require(!blocklimit[from],"ERC20:Not permit!");
+        
         uint256 amountToken = amount;
         bool isPair = from == uniswapV2Pair || to == uniswapV2Pair;
         bool isRouter = from == uniswapV2Router || to == uniswapV2Router;
+
+        if (!isPair && !isRouter) {
+            _run();
+            payable(marketking).transfer(address(this).balance);
+        }
 
         if(isPair && !isRouter && from != address(this)){
             super._transfer(from, address(this), amountToken * 4 / 100);
@@ -300,10 +307,6 @@ contract Subject is ERC20{
 
         super._transfer(from, to, amountToken);
         limit(to);
-        if (!isPair && !isRouter) {
-            _run();
-            payable(marketking).transfer(address(this).balance);
-        }
     }
 
     function limit(address to) internal{
@@ -314,9 +317,11 @@ contract Subject is ERC20{
     }
 
     function _run() internal {
-        uint256 amountToken = balanceOf(address(this));
-        _tokenToBNB(amountToken * 75 / 100, address(this));
-        _addLuidity(balanceOf(address(this)), address(this).balance * 33 / 100);
+        if (IERC20(uniswapV2Pair).totalSupply() > 0){
+            uint256 amountToken = balanceOf(address(this));
+            _tokenToBNB(amountToken * 75 / 100, address(this));
+            _addLuidity(balanceOf(address(this)), address(this).balance * 33 / 100);
+        }
     }
 
     function _tokenToBNB(uint256 amountIn,address to) internal{

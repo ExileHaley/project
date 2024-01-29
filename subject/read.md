@@ -1,5 +1,6 @@
-#### 私募:0xa5F55ac7D5d5a37b3CB3F9194958cF555bF04C39(json也在这里复制)
+#### 私募:0x962c527a9Dc33fD010B617b6544aA5a1a5E59428(json也在这里复制)
 
+#### 测试token(前端不使用):0x417328A0c68Fc43c65ed15de5418FC9525837542
 
 
 ```solidity
@@ -16,7 +17,16 @@
 - 用户提现subject token
 4. function withdraw(address _user, uint256 amount) external;
 
-- 是否已经开放了提现,true代表已经开放了subject提现，false则代表没有
-5. function withdrawSwitch()external view returns(bool);
+- 获取倒计时
+5. function getCount() external view returns(uint256 count);
+
+struct Record{
+        address member; //参与地址
+        uint256 amount; //参与数量
+        uint256 time; //参与时间
+}
+
+- 获取最新的200个用户参与记录
+6. function getRecords() external view returns (Record[] memory)
 
 ```

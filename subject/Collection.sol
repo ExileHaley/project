@@ -34,24 +34,38 @@ contract Collection{
     address public subject;
     address public owner;
     address public receiver;
-    bool    public withdrawSwitch;
+    uint256 public startTime;
+    uint256 public endTime;
 
     struct User{
         uint256 staking;
         uint256 acquire;
     }
-
     mapping(address => User) public userInfo;
+
+    struct Record{
+        address member;
+        uint256 amount;
+        uint256 time;
+    }
+    Record[] records;
 
     uint256 public maxlimit = 3e18;
     uint256 public minlimit = 1e17;
     uint256 public rate = 2500;
-    //subject:0x41b3a488c54ab541f9E1Dd460A28caBE08b7557d
+
+    //测试subject:0x417328A0c68Fc43c65ed15de5418FC9525837542
     //receiver:0x48Ef30D8063FAd6204b344BD9ea80A9476345BB3
+    //collection:0x962c527a9Dc33fD010B617b6544aA5a1a5E59428
+    //2024.02.01 13:30:00  1706772600
+    //2024.02.09 18:30:00  1707474600
     constructor(address _subject,address _receiver){
         subject = _subject;
         receiver = _receiver;
         owner = msg.sender;
+        startTime = block.timestamp;
+
+        endTime = block.timestamp + (86400 * 4);
     }
 
     modifier onlyOwner() {
@@ -63,15 +77,15 @@ contract Collection{
         require(msg.value >= _amount,"Collection:Insufficient assets!");
         require(msg.value + userInfo[_user].staking <= maxlimit,"Collection:Maximum limit exceeded");
         require(msg.value >= 1e17,"Collection:Below minimum limit!");
-        require(!withdrawSwitch,"Collection:Pause recharge!");
+        require(block.timestamp >= startTime && block.timestamp < endTime,"Collection:Pause recharge!");
         TransferHelper.safeTransferETH(receiver, msg.value);
         userInfo[_user].staking += msg.value;
         userInfo[_user].acquire += (msg.value * rate);
+        records.push(Record(_user, _amount, block.timestamp));
     }  
     
-
     function withdraw(address _user, uint256 amount) external {
-        require(withdrawSwitch,"Collection:Withdrawal not yet open!");
+        require(block.timestamp >= endTime,"Collection:Withdrawal not yet open!");
         require(userInfo[_user].acquire >= amount,"Collection:Insufficient subject assets!");
         userInfo[_user].acquire -= amount;
         TransferHelper.safeTransfer(subject, _user, amount);
@@ -79,6 +93,25 @@ contract Collection{
 
     function getMaximum(address _user) external view returns(uint256){
         return maxlimit - userInfo[_user].staking;
+    }
+
+    function getRecords() external view returns (Record[] memory) {
+        uint256 totalRecords = records.length;
+        uint256 recordsToFetch = totalRecords < 200 ? totalRecords : 200;
+        Record[] memory latestRecords = new Record[](recordsToFetch);
+
+        uint256 index = 0;
+        for (uint256 i = totalRecords; i > 0 && index < recordsToFetch; i--) {
+            latestRecords[index] = records[i - 1];
+            index++;
+        }
+
+        return latestRecords;
+    }
+
+
+    function getCount() external view returns(uint256 count){
+        if(endTime >= block.timestamp) count = endTime - block.timestamp;
     }
 
     function setCurrency(address _subject) external onlyOwner{
@@ -89,9 +122,9 @@ contract Collection{
         owner = _owner;
     }
 
-    function setSwitch(bool _isSwitch) external onlyOwner{
-        withdrawSwitch = _isSwitch;
+    function setTime(uint256 _start,uint256 _end) external onlyOwner{
+        startTime = _start;
+        endTime = _end;
     }
 
 }
-//collection:0xa5F55ac7D5d5a37b3CB3F9194958cF555bF04C39
