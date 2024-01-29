@@ -579,7 +579,8 @@ contract MembershipV4 is StoreV1{
         transactionMark[mark] = true;
     }
     
-    function getWholeInfo() external view returns(Whole[] memory wholes){
+    function getWholeInfo() external view returns(Whole[] memory){
+        Whole[] memory wholes = new  Whole[](4);
         uint256 dailyInviteCount;
         uint256 weeklyInviteCount;
         uint256 weeklyRemoveCount;
@@ -596,6 +597,7 @@ contract MembershipV4 is StoreV1{
         wholes[1] = Whole(Target.WEEKLYINVITE, surplus * 2 / 100, weeklyInviteRankings[weeklyInviteCurrentTime].length,weeklyInviteCount);
         wholes[2] = Whole(Target.WEEKLYREMOVE, surplus * 2 / 100, weeklyRemoveRankings[weeklyRemoveCurrentTime].length,weeklyRemoveCount);
         wholes[3] = Whole(Target.LUCKYREWARD, surplus / 100, 0, 0);
+        return wholes;
     }
 
     function getUserInfo(address member) external view returns(
@@ -628,4 +630,4 @@ contract MembershipV4 is StoreV1{
 //- lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
 // - yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
 //proxy:0x7370A9A6d256a7cf3f93BD91d99bDA87db045B41
-//membership:0x9d3dF0FC4F0b60C70925DC323751B9b96476687A
+//membership:0x68bF702d9e604B8dA596E8D15c877B6946286c9B
