@@ -125,21 +125,18 @@ contract StoreV1 is Store{
         uint256 time;
     }
 
-    //token
-    address public usdt;
-    address public token;
-    address public lp;
+    struct Assemble{
+        address member;
+        uint256 amount;
+    }
 
-    //address first
-    address public leader;
+    struct Whole{
+        Target  target;
+        uint256 amountRewrad;
+        uint256 members;
+        uint256 countTime;
+    }
 
-    //swap
-    address public uniswapV2Router;
-
-    //burn 
-    address public dead;
-
-    //user info
     struct User{
         address inviter;
         address additionalInviter;
@@ -157,6 +154,20 @@ contract StoreV1 is Store{
     }
     mapping(address => User)  userInfo;
 
+    //token
+    address public usdt;
+    address public token;
+    address public lp;
+
+    //address first
+    address public leader;
+
+    //swap
+    address public uniswapV2Router;
+    address public uniswapV2Pair;
+
+    //burn 
+    address public dead;
 
     //lucky
     address[] public fortunes;
@@ -194,21 +205,10 @@ contract StoreV1 is Store{
     //percent
     mapping(Target => uint256) public percent;
     bool internal  locked;
-
-    struct Assemble{
-        address member;
-        uint256 amount;
-    }
-
-    struct Whole{
-        Target  target;
-        uint256 amountRewrad;
-        uint256 members;
-        uint256 countTime;
-    }
 }
 
-contract MembershipV4 is StoreV1{
+contract MembershipV5 is StoreV1{
+
     constructor(){
         admin = msg.sender;
     }
@@ -241,7 +241,9 @@ contract MembershipV4 is StoreV1{
     function setPercent(Target _target,uint256 _percent) external onlyOperator{
         percent[_target] = _percent;
     }
-
+    //token:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc
+    //lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838
+    //leader:0xB077e40399F1D632F01b6AaAdabcA084E18C4846
     function initialize(address _token,address _lp,address _leader,address _operator) external onlyOwner(){
         token = _token;
         lp = _lp;
@@ -250,6 +252,7 @@ contract MembershipV4 is StoreV1{
         dailyInviteCurrentTime = block.timestamp;
         weeklyInviteCurrentTime = block.timestamp;
         weeklyRemoveCurrentTime = block.timestamp;
+        //这里注意调整
         lastFortunesTime = block.timestamp;
         usdt = 0x55d398326f99059fF775485246999027B3197955;
         uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
@@ -372,24 +375,31 @@ contract MembershipV4 is StoreV1{
 
         if (upper.staking == 0) {
             surplus += totalPart;
-        }else if(upper.staking >= amountStake || upper.staking >= 300e18){
+        }else if(upper.staking >= amountStake || upper.staking >= 600e18){
             upper.property += totalPart;
             upper.records.push(Record(Target.RECOMMEND,member,totalPart,block.timestamp));
         }else{
-            uint256 surplusLP = amountLP / (upper.staking / amountStake) * 40 / 100;
+            uint256 surplusLP = amountLP / (amountStake / upper.staking) * 40 / 100;
             upper.property += surplusLP;
             upper.records.push(Record(Target.RECOMMEND,member,surplusLP,block.timestamp));
-            surplus += totalPart - surplusLP ;
+            surplus += (totalPart - surplusLP);
         }
     }
 
-    function _loopReward(address member, uint256 amountLP) internal returns (uint256) {
+    function _loopReward(address member, uint256 amountStake, uint256 amountLP) internal returns (uint256) {
         address _loop = userInfo[member].inviter;
         uint256 iterations = 0;
-        for (uint256 i = 0; i < 100 && _loop != address(0); i++) {
+        for (uint256 i = 0; i < 50 && _loop != address(0); i++) {
             if (userInfo[_loop].staking > 0) {
-                userInfo[_loop].property += amountLP * 2 / 1000;
-                userInfo[_loop].records.push(Record(Target.HIERARCHY, member, amountLP * 2 / 1000, block.timestamp));
+                if(userInfo[_loop].staking >= amountStake || userInfo[_loop].staking >= 600e18){
+                    userInfo[_loop].property += amountLP * 2 / 1000;
+                    userInfo[_loop].records.push(Record(Target.HIERARCHY, member, amountLP * 2 / 1000, block.timestamp));
+                }else{
+                    uint256 surplusLP = amountLP / (amountStake / userInfo[_loop].staking) * 2 / 1000;
+                    userInfo[_loop].property += surplusLP;
+                    userInfo[_loop].records.push(Record(Target.HIERARCHY, member, surplusLP, block.timestamp));
+                    surplus += (amountLP * 2 / 1000 - surplusLP);
+                }
             } else {
                 surplus += amountLP * 2 / 1000;
             }
@@ -399,41 +409,13 @@ contract MembershipV4 is StoreV1{
         return iterations;
     }
 
-    function _distributeLuckyRankings(address[] memory rankings) internal {
-        uint256 totalReward = surplus * percent[Target.LUCKYREWARD] / 100;
-        uint256 thirtyPercent = totalReward * 30 / 100;
-        uint256 twentyPercent = totalReward * 20 / 100;
-        uint256 startIndex = (rankings.length > 30) ? rankings.length - 30 : 0;
-        for (uint256 i = startIndex; i < rankings.length; i++) {
-            uint256 share;
-            if (i >= rankings.length - 5) {
-                share = thirtyPercent / 5;
-            } else if (i >= rankings.length - 10) {
-                share = twentyPercent / 5;
-            } else if (i >= rankings.length - 20) {
-                share = thirtyPercent / 10;
-            } else {
-                share = twentyPercent / 10;
-            }
-            userInfo[rankings[i]].property += share;
-            userInfo[rankings[i]].records.push(Record(Target.LUCKYREWARD, leader, share, block.timestamp));
-            surplus -= share;
-        }
-    }
 
-    function _distributeLuckyReward(address member) internal{
-        if(block.timestamp >= lastFortunesTime + 86400 && fortunes.length > 0){
-            _distributeLuckyRankings(fortunes);
-        }else{
-            fortunes.push(member);
-            lastFortunesTime = block.timestamp;
-        }
-    }
 
     function provide(address member, uint256 amount) external noReentrancy{
         User storage user = userInfo[member];
         if(member != leader) require(user.inviter != address(0),"Membership: Invalid inviter address");
-        // require(getAccessAmount(amount),"Membership: Invalid provide amount");
+        require(getAccessAmount(amount),"Membership: Invalid provide amount");
+        if(getAccessAmountIn() > 0) require(getAccessAmountIn() - user.staking >= amount,"Membership:No over-participation allowed");
         TransferHelper.safeTransferFrom(usdt, member, address(this), amount); 
         require(IERC20(usdt).balanceOf(address(this)) >= amount, "Membership: Insufficient token balance");
         user.staking += amount;
@@ -444,12 +426,28 @@ contract MembershipV4 is StoreV1{
         userInfo[user.additionalInviter].dailyInvite[weeklyInviteCurrentTime] += amount;
         _reward(member,amount,_luidity);
 
-        uint256 index = _loopReward(member, _luidity);
+        uint256 index = _loopReward(member, amount, _luidity);
         uint256 hierarchy = _luidity * 20 / 100;
         uint256 pre = _luidity * 2 / 1000;
         surplus = surplus + (hierarchy - pre * index);
 
         _distributeLuckyReward(member);
+    }
+
+    function _distributeLuckyReward(address member) internal{
+
+        if(totalMembers == 2) lastFortunesTime = block.timestamp + 86400;
+
+        if(block.timestamp >= lastFortunesTime && fortunes.length > 0){
+            uint256 totalReward = surplus * percent[Target.LUCKYREWARD] / 100;
+            userInfo[fortunes[fortunes.length - 1]].property += (totalReward / 2);
+            userInfo[fortunes[fortunes.length - 1]].records.push(Record(Target.LUCKYREWARD, leader, totalReward / 2, block.timestamp));
+            surplus -= totalReward / 2;
+            lastFortunesTime = block.timestamp + 86400;
+        }else{
+            lastFortunesTime = block.timestamp + 3600;
+        }
+        fortunes.push(member);
     }
 
     function withdraw(address member,uint256 amount) external{
@@ -503,7 +501,8 @@ contract MembershipV4 is StoreV1{
             lucky[i] = fortunes[startIndex + i];
         }
         lastTime = lastFortunesTime;
-        count = lastTime + 86400 - block.timestamp;
+        if(block.timestamp >= lastFortunesTime) count = 0;
+        else count = lastFortunesTime - block.timestamp;
     }
 
     function getRankings(Target target) external view returns(address[] memory){
@@ -542,43 +541,6 @@ contract MembershipV4 is StoreV1{
         return grades;
     }
 
-    function distributeRankings(address[] memory members,Target target,string memory mark) external onlyOperator(){
-        uint256 _percent;
-        if (Target.DAILYINVITE == target) {
-            _percent = percent[Target.DAILYINVITE];   
-            dailyInviteCurrentTime = block.timestamp;
-        }
-        if(Target.WEEKLYINVITE == target) {
-            _percent = percent[Target.WEEKLYINVITE];
-            weeklyInviteCurrentTime = block.timestamp;
-        }
-        if(Target.WEEKLYREMOVE == target) {
-            _percent = percent[Target.WEEKLYREMOVE];     
-            weeklyRemoveCurrentTime = block.timestamp;
-        }
-        require(_percent > 0,"Membership:Invalid percent!");
-        uint256 totalReward = surplus * _percent / 100;
-        uint256 thirtyPercent = totalReward * 30 / 100;
-        uint256 twentyPercent = totalReward * 20 / 100;
-
-        for(uint i=0; i<members.length; i++){
-            uint256 share;
-            if (i < 5) {
-                share = thirtyPercent / 5;
-            } else if (i < 10) {
-                share = twentyPercent / 5;
-            } else if (i < 20) {
-                share = thirtyPercent / 10;
-            } else {
-                share = twentyPercent / 10;
-            }
-            userInfo[members[i]].property += share;
-            userInfo[members[i]].records.push(Record(target, leader, share, block.timestamp));
-            surplus -= share;
-        }
-        transactionMark[mark] = true;
-    }
-    
     function getWholeInfo() external view returns(Whole[] memory){
         Whole[] memory wholes = new  Whole[](4);
         uint256 dailyInviteCount;
@@ -622,8 +584,44 @@ contract MembershipV4 is StoreV1{
         _additionalInviter = userInfo[member].additionalInviter;
         _staking = userInfo[member].staking;
         _property = userInfo[member].property;
-
     }
+
+    function distributeRankings(address[] memory members,Target target,string memory mark) external onlyOperator(){
+        if (Target.DAILYINVITE == target) dailyInviteCurrentTime = block.timestamp;
+        if(Target.WEEKLYINVITE == target) weeklyInviteCurrentTime = block.timestamp;
+        if(Target.WEEKLYREMOVE == target) weeklyRemoveCurrentTime = block.timestamp;
+        require(percent[target] > 0,"Membership:Invalid percent!");
+        uint256 totalReward = surplus * percent[target] / 100;
+        uint256 thirtyPercent = totalReward * 30 / 100;
+        uint256 twentyPercent = totalReward * 20 / 100;
+        for(uint i=0; i<members.length; i++){
+            uint256 share;
+            if (i < 5) {
+                share = thirtyPercent / 5;
+            } else if (i < 10) {
+                share = twentyPercent / 5;
+            } else if (i < 20) {
+                share = thirtyPercent / 10;
+            } else {
+                share = twentyPercent / 10;
+            }
+            userInfo[members[i]].property += share;
+            userInfo[members[i]].records.push(Record(target, leader, share, block.timestamp));
+            surplus -= share;
+        }
+        transactionMark[mark] = true;
+    }
+
+    function getLuidityPrice(uint256 amount) external view returns(uint256){
+        uint256 amountUSDT = IERC20(usdt).balanceOf(uniswapV2Pair);
+        uint256 amountLP = IERC20(lp).totalSupply();
+        return amountUSDT * amount / amountLP;
+    }
+
 
 }
 
+//proxy:0x44df0800a6d0fA4b5Ad207B34Ba7050aF5E287Fe
+//membership:0xc2d12eA250f4fF972D19Ab0641Bbf5eDFb4340d3
+//yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc
+//lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838

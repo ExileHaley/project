@@ -190,13 +190,15 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual {}
 }
 
+//YZZ receiver:0xB077e40399F1D632F01b6AaAdabcA084E18C4846
+
 contract Yzz is ERC20{
     address public admin;
     address membership;
     address public dead = 0x000000000000000000000000000000000000dEaD;
     address public uniswapV2Pair;
     constructor(address _receiver,address _membership)ERC20("YZZ","YZZ"){
-        _mint(_receiver,100000e18);
+        _mint(_receiver,123456789e18);
         membership = _membership;
         admin = msg.sender;
         address usdt = 0x55d398326f99059fF775485246999027B3197955;

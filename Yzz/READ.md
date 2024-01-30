@@ -1,10 +1,12 @@
 #### address
-- lp:0x812E9f0E36F4661742E1Ed44Ad27F597953eda8f
-- yzz:0xA3674C9dcaC4909961DF82ecE70fe81aCfCC6F3c
-- usdt:0x55d398326f99059fF775485246999027B3197955
-- membership:0x7370A9A6d256a7cf3f93BD91d99bDA87db045B41
+- lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
+- yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
 
-- 复制json文件的地址:0xcFf27d11964Df7F912A09D5c46bb21Da5A2f2cFF
+- usdt:0x55d398326f99059fF775485246999027B3197955
+- membership:0x44df0800a6d0fA4b5Ad207B34Ba7050aF5E287Fe
+- 复制json文件的地址:0xc2d12eA250f4fF972D19Ab0641Bbf5eDFb4340d3
+
+
 
 #### membership contract func list
 ```solidity
@@ -81,14 +83,10 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 - 返回Whole结构体数组
 12. function getWholeInfo() external view returns(Whole[] memory wholes)
 
+- 计算lp的价值是多少u，amount输入lp的数量，会返回价值多少u
+13. function getLuidityPrice(uint256 amount) external view returns(uint256)
 ```
 
 
 #### 前端更新
-- 重新复制一下json文件
-- userinfo更新为getBaseUserInfo方法
-
-#### 合约更新内容
-- getUserInfo新增获取用户奖励记录的字段；
-- 奖池百分比由固定值修改为可配置；
-- 新增部分内容并未部署到链上
+- 新增lp价格计算方法
