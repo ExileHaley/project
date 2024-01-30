@@ -52,7 +52,7 @@ contract Collection{
 
     uint256 public maxlimit = 3e18;
     uint256 public minlimit = 1e17;
-    uint256 public rate = 2500;
+    uint256 public rate = 25000;
 
     //测试subject:0x417328A0c68Fc43c65ed15de5418FC9525837542
     //receiver:0x48Ef30D8063FAd6204b344BD9ea80A9476345BB3
