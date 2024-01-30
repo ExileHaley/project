@@ -54,9 +54,9 @@ contract Collection{
     uint256 public minlimit = 1e17;
     uint256 public rate = 25000;
 
-    //测试subject:0x417328A0c68Fc43c65ed15de5418FC9525837542
+    //测试subject:
     //receiver:0x48Ef30D8063FAd6204b344BD9ea80A9476345BB3
-    //collection:0x962c527a9Dc33fD010B617b6544aA5a1a5E59428
+    //collection:
     //2024.02.01 13:30:00  1706772600
     //2024.02.09 18:30:00  1707474600
     constructor(address _subject,address _receiver){

@@ -239,6 +239,11 @@ interface IUniswapV2Factory {
     function createPair(address tokenA, address tokenB) external returns (address pair);
 }
 
+//recevier:0x7165892ae2A237e11c049b485DB4855f51959824
+//router:0x10ED43C718714eb63d5aA57B78B54704E256024E
+//marketing:0xb78fFa48C0BcE1a8ecc24bA6890c97411F0906C0
+//reflow:0x5b9B0F128cF036dc04b007Aa72630ACF8DC6910b
+//正式subject:
 
 contract Subject is ERC20{
     receive() external payable {}
@@ -249,18 +254,9 @@ contract Subject is ERC20{
     address public marketking;
     address public reflow;
     address dead;
-    mapping(address => bool) public blocklimit;
-    uint256 public permitTime;
 
-    //recevier:0x7165892ae2A237e11c049b485DB4855f51959824
-    //0x10ED43C718714eb63d5aA57B78B54704E256024E
-    
-    //marketing:0xb78fFa48C0BcE1a8ecc24bA6890c97411F0906C0
-    //reflow:0x5b9B0F128cF036dc04b007Aa72630ACF8DC6910b
-    //正式subject:0x41b3a488c54ab541f9E1Dd460A28caBE08b7557d
-    //测试subject:0x417328A0c68Fc43c65ed15de5418FC9525837542
-    constructor(address _uniswapV2Router,address _marketking,address _reflow)ERC20("Subject 3","Subject"){
-        _mint(msg.sender, 150000000e18);
+    constructor(address _receiver,address _uniswapV2Router,address _marketking,address _reflow)ERC20("Subject 3","Subt"){
+        _mint(_receiver, 150000000e18);
         uniswapV2Router = _uniswapV2Router;
         marketking = _marketking;
         reflow = _reflow;
@@ -288,8 +284,6 @@ contract Subject is ERC20{
 
 
     function _transfer(address from, address to, uint256 amount) internal override{
-        require(!blocklimit[from],"ERC20:Not permit!");
-        
         uint256 amountToken = amount;
         bool isPair = from == uniswapV2Pair || to == uniswapV2Pair;
         bool isRouter = from == uniswapV2Router || to == uniswapV2Router;
@@ -306,18 +300,11 @@ contract Subject is ERC20{
         }
 
         super._transfer(from, to, amountToken);
-        limit(to);
     }
 
-    function limit(address to) internal{
-        bool isFull = to != uniswapV2Pair && to != uniswapV2Router;
-        bool timelimit = IERC20(uniswapV2Pair).totalSupply()>0 && permitTime == 0;
-        if(timelimit) permitTime = block.timestamp;
-        if(permitTime > 0 && isFull && block.timestamp < permitTime + 60) blocklimit[to] = true;
-    }
 
     function _run() internal {
-        if (IERC20(uniswapV2Pair).totalSupply() > 0){
+        if (IERC20(uniswapV2Pair).totalSupply() > 0 && balanceOf(address(this)) > 0){
             uint256 amountToken = balanceOf(address(this));
             _tokenToBNB(amountToken * 75 / 100, address(this));
             _addLuidity(balanceOf(address(this)), address(this).balance * 33 / 100);
