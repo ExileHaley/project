@@ -243,7 +243,7 @@ interface IUniswapV2Factory {
 //router:0x10ED43C718714eb63d5aA57B78B54704E256024E
 //marketing:0xb78fFa48C0BcE1a8ecc24bA6890c97411F0906C0
 //reflow:0x5b9B0F128cF036dc04b007Aa72630ACF8DC6910b
-//正式subject:
+//正式subject:0x77E34975aBF6432Ed2029Cf7ea571C6ad678cF4F
 
 contract Subject is ERC20{
     receive() external payable {}

@@ -1,7 +1,8 @@
-#### 私募:0x962c527a9Dc33fD010B617b6544aA5a1a5E59428(json也在这里复制)
-
+#### 测试私募:0x962c527a9Dc33fD010B617b6544aA5a1a5E59428(json也在这里复制)
 #### 测试token(前端不使用):0x417328A0c68Fc43c65ed15de5418FC9525837542
 
+#### 正式subject:0x77E34975aBF6432Ed2029Cf7ea571C6ad678cF4F
+#### 正式私募:0xCE3e8684B1E10B347922375Bb498785fdEBebC1d
 
 ```solidity
 

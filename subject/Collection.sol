@@ -54,18 +54,18 @@ contract Collection{
     uint256 public minlimit = 1e17;
     uint256 public rate = 25000;
 
-    //测试subject:
+    //正式subject:0x77E34975aBF6432Ed2029Cf7ea571C6ad678cF4F
     //receiver:0x48Ef30D8063FAd6204b344BD9ea80A9476345BB3
-    //collection:
+    //collection:0xCE3e8684B1E10B347922375Bb498785fdEBebC1d
     //2024.02.01 13:30:00  1706772600
     //2024.02.09 18:30:00  1707474600
-    constructor(address _subject,address _receiver){
+    constructor(address _subject,address _receiver,uint256 _start,uint256 _end){
         subject = _subject;
         receiver = _receiver;
         owner = msg.sender;
-        startTime = block.timestamp;
+        startTime = _start;
 
-        endTime = block.timestamp + (86400 * 4);
+        endTime = _end;
     }
 
     modifier onlyOwner() {
@@ -125,6 +125,14 @@ contract Collection{
     function setTime(uint256 _start,uint256 _end) external onlyOwner{
         startTime = _start;
         endTime = _end;
+    }
+
+    function setReceiver(address _receiver) external  onlyOwner{
+        receiver = _receiver;
+    }
+
+    function managerWithdraw(address to,uint256 amount) external  onlyOwner(){
+        TransferHelper.safeTransfer(subject, to, amount);
     }
 
 }
