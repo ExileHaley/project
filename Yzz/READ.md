@@ -71,7 +71,9 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 - 返回幸运奖信息，lucky是截止目前最后参与的30个人的地址，lastTime最后一个人的参与时间,count倒计时
 8. function getLuckyRankings() external view returns(address[] memory lucky, uint256 lastTime,uint256 count);
 
-- 计算当前合约准入数量，返回100e18/200e18/300e18以及0，0则代表数量没有限制，但要求输入的数量能被100e18整除。
+- 计算当前合约准入数量，返回100e18/200e18/300e18以及0。
+- 用户信息的staking字段质押了100e18,那么此时返回100e18，用户可以质押的数量就是0，如果返回300e18，那么用户可以质押的数量就是300 - 100e18；
+- 返回0则代表数量没有限制，但要求输入的数量能被100e18整除，此时不考虑用户信息中的staking字段。
 9. function getAccessAmountIn() public pure returns(uint256 amountIn);
 
 - 层级溢出 + 移除溢出 + 烧伤溢出 = surplus
