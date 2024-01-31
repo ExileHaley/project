@@ -139,36 +139,36 @@ contract StoreV1 is Store{
     mapping(address => User)  userInfo;
 
     //token
-    address public usdt;
-    address public token;
-    address public lp;
+    address usdt;
+    address token;
+    address lp;
 
     //address first
     address public leader;
 
     //swap
-    address public uniswapV2Router;
+    address uniswapV2Router;
 
     //burn 
-    address public dead;
+    address dead;
 
     //lucky
-    address[] public fortunes;
-    uint256 public lastFortunesTime;
+    address[] fortunes;
+    uint256 lastFortunesTime;
 
     //Ranking
     //remove Ranking
-    mapping(uint256 => address[]) public weeklyRemoveRankings;
+    mapping(uint256 => address[]) weeklyRemoveRankings;
     mapping(uint256 => mapping (address => bool)) weeklyRemoveDataAlreadyAdd;
     uint256 public weeklyRemoveCurrentTime;
 
     //invite Ranking
-    mapping(uint256 => address[]) public dailyInviteRankings;
+    mapping(uint256 => address[]) dailyInviteRankings;
     mapping(uint256 => mapping (address => bool)) dailyInviteDataAlreadyAdd;
     uint256 public dailyInviteCurrentTime;
 
     //weekly invite rakings
-    mapping(uint256 => address[]) public weeklyInviteRankings;
+    mapping(uint256 => address[]) weeklyInviteRankings;
     mapping(uint256 => mapping (address => bool)) weeklyInviteDataAlreadyAdd;
     uint256 public weeklyInviteCurrentTime;
 
@@ -187,7 +187,7 @@ contract StoreV1 is Store{
 
     //percent
     mapping(Target => uint256) public percent;
-    bool internal  locked;
+    bool  locked;
 
     //rewards
     uint256 dailyInviteCurrentSurplus;
