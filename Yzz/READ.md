@@ -5,14 +5,12 @@
 - usdt:0x55d398326f99059fF775485246999027B3197955
 
 #### 旧的测试版本
-- membership:0x44df0800a6d0fA4b5Ad207B34Ba7050aF5E287Fe
-- 复制json文件的地址:0xc2d12eA250f4fF972D19Ab0641Bbf5eDFb4340d3
-
-#### 新的测试版本
 - membership:0x6F638Cdc708a61dbD6E75b4Fd0576CE7B25a3eDC
 - 复制json文件的地址:0x76564711f720bae445ED15Ba6AAe5E85c14966ca
 
-
+#### 新的测试版本
+- membership:0x47EdA0209a460FB97395c9DD3884f23a80a6943B
+- 复制json文件的地址:0x5bC7eEEe349d7AeC10587f9071E5F6f77D451b36
 
 #### membership contract func list
 ```solidity
@@ -74,9 +72,5 @@ function totalSurplus() external view returns(uint256);
 
 
 #### 前端更新
-- 注意方法:removeLuidity(移除流动性)、getAccessAmountIn(获取provide输入参数)
-- 新增方法：getPrizeInfo(获取各个奖池的数量)、totalSurplus(获取总溢出)
-- 收益记录列表直接删除，不再展示
-- lp页面只展示总的lp数量，不给提现；
-- 溢出流动性页面展示lp数量，价值u，提供移除按钮；
 - 合约地址请使用新的测试版本；
+- json文件应该不用更新，没有新增或删除方法

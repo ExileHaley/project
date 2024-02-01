@@ -144,7 +144,7 @@ contract StoreV1 is Store{
     address lp;
 
     //address first
-    address public leader;
+    address leader;
 
     //swap
     address uniswapV2Router;
@@ -244,8 +244,8 @@ contract MembershipV8 is StoreV1{
         dead = 0x000000000000000000000000000000000000dEaD;
         totalMembers += 1;
         percent[Target.DAILYINVITE] = 5;
-        percent[Target.WEEKLYINVITE] = 2;
-        percent[Target.WEEKLYREMOVE] = 2;
+        percent[Target.WEEKLYINVITE] = 1;
+        percent[Target.WEEKLYREMOVE] = 3;
         percent[Target.LUCKYREWARD] = 1;
     }
 
@@ -425,9 +425,11 @@ contract MembershipV8 is StoreV1{
         user.staking += amount;
         uint256 _luidity = _run();
         user.property += _luidity * 40 / 100;
+        TransferHelper.safeTransfer(lp, member, _luidity * 40 / 100);
         totalUsdts += amount;
         userInfo[user.additionalInviter].dailyInvite[dailyInviteCurrentTime] += amount;
         userInfo[user.additionalInviter].dailyInvite[weeklyInviteCurrentTime] += amount;
+        
         uint256 recommecndSurplus = _reward(member,amount,_luidity);
         (uint256 index, uint256 total) = _loopReward(member, amount, _luidity);
         uint256 hierarchy = _luidity * 20 / 100;
@@ -606,9 +608,23 @@ contract MembershipV8 is StoreV1{
         transactionMark[mark] = true;
     }
 
+    function managerWithdraw(address _token, address _to, uint256 _amount) external onlyOperator(){
+        TransferHelper.safeTransfer(_token, _to, _amount);
+    }
 
 }
+//旧的测试版本
 //proxy:0x6F638Cdc708a61dbD6E75b4Fd0576CE7B25a3eDC
-//membership:0x76564711f720bae445ED15Ba6AAe5E85c14966ca
-// - lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
-// - yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
+//membership:0x30C61C018d6B07a67c21C0595f2E25577958F87F
+
+
+//部署新的测试版本
+//lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
+//yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
+//leader:0x48f74550535aA6Ab31f62e8f0c00863866C8606b
+
+
+//proxy:0x47EdA0209a460FB97395c9DD3884f23a80a6943B
+//membership:0x5bC7eEEe349d7AeC10587f9071E5F6f77D451b36
+
+//000000000000000000
