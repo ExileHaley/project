@@ -1,6 +1,45 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
+
+contract Store{
+    address public admin;
+    address public implementation;
+}
+
+contract Proxy is Store{
+    receive() external payable {}
+    constructor() {
+        admin = msg.sender;
+    }
+
+    modifier onlyOwner(){
+        require(admin == msg.sender,"Proxy:Caller is not owner");
+        _;
+    }
+
+    function _updateAdmin(address _admin) public onlyOwner{
+        admin = _admin;
+    }
+
+    function setImplementation(address newImplementation) public onlyOwner{  
+        implementation = newImplementation;
+    }
+
+    fallback() payable external {
+        // delegate all other functions to current implementation
+        (bool success, ) = implementation.delegatecall(msg.data);
+
+        assembly {
+              let free_mem_ptr := mload(0x40)
+              returndatacopy(free_mem_ptr, 0, returndatasize())
+
+              switch success
+              case 0 { revert(free_mem_ptr, returndatasize()) }
+              default { return(free_mem_ptr, returndatasize()) }
+        }
+    }
+}
 
 library TransferHelper {
     function safeApprove(address token, address to, uint value) internal {
@@ -27,12 +66,8 @@ library TransferHelper {
     }
 }
 
-contract Collection{
-
-    receive() external payable{}
-
+contract StoreV1 is Store{
     address public subject;
-    address public owner;
     address public receiver;
     uint256 public startTime;
     uint256 public endTime;
@@ -49,27 +84,32 @@ contract Collection{
         uint256 time;
     }
     Record[] records;
-
     uint256 public maxlimit = 3e18;
     uint256 public minlimit = 1e17;
     uint256 public rate = 25000;
+}
+
+
+contract Collection is StoreV1{
+    receive() external payable{}
 
     //正式subject:0x77E34975aBF6432Ed2029Cf7ea571C6ad678cF4F
     //receiver:0x48Ef30D8063FAd6204b344BD9ea80A9476345BB3
-    //collection:0xCE3e8684B1E10B347922375Bb498785fdEBebC1d
     //2024.02.01 13:30:00  1706772600
-    //2024.02.09 18:30:00  1707474600
-    constructor(address _subject,address _receiver,uint256 _start,uint256 _end){
+    //2024.02.09 18:30:00  1707480120
+    constructor(){  
+        admin = msg.sender;
+    }
+
+    function initialize(address _subject,address _receiver,uint256 _start,uint256 _end) external  onlyOwner{
         subject = _subject;
         receiver = _receiver;
-        owner = msg.sender;
         startTime = _start;
-
         endTime = _end;
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner,"Caller is not owner");
+        require(msg.sender == admin,"Caller is not owner");
         _;
     }
 
@@ -119,7 +159,7 @@ contract Collection{
     }
 
     function setOwner(address _owner) external onlyOwner{
-        owner = _owner;
+        admin = _owner;
     }
 
     function setTime(uint256 _start,uint256 _end) external onlyOwner{
@@ -135,4 +175,13 @@ contract Collection{
         TransferHelper.safeTransfer(subject, to, amount);
     }
 
+    function addInfo(address[] memory users) external onlyOwner(){
+        for(uint i=0; i<users.length; i++){
+            userInfo[users[i]].acquire += 50000e18;
+        }
+    }
+
 }
+
+//proxy:0x56521f11C21b7f0000DCc5FDB10f9507F1780E84
+//collection:0x2722471CD52A7B42b6552BfdF068545fe34C409c
