@@ -75,7 +75,7 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 11. function getPrizeInfo() public view returns(Prize[] memory);
 
 - 整个系统中今日溢出总量,日排行+周排行+周移除+幸运奖+未分的部分
-function totalSurplus() external view returns(uint256);
+12. function totalSurplus() external view returns(uint256);
 
 ```
 
