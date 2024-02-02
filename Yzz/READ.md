@@ -1,25 +1,34 @@
+### 前端更新内容备注
+- 更新json文件；
+- getPrizeInfo()方法返回的数据发生了变化；
+- getLuckyRewards..该方法更新为getProsperOrEarlyBirdInfo()；
+- 早鸟保卫和繁荣保卫仍旧由合约返回，日/周邀请，周移除走中心化接口；
+
 #### address
 - lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838
 - yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
 
 - usdt:0x55d398326f99059fF775485246999027B3197955
 
-#### 旧的测试版本
-- membership:0x6F638Cdc708a61dbD6E75b4Fd0576CE7B25a3eDC
-- 复制json文件的地址:0x76564711f720bae445ED15Ba6AAe5E85c14966ca
-
 #### 新的测试版本
-- membership:0x47EdA0209a460FB97395c9DD3884f23a80a6943B
-- 复制json文件的地址:0x5bC7eEEe349d7AeC10587f9071E5F6f77D451b36
+- membership:0x59dda72C4f1254CC7B860CBd914226dd7cE04847
+- 复制json文件的地址:0x1B9C6d9965027a3A0e7323E64f3233c0E1968827
+
 
 #### membership contract func list
 ```solidity
-enum Target{
-        DAILYINVITE,//0，日邀请标识
-        WEEKLYINVITE,//1，周邀请标识
-        WEEKLYREMOVE,//2，早鸟奖标识
-        LUCKYREWARD,//3，幸运奖标识
-}
+    enum Target{
+        DAILYINVITE, // 0，日邀请
+        WEEKLYINVITE, //1，周邀请
+        WEEKLYREMOVE, //2，周移除
+        PROSPER,      //3，繁荣保卫
+        EARLYBIRD    //4，早鸟保卫
+    }
+
+    struct Prize{
+        Target target; //奖金类型
+        uint256 amount; //奖金数量
+    }
 
 - 邀请用户，_inviter邀请地址，_member当前用户
 1. function invite(address _inviter, address _member) external;
@@ -51,8 +60,8 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 7. function getBaseUserInfo(address member) external view returns(address _inviter,address _additionalInvi, uint256 _staking, uint256 _property)
 
 
-- 返回幸运奖信息，lucky是截止目前最后参与的30个人的地址，lastTime最后一个人的参与时间,count倒计时
-8. function getLuckyRankings() external view returns(address[] memory lucky, uint256 lastTime,uint256 count);
+- target传3或4，3返回繁荣保卫最后一个地址和最新时间以及倒计时，4返回早鸟保卫最后一个地址和最新时间以及倒计时
+8. function getProsperOrEarlyBirdInfo(Target target) external view returns(address last, uint256 lastTime,uint256 count)；
 
 - 计算当前合约准入数量，返回100e18/200e18/300e18以及0。注意看描述
 - 用户信息的staking字段质押了100e18,那么此时返回100e18，用户可以质押的数量就是0，如果返回300e18，那么用户可以质押的数量就是300 - 100e18；
@@ -62,15 +71,11 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 - 计算lp的价值是多少u，amount输入lp的数量，会返回价值多少u
 10. function getLuidityPrice(uint256 amount) external view returns(uint256)
 
-- 获取各个奖池的大小.[0]是日邀请奖池总额，[1]周邀请，[2]周移除，[3]幸运奖
-11. function getPrizeInfo() public view returns(uint256[] memory);
+- 获取各个奖池的大小，返回结构体Prize数组
+11. function getPrizeInfo() public view returns(Prize[] memory);
 
 - 整个系统中今日溢出总量,日排行+周排行+周移除+幸运奖+未分的部分
 function totalSurplus() external view returns(uint256);
 
 ```
 
-
-#### 前端更新
-- 合约地址请使用新的测试版本；
-- json文件应该不用更新，没有新增或删除方法

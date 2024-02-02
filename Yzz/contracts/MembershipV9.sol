@@ -8,7 +8,9 @@ contract Store{
 }
 
 contract Proxy is Store{
+
     receive() external payable {}
+
     constructor() {
         admin = msg.sender;
     }
@@ -151,7 +153,7 @@ contract StoreV1 is Store{
     address lp;
 
     //address first
-    address leader;
+    address public leader;
 
     //swap
     address uniswapV2Router;
@@ -518,14 +520,14 @@ contract MembershipV9 is StoreV1{
 
     function getProsperOrEarlyBirdInfo(Target target) external view returns(address last, uint256 lastTime,uint256 count) {
         if(target == Target.PROSPER){
-            last = prosperDefense[prosperDefense.length - 1];
+            if (prosperDefense.length > 0) last = prosperDefense[prosperDefense.length - 1];
             lastTime = lastProsperDefenseUpdateTime;
             if(block.timestamp >= lastProsperDefenseUpdateTime) count = 0;
             else count = lastProsperDefenseUpdateTime - block.timestamp;
         }
 
         if(target == Target.EARLYBIRD){
-            last = earlyBirdDefense[earlyBirdDefense.length - 1];
+            if (earlyBirdDefense.length > 0) last = earlyBirdDefense[earlyBirdDefense.length - 1];
             lastTime = lastEarlyBirdDefenseUpdateTime;
             if(block.timestamp >= lastEarlyBirdDefenseUpdateTime) count = 0;
             else count = lastEarlyBirdDefenseUpdateTime - block.timestamp;
@@ -654,8 +656,8 @@ contract MembershipV9 is StoreV1{
     
 }
 
-//proxy:
-//membershiip:
+//proxy:0x59dda72C4f1254CC7B860CBd914226dd7cE04847
+//membershiip:0x1B9C6d9965027a3A0e7323E64f3233c0E1968827
 
 //lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
 //yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
