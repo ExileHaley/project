@@ -84,9 +84,9 @@ contract StoreV1 is Store{
         uint256 time;
     }
     Record[] records;
-    uint256 public maxlimit = 3e18;
-    uint256 public minlimit = 1e17;
-    uint256 public rate = 25000;
+    uint256 public maxlimit;
+    uint256 public minlimit;
+    uint256 public rate;
 }
 
 
@@ -106,6 +106,9 @@ contract Collection is StoreV1{
         receiver = _receiver;
         startTime = _start;
         endTime = _end;
+        maxlimit = 3e18;
+        minlimit = 1e18;
+        rate = 25000;
     }
 
     modifier onlyOwner() {
@@ -175,13 +178,7 @@ contract Collection is StoreV1{
         TransferHelper.safeTransfer(subject, to, amount);
     }
 
-    function addInfo(address[] memory users) external onlyOwner(){
-        for(uint i=0; i<users.length; i++){
-            userInfo[users[i]].acquire += 50000e18;
-        }
-    }
-
 }
 
 //proxy:0x56521f11C21b7f0000DCc5FDB10f9507F1780E84
-//collection:0x2722471CD52A7B42b6552BfdF068545fe34C409c
+//collection:0xbF879c41d82e2BC3321b0Dbc4a40A9880316eab4
