@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -78,21 +79,14 @@ func (mc *MembershipController) sendTransations(input []byte) (*types.Transactio
 		return nil, err
 	}
 
-	// gaslimit, err := strconv.ParseUint(mc.cfg.RPC.Gaslimit, 10, 64)
-	// if err != nil {
-	// 	fmt.Println("gaslimit转换失败:", err)
-	// 	return nil, err
-	// }
-	// multiple := new(big.Int)
-	// multiple.SetString(mc.cfg.RPC.Multiple, 10)
-	// gasPrice.Mul(gasPrice, multiple)
-	/////////尝试动态获取gaslimit/////////////////
-	gaslimit, err := mc.EstimateGasLimit(mc.cfg.Contract.Membership, input)
+	gaslimit, err := strconv.ParseUint(mc.cfg.RPC.Gaslimit, 10, 64)
 	if err != nil {
-		fmt.Println("动态获取gaslimit失败:", err)
+		fmt.Println("gaslimit转换失败:", err)
 		return nil, err
 	}
-	/////////尝试动态获取gaslimit/////////////////
+	multiple := new(big.Int)
+	multiple.SetString(mc.cfg.RPC.Multiple, 10)
+	gasPrice.Mul(gasPrice, multiple)
 	tx := types.NewTransaction(nonce, common.HexToAddress(mc.cfg.Contract.Membership), big.NewInt(0), gaslimit, gasPrice, input)
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(big.NewInt(56)), privateKey)
 	if err != nil {
