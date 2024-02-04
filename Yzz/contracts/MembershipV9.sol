@@ -596,6 +596,12 @@ contract MembershipV9 is StoreV1{
         if (IERC20(lp).balanceOf(address(this)) >= totalSurplus){
             _middle = IERC20(lp).balanceOf(address(this)) - totalSurplus;
         }
+        uint256 total = totalSurplus + dailyInviteCurrentSurplus + weeklyInviteCurrentSurplus + weeklyRemoveCurrentSurplus + prosperCurrentSurplus + earlyBirdCurrentSurplus;
+
+        if (IERC20(lp).balanceOf(address(this)) >= total){
+            _middle = IERC20(lp).balanceOf(address(this)) - total;
+        }
+        
         prizes[0] = Prize(Target.DAILYINVITE,dailyInviteCurrentSurplus + (_middle * percent[Target.DAILYINVITE] / 100));
         prizes[1] = Prize(Target.WEEKLYINVITE,weeklyInviteCurrentSurplus+ (_middle * percent[Target.WEEKLYINVITE]  / 100));
         prizes[2] = Prize(Target.WEEKLYREMOVE,weeklyRemoveCurrentSurplus + (_middle * percent[Target.WEEKLYREMOVE]  / 100));
@@ -695,7 +701,7 @@ contract MembershipV9 is StoreV1{
 
 //new test version
 //proxy:0x47F403d0f97B8A660b9A4D39F635b63EA9A68560
-//membership:0x9443ED673fBD71762e0224b4D8C458f1157B3c74
+//membership:0x32F4A6FCF005f1f7bA7b229038A6C0D6c4A4Cd88
 
 //lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
 //yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
