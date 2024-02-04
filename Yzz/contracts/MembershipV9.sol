@@ -133,7 +133,8 @@ contract StoreV1 is Store{
     struct User{
         address inviter;
         address additionalInviter;
-
+        //1707066288
+        //1707069888
         uint256 staking;
         uint256 property;
 
@@ -187,7 +188,7 @@ contract StoreV1 is Store{
 
     //data
     uint256 public totalMembers;
-    uint256 public totalUsdts;
+    uint256 totalUsdts;
 
     //total surplus
     uint256 public totalSurplus;
@@ -199,7 +200,7 @@ contract StoreV1 is Store{
     address public operator;
 
     //percent
-    mapping(Target => uint256) public percent;
+    mapping(Target => uint256) percent;
     bool  locked;
 
     //rewards
@@ -426,6 +427,26 @@ contract MembershipV9 is StoreV1{
         earlyBirdCurrentSurplus += (luidity * percent[Target.EARLYBIRD] / 100);
     }
 
+    function updateCountTime(Target target) internal{
+        
+        if(Target.PROSPER == target){
+            if(lastProsperDefenseUpdateTime > block.timestamp){
+                uint256 totalMiddle = lastProsperDefenseUpdateTime - block.timestamp;
+                if(totalMiddle <= 3600) lastProsperDefenseUpdateTime = block.timestamp + 86400;
+                if(totalMiddle > 3600) lastProsperDefenseUpdateTime += 3600;
+            }
+        }
+
+        if(Target.EARLYBIRD == target){
+            if(lastEarlyBirdDefenseUpdateTime > block.timestamp){
+                uint256 totalMiddle = lastEarlyBirdDefenseUpdateTime - block.timestamp;
+                if(totalMiddle <= 600) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
+                if(totalMiddle > 600) lastEarlyBirdDefenseUpdateTime += 600;
+            }
+        }
+    }
+
+
     function _distributeProsperReward(address member) internal{
         if(lastProsperDefenseUpdateTime == 0) lastProsperDefenseUpdateTime = block.timestamp + 86400;
         if(block.timestamp >= lastProsperDefenseUpdateTime && prosperDefense.length > 0){
@@ -436,10 +457,25 @@ contract MembershipV9 is StoreV1{
             TransferHelper.safeTransfer(lp, prosperDefense[prosperDefense.length - 1], _totalRewards / 2);
             lastProsperDefenseUpdateTime = block.timestamp + 86400;
             prosperCurrentSurplus -= (_totalRewards/2);
-        }else{
-            lastProsperDefenseUpdateTime += 3600;
         }
         prosperDefense.push(member);
+        updateCountTime(Target.PROSPER);
+    }
+
+    function _distributeEarlyBirdReward(address member,uint256 amount) internal{
+        if(lastEarlyBirdDefenseUpdateTime == 0) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
+        if(block.timestamp >= lastEarlyBirdDefenseUpdateTime && earlyBirdDefense.length > 0){
+            uint256 _totalPrize = IERC20(lp).balanceOf(address(this));
+            uint256 _middle = _totalPrize - totalSurplus;
+            uint256 _totalRewards = earlyBirdCurrentSurplus + _middle * percent[Target.EARLYBIRD] / 100;
+            userInfo[earlyBirdDefense[earlyBirdDefense.length - 1]].property += ( _totalRewards/2 );
+            TransferHelper.safeTransfer(lp, earlyBirdDefense[earlyBirdDefense.length - 1], _totalRewards / 2);
+            lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
+            lastEarlyBirdDefenseUpdateTime = 0;
+            totalSurplus += _totalRewards / 2;
+        }
+        updateCountTime(Target.EARLYBIRD);
+        if(amount >= positiveRemove) earlyBirdDefense.push(member);
     }
 
     function provide(address member, uint256 amount) external noReentrancy{
@@ -454,8 +490,6 @@ contract MembershipV9 is StoreV1{
         user.property += _luidity * 40 / 100;
         TransferHelper.safeTransfer(lp, member, _luidity * 40 / 100);
         totalUsdts += amount;
-        userInfo[user.additionalInviter].dailyInvite[dailyInviteCurrentTime] += amount;
-        userInfo[user.additionalInviter].dailyInvite[weeklyInviteCurrentTime] += amount;
         
         uint256 recommecndSurplus = _reward(member,amount,_luidity);
         (uint256 index, uint256 total) = _loopReward(member, amount, _luidity);
@@ -468,23 +502,6 @@ contract MembershipV9 is StoreV1{
         updateRewards(currentSurplus);
     }
 
-
-    function _distributeEarlyBirdReward(address member,uint256 amount) internal{
-        if(lastEarlyBirdDefenseUpdateTime == 0) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
-        if(block.timestamp >= lastEarlyBirdDefenseUpdateTime && earlyBirdDefense.length > 0){
-            uint256 _totalPrize = IERC20(lp).balanceOf(address(this));
-            uint256 _middle = _totalPrize - totalSurplus;
-            uint256 _totalRewards = earlyBirdCurrentSurplus + _middle * percent[Target.EARLYBIRD] / 100;
-            userInfo[earlyBirdDefense[earlyBirdDefense.length - 1]].property += ( _totalRewards/2 );
-            TransferHelper.safeTransfer(lp, earlyBirdDefense[earlyBirdDefense.length - 1], _totalRewards / 2);
-            lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
-            lastEarlyBirdDefenseUpdateTime = 0;
-            totalSurplus += _totalRewards / 2;
-        }else{
-            lastEarlyBirdDefenseUpdateTime += 600;
-        }
-        if(amount >= positiveRemove) earlyBirdDefense.push(member);
-    }
 
     function removeLuidity(address member, uint256 amount)external {
         require(member == msg.sender,"Membership:Not permit!");
@@ -499,10 +516,12 @@ contract MembershipV9 is StoreV1{
     function _removeLuidity(address member, uint256 original, uint256 amount) internal {
 
         userInfo[member].weeklyRemove[weeklyRemoveCurrentTime] += original;
+
         if (!weeklyRemoveDataAlreadyAdd[weeklyRemoveCurrentTime][member]) {
             weeklyRemoveRankings[weeklyRemoveCurrentTime].push(member);
             weeklyRemoveDataAlreadyAdd[weeklyRemoveCurrentTime][member] = true;
         }
+
         address[] memory path = new address[](2);
         path[0] = usdt;
         path[1] = token;
@@ -612,26 +631,38 @@ contract MembershipV9 is StoreV1{
         return amountUSDT * amount/ amountLP;
     }
 
-    function updatePrizesInfo(Target target) internal returns(uint256){
+    function prizesInfo(Target target) internal view returns(uint256){
         Prize[] memory prizes = getPrizeInfo();
         if (Target.DAILYINVITE == target) {
-            dailyInviteCurrentTime = block.timestamp;
-            totalSurplus = 0;
             return prizes[0].amount;
         }
         if (Target.WEEKLYINVITE == target) {
-            weeklyInviteCurrentTime = block.timestamp;
             return prizes[1].amount;
         }
         if (Target.WEEKLYREMOVE == target) {
-            weeklyRemoveCurrentTime = block.timestamp;
             return prizes[2].amount;
         }
         return 0;
     }
 
+    function updatePrizes(Target target) internal{
+        if (Target.DAILYINVITE == target) {
+            dailyInviteCurrentTime = block.timestamp;
+            totalSurplus = 0;
+            dailyInviteCurrentSurplus = 0;
+        }
+        if (Target.WEEKLYINVITE == target) {
+            weeklyInviteCurrentTime = block.timestamp;
+            weeklyInviteCurrentSurplus = 0;
+        }
+        if (Target.WEEKLYREMOVE == target) {
+            weeklyRemoveCurrentTime = block.timestamp;
+            weeklyRemoveCurrentSurplus = 0;
+        }
+    }
+
     function distributeRankings(address[] memory members,Target target,string memory mark) external onlyOperator(){
-        uint256 rewards = updatePrizesInfo(target);
+        uint256 rewards = prizesInfo(target);
         require(rewards > 0,"Membership:Invalid percent!");
         uint256 thirtyPercent = rewards * 30 / 100;
         uint256 twentyPercent = rewards * 20 / 100;
@@ -648,9 +679,9 @@ contract MembershipV9 is StoreV1{
             }
             userInfo[members[i]].property += share;
             TransferHelper.safeTransfer(lp, members[i], share);
-            totalSurplus -= share;
         }
         transactionMark[mark] = true;
+        updatePrizes(target);
     }
 
     
