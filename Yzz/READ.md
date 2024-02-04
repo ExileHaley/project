@@ -1,8 +1,7 @@
 ### 前端更新内容备注
 - 更新json文件；
-- getPrizeInfo()方法返回的数据发生了变化；
-- getLuckyRewards..该方法更新为getProsperOrEarlyBirdInfo()；
-- 早鸟保卫和繁荣保卫仍旧由合约返回，日/周邀请，周移除走中心化接口；
+- getTruthSurplus新增了这个方法
+- 先使用旧的测试版本调试数据，与项目方沟通没问题后使用新的测试版本做最终测试
 
 #### address
 - lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838
@@ -10,10 +9,15 @@
 
 - usdt:0x55d398326f99059fF775485246999027B3197955
 
-#### 新的测试版本
+#### 旧的测试版本
 - membership:0x59dda72C4f1254CC7B860CBd914226dd7cE04847
 - 复制json文件的地址:0x1B9C6d9965027a3A0e7323E64f3233c0E1968827
 
+
+
+#### 新的测试版本
+- membership:0x47F403d0f97B8A660b9A4D39F635b63EA9A68560
+- 复制json文件的地址:0x9443ED673fBD71762e0224b4D8C458f1157B3c74
 
 #### membership contract func list
 ```solidity
@@ -74,8 +78,11 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 - 获取各个奖池的大小，返回结构体Prize数组
 11. function getPrizeInfo() public view returns(Prize[] memory);
 
-- 整个系统中今日溢出总量,日排行+周排行+周移除+幸运奖+未分的部分
+- 整个系统中今日溢出总量,日排行+周排行+周移除+幸运奖+未分的部分,这个是今日溢出总量
 12. function totalSurplus() external view returns(uint256);
+
+- 整个池子中截止目前溢出总量
+13. function getTruthSurplus() external view returns(uint256)；
 
 ```
 
