@@ -684,6 +684,9 @@ contract MembershipV9 is StoreV1{
         updatePrizes(target);
     }
 
+    function getTruthSurplus() external view returns(uint256){
+        return IERC20(lp).balanceOf(address(this));
+    }
     
 }
 
