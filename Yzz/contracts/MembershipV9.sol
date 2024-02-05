@@ -427,21 +427,20 @@ contract MembershipV9 is StoreV1{
         earlyBirdCurrentSurplus += (luidity * percent[Target.EARLYBIRD] / 100);
     }
 
-    function updateCountTime(Target target) internal{
-        
+    function updateCountTime(Target target) internal {
         if(Target.PROSPER == target){
             if(lastProsperDefenseUpdateTime > block.timestamp){
                 uint256 totalMiddle = lastProsperDefenseUpdateTime - block.timestamp;
-                if(totalMiddle <= 3600) lastProsperDefenseUpdateTime = block.timestamp + 86400;
-                if(totalMiddle > 3600) lastProsperDefenseUpdateTime += 3600;
+                if (86400 - totalMiddle <= 3600) lastProsperDefenseUpdateTime = block.timestamp + 86400;
+                else  lastProsperDefenseUpdateTime += 3600;
             }
         }
 
         if(Target.EARLYBIRD == target){
             if(lastEarlyBirdDefenseUpdateTime > block.timestamp){
                 uint256 totalMiddle = lastEarlyBirdDefenseUpdateTime - block.timestamp;
-                if(totalMiddle <= 600) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
-                if(totalMiddle > 600) lastEarlyBirdDefenseUpdateTime += 600;
+                if (86400 - totalMiddle <= 3600) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
+                else  lastProsperDefenseUpdateTime += 600;
             }
         }
     }
@@ -696,12 +695,8 @@ contract MembershipV9 is StoreV1{
     
 }
 
-//proxy:0x59dda72C4f1254CC7B860CBd914226dd7cE04847
-//membershiip:0x1B9C6d9965027a3A0e7323E64f3233c0E1968827
-
-//new test version
-//proxy:0x47F403d0f97B8A660b9A4D39F635b63EA9A68560
-//membership:0x32F4A6FCF005f1f7bA7b229038A6C0D6c4A4Cd88
+//proxy:0x2A393fFdbDE07fbf7cD891caa04FBc86BA9a66fC
+//membership:0x043ebF270eA8Ee4883F1a8DFD20968F3B6efD946
 
 //lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
 //yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
