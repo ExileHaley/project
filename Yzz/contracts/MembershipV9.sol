@@ -455,7 +455,7 @@ contract MembershipV9 is StoreV1{
             userInfo[prosperDefense[prosperDefense.length - 1]].property += ( _totalRewards/2 );
             TransferHelper.safeTransfer(lp, prosperDefense[prosperDefense.length - 1], _totalRewards / 2);
             lastProsperDefenseUpdateTime = block.timestamp + 86400;
-            prosperCurrentSurplus -= (_totalRewards/2);
+            prosperCurrentSurplus = (_totalRewards/2);
         }
         prosperDefense.push(member);
         updateCountTime(Target.PROSPER);
@@ -470,8 +470,7 @@ contract MembershipV9 is StoreV1{
             userInfo[earlyBirdDefense[earlyBirdDefense.length - 1]].property += ( _totalRewards/2 );
             TransferHelper.safeTransfer(lp, earlyBirdDefense[earlyBirdDefense.length - 1], _totalRewards / 2);
             lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
-            lastEarlyBirdDefenseUpdateTime = 0;
-            totalSurplus += _totalRewards / 2;
+            earlyBirdCurrentSurplus = _totalRewards / 2;
         }
         updateCountTime(Target.EARLYBIRD);
         if(amount >= positiveRemove) earlyBirdDefense.push(member);
@@ -696,7 +695,7 @@ contract MembershipV9 is StoreV1{
 }
 
 //proxy:0x2A393fFdbDE07fbf7cD891caa04FBc86BA9a66fC
-//membership:0x043ebF270eA8Ee4883F1a8DFD20968F3B6efD946
+//membership:0x2a6D0985888253bDE83AD647e56aFfe8F1702227
 
 //lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
 //yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
