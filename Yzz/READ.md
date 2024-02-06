@@ -78,7 +78,7 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 13. function getTruthSurplus() external view returns(uint256)；
 
 ```
-#### 测试地址
+#### 测试地址(合约测试使用)
 
 //0x5B38Da6a701c568545dCfcB03FcB875f56beddC4
 //0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2
