@@ -1,6 +1,5 @@
 ### 前端更新内容备注
-- 应该不需要更新json，昨天说的数据在getUserInfo和getBase里面都有，仔细看
-- 前端问题如果修复完了，直接更新到新的测试版本合约，然后告知用户测试
+- 代码更新和重新部署，不涉及abi变化，更新合约地址即可。
 
 #### address
 - lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838
@@ -8,13 +7,10 @@
 
 - usdt:0x55d398326f99059fF775485246999027B3197955
 
-#### 旧的测试版本
-- membership:0x47F403d0f97B8A660b9A4D39F635b63EA9A68560
-- 复制json文件的地址:0x9443ED673fBD71762e0224b4D8C458f1157B3c74
-
 #### 新的测试版本
-- membership:0x2A393fFdbDE07fbf7cD891caa04FBc86BA9a66fC
-- 复制json文件的地址:0x043ebF270eA8Ee4883F1a8DFD20968F3B6efD946
+- membership:0xB4922975323e15bfB915870a9C628e9608201B3D
+- 复制json文件的地址:0x2E7a78946C83a464aB90C237B7fb3b41259ca734
+
 
 #### membership contract func list
 ```solidity

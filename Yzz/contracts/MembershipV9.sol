@@ -290,40 +290,42 @@ contract MembershipV9 is StoreV1{
     }
 
     function invite(address _inviter, address _member) external{
+        require(_member == msg.sender,"MemberShip:Member address error!");
         if(_inviter != leader) require(userInfo[_inviter].inviter != address(0),"MemberShip: Invalid inviter address");
         require(userInfo[_member].inviter == address(0),"MemberShip: Invalid member address");
         userInfo[_member].additionalInviter = _inviter;
         userInfo[_inviter].inviteForms.push(_member);
         totalMembers += 1;
         updateInviteList(_inviter);
-        recursiveInvite(_inviter, _member);
+        iterativeInvite(_inviter, _member);
     }
+////////////////////////////////////////////////////invite/////////////////////////////////////////////////////////////////
 
-    function findSubordinateWithSpace(address userAddress) internal view returns (address) {
-        for (uint i = 0; i < userInfo[userAddress].subordinates.length; i++) {
-            if (userInfo[userInfo[userAddress].subordinates[i]].subordinates.length < 2) {
-                return userInfo[userAddress].subordinates[i];
-            }
-        }
-        return address(0);
-    }
+    function iterativeInvite(address _inviter, address _member) internal  {
+        address[] memory currentLayer = new address[](1);
+        currentLayer[0] = _inviter;
+        for (uint8 layer = 0; layer < 10; layer++) { 
+            address[] memory nextLayer = new address[](currentLayer.length * 2);
+            uint256 nextLayerIndex = 0;
 
-    function recursiveInvite(address _inviter, address _member) internal {
-        if (userInfo[_inviter].subordinates.length >= 2) {
-            address subToAddUnder = findSubordinateWithSpace(_inviter);
-            if (subToAddUnder == address(0)) {
-                for (uint i = 0; i < userInfo[_inviter].subordinates.length; i++) {
-                    recursiveInvite(userInfo[_inviter].subordinates[i], _member);
+            for (uint256 i = 0; i < currentLayer.length; i++) {
+                address inviter = currentLayer[i];
+                if (userInfo[inviter].subordinates.length >= 2) {
+                    for (uint256 j = 0; j < userInfo[inviter].subordinates.length; j++) {
+                        nextLayer[nextLayerIndex] = userInfo[inviter].subordinates[j];
+                        nextLayerIndex++;
+                    }
+                } else {
+                    userInfo[_member].inviter = inviter;
+                    userInfo[inviter].subordinates.push(_member);
+                    return;
                 }
-            } else {
-                recursiveInvite(subToAddUnder, _member);
             }
-        } else {
-            userInfo[_member].inviter = _inviter;
-            userInfo[_inviter].subordinates.push(_member);
+            currentLayer = nextLayer;
         }
     }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     function _swapUSDTForToken(uint256 amount)internal{
         IERC20(usdt).approve(uniswapV2Router, amount);
         address[] memory path = new address[](2);
@@ -694,10 +696,13 @@ contract MembershipV9 is StoreV1{
     
 }
 
-//proxy:0x2A393fFdbDE07fbf7cD891caa04FBc86BA9a66fC
-//membership:0x2a6D0985888253bDE83AD647e56aFfe8F1702227
 
 //lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
 //yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
 //leader:0x48f74550535aA6Ab31f62e8f0c00863866C8606b
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
+
+
+//new test version
+//proxy:0xB4922975323e15bfB915870a9C628e9608201B3D
+//membership:0x2E7a78946C83a464aB90C237B7fb3b41259ca734
