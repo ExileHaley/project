@@ -441,7 +441,7 @@ contract MembershipV9 is StoreV1{
         if(Target.EARLYBIRD == target){
             if(lastEarlyBirdDefenseUpdateTime > block.timestamp){
                 uint256 totalMiddle = lastEarlyBirdDefenseUpdateTime - block.timestamp;
-                if (86400 - totalMiddle <= 3600) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
+                if (86400 - totalMiddle <= 600) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
                 else  lastProsperDefenseUpdateTime += 600;
             }
         }
