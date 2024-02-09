@@ -291,7 +291,7 @@ contract MembershipV9 is StoreV1{
 
     function invite(address _inviter, address _member) external{
         require(_member == msg.sender,"MemberShip:Member address error!");
-        if(_inviter != leader) require(userInfo[_inviter].inviter != address(0),"MemberShip: Invalid inviter address");
+        if(_inviter != leader) require(userInfo[_inviter].inviter != address(0) && userInfo[_inviter].staking > 0,"MemberShip: Invalid inviter address");
         require(userInfo[_member].inviter == address(0),"MemberShip: Invalid member address");
         userInfo[_member].additionalInviter = _inviter;
         userInfo[_inviter].inviteForms.push(_member);
@@ -442,7 +442,7 @@ contract MembershipV9 is StoreV1{
             if(lastEarlyBirdDefenseUpdateTime > block.timestamp){
                 uint256 totalMiddle = lastEarlyBirdDefenseUpdateTime - block.timestamp;
                 if (86400 - totalMiddle <= 600) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
-                else  lastProsperDefenseUpdateTime += 600;
+                else  lastEarlyBirdDefenseUpdateTime += 600;
             }
         }
     }
@@ -451,8 +451,7 @@ contract MembershipV9 is StoreV1{
     function _distributeProsperReward(address member) internal{
         if(lastProsperDefenseUpdateTime == 0) lastProsperDefenseUpdateTime = block.timestamp + 86400;
         if(block.timestamp >= lastProsperDefenseUpdateTime && prosperDefense.length > 0){
-            uint256 _totalPrize = IERC20(lp).balanceOf(address(this));
-            uint256 _middle = _totalPrize - totalSurplus;
+            uint256 _middle = prizesInfo(Target.PROSPER);
             uint256 _totalRewards = prosperCurrentSurplus + _middle * percent[Target.PROSPER] / 100;
             userInfo[prosperDefense[prosperDefense.length - 1]].property += ( _totalRewards/2 );
             TransferHelper.safeTransfer(lp, prosperDefense[prosperDefense.length - 1], _totalRewards / 2);
@@ -466,8 +465,7 @@ contract MembershipV9 is StoreV1{
     function _distributeEarlyBirdReward(address member,uint256 amount) internal{
         if(lastEarlyBirdDefenseUpdateTime == 0) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
         if(block.timestamp >= lastEarlyBirdDefenseUpdateTime && earlyBirdDefense.length > 0){
-            uint256 _totalPrize = IERC20(lp).balanceOf(address(this));
-            uint256 _middle = _totalPrize - totalSurplus;
+            uint256 _middle = prizesInfo(Target.EARLYBIRD);
             uint256 _totalRewards = earlyBirdCurrentSurplus + _middle * percent[Target.EARLYBIRD] / 100;
             userInfo[earlyBirdDefense[earlyBirdDefense.length - 1]].property += ( _totalRewards/2 );
             TransferHelper.safeTransfer(lp, earlyBirdDefense[earlyBirdDefense.length - 1], _totalRewards / 2);
@@ -648,6 +646,14 @@ contract MembershipV9 is StoreV1{
         if (Target.WEEKLYREMOVE == target) {
             return prizes[2].amount;
         }
+
+        if (Target.PROSPER == target){
+            return prizes[3].amount;
+        }
+
+        if (Target.EARLYBIRD == target){
+            return prizes[4].amount;
+        }
         return 0;
     }
 
@@ -699,10 +705,16 @@ contract MembershipV9 is StoreV1{
 
 //lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
 //yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
-//leader:0x48f74550535aA6Ab31f62e8f0c00863866C8606b
+//leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 
 
-//new test version
-//proxy:0xB4922975323e15bfB915870a9C628e9608201B3D
-//membership:0x2E7a78946C83a464aB90C237B7fb3b41259ca734
+
+//online version
+//yzz:0xc71b934E6DC876A3B6Fbc7A2FF3394915Bcac51B
+//lp:0x6b78C08452FACDf8C52803d74FaB51f31B61a32e
+//membership:0xc545Db36D535be76748D8450fA807933fa44cB15
+
+
+//proxy:0xc545Db36D535be76748D8450fA807933fa44cB15
+//membership:0xD8F894A5dC8f7BB16E23ed0d9aBEdbc30618eC3B

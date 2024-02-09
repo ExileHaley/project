@@ -190,7 +190,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
     function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual {}
 }
 
-//YZZ receiver:0xB077e40399F1D632F01b6AaAdabcA084E18C4846
+//YZZ receiver:0x74a99789b9473dA81191391384243B2E7e18881f
 
 contract Yzz is ERC20{
     address public admin;
