@@ -290,9 +290,9 @@ contract MembershipV9 is StoreV1{
     }
 
     function invite(address _inviter, address _member) external{
-        require(_member == msg.sender,"MemberShip:Member address error!");
-        if(_inviter != leader) require(userInfo[_inviter].inviter != address(0) && userInfo[_inviter].staking > 0,"MemberShip: Invalid inviter address");
-        require(userInfo[_member].inviter == address(0),"MemberShip: Invalid member address");
+        require(_member == msg.sender && _inviter != _member,"MemberShip:Member address error!");
+        if(_inviter != leader) require(userInfo[_inviter].inviter != address(0) && userInfo[_inviter].staking > 0, "MemberShip: Invalid inviter address");
+        require(userInfo[_member].inviter == address(0) && userInfo[_member].additionalInviter == address(0), "MemberShip: Invalid member address");
         userInfo[_member].additionalInviter = _inviter;
         userInfo[_inviter].inviteForms.push(_member);
         totalMembers += 1;
@@ -478,7 +478,7 @@ contract MembershipV9 is StoreV1{
 
     function provide(address member, uint256 amount) external noReentrancy{
         User storage user = userInfo[member];
-        if(member != leader) require(user.inviter != address(0),"Membership: Invalid inviter address");
+        require(user.inviter != address(0),"Membership: Invalid inviter address");
         require(getAccessAmount(amount),"Membership: Invalid provide amount");
         if(getAccessAmountIn() > 0) require(getAccessAmountIn() - user.staking >= amount,"Membership:No over-participation allowed");
         TransferHelper.safeTransferFrom(usdt, member, address(this), amount); 
@@ -710,7 +710,7 @@ contract MembershipV9 is StoreV1{
 
 
 
-//online version
+//online version1.0
 //yzz:0xc71b934E6DC876A3B6Fbc7A2FF3394915Bcac51B
 //lp:0x6b78C08452FACDf8C52803d74FaB51f31B61a32e
 //membership:0xc545Db36D535be76748D8450fA807933fa44cB15
@@ -718,3 +718,12 @@ contract MembershipV9 is StoreV1{
 
 //proxy:0xc545Db36D535be76748D8450fA807933fa44cB15
 //membership:0xD8F894A5dC8f7BB16E23ed0d9aBEdbc30618eC3B
+
+
+//online version2.0
+//yzz:0xc71b934E6DC876A3B6Fbc7A2FF3394915Bcac51B
+//lp:0x6b78C08452FACDf8C52803d74FaB51f31B61a32e
+//leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
+//permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
+//proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
+//membership:0x3ABfB1cDc25A5b8c8836d93Cc167B79C76d5F2a3

@@ -1,14 +1,13 @@
 ### 前端更新内容备注
-- 代码更新和重新部署，不涉及abi变化，更新合约地址即可。
+- 更新membership地址。
 
 #### address
 - lp:0x6b78C08452FACDf8C52803d74FaB51f31B61a32e
 - yzz:0xc71b934E6DC876A3B6Fbc7A2FF3394915Bcac51B(前端不使用)
 - usdt:0x55d398326f99059fF775485246999027B3197955
 
-#### 新的测试版本
-- membership:0xc545Db36D535be76748D8450fA807933fa44cB15
-- 复制json文件的地址:0xD8F894A5dC8f7BB16E23ed0d9aBEdbc30618eC3B
+#### 正式版本
+- membership:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
 
 
 
