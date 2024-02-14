@@ -382,7 +382,7 @@ contract MembershipV9 is StoreV1{
 
         if (upper.staking == 0) {
             return totalPart;
-        }else if(upper.staking >= amountStake || upper.staking >= 600e18){
+        }else if(upper.staking >= amountStake || upper.staking >= 300e18){
             upper.property += totalPart;
             TransferHelper.safeTransfer(lp, inviter, totalPart);
             return 0;
@@ -398,7 +398,7 @@ contract MembershipV9 is StoreV1{
         address _loop = userInfo[member].inviter;
         for (uint256 i = 0; i < 50 && _loop != address(0); i++) {
             if (userInfo[_loop].staking > 0) {
-                if(userInfo[_loop].staking >= amountStake || userInfo[_loop].staking >= 600e18){
+                if(userInfo[_loop].staking >= amountStake || userInfo[_loop].staking >= 300e18){
                     userInfo[_loop].property += amountLP * 2 / 1000;
                     TransferHelper.safeTransfer(lp, _loop, amountLP * 2 / 1000);
                 }else{
@@ -722,4 +722,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0x533CCbeeA7EE9271432Acd62C76D73Ea337675F2
+//membership:0x7fb2D064aaa032615d84E3aCff86BF263C0B2EA0
