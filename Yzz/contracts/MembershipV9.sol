@@ -1,3 +1,7 @@
+/**
+ *Submitted for verification at BscScan.com on 2024-02-14
+*/
+
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
@@ -470,13 +474,16 @@ contract MembershipV9 is StoreV1{
         if(amount >= positiveRemove) earlyBirdDefense.push(member);
     }
 
+    function getLimit(address member, uint256 amount) public view returns(bool supp){
+        if(getAccessAmountIn(member) > 0)  supp = (amount <= getAccessAmountIn(member) && amount % 100e18 == 0);
+        else if(getAccessAmountIn(member) == 0 && totalMembers >= 3000) supp = amount % 100e18 == 0;
+        else supp = false;
+    }
+
     function provide(address member, uint256 amount) external noReentrancy{
         User storage user = userInfo[member];
         require(user.inviter != address(0),"Membership: Invalid inviter address");
-        // require(getAccessAmount(amount),"Membership: Invalid provide amount");
-        // if(getAccessAmountIn() > 0) require(getAccessAmountIn() - user.staking >= amount && amount % 100e18 == 0,"Membership:No over-participation allowed");
-        if(getAccessAmountIn(member) > 0) require(getAccessAmountIn(member) == amount,"Membership:No over-participation allowed");
-        else require(amount % 100e18 ==0,"Membership: Invalid provide amount");
+        require(getLimit(member,amount),"Invalid provide amount!");
         TransferHelper.safeTransferFrom(usdt, member, address(this), amount); 
         require(IERC20(usdt).balanceOf(address(this)) >= amount, "Membership: Insufficient token balance");
         user.staking += amount;
@@ -698,7 +705,6 @@ contract MembershipV9 is StoreV1{
     
 }
 
-
 //lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
 //yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
@@ -722,4 +728,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0x7fb2D064aaa032615d84E3aCff86BF263C0B2EA0
+//membership:0xBcCC7aed76b7B5D06a4641774A2cF7A11c8C36b2
