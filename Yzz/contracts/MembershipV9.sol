@@ -367,17 +367,11 @@ contract MembershipV9 is StoreV1{
         return  _luidity;
     }
 
-    function getAccessAmount(uint256 amount) public view returns(bool supp) {
+    function getAccessAmountIn(address member) public view returns(uint256 amountIn) {
         uint256 middleDiv = totalMembers / 1000;
-        supp = 
-            (middleDiv <= 2 && amount == (middleDiv + 1) * 1e20) ||
-            (middleDiv >= 3 && amount % 100e18 == 0);
+        amountIn = (middleDiv <= 2) ? (middleDiv + 1) * 1e20 - userInfo[member].staking : 0; 
     }
 
-    function getAccessAmountIn() public view returns(uint256 amountIn) {
-        uint256 middleDiv = totalMembers / 1000;
-        amountIn = (middleDiv <= 2) ? (middleDiv + 1) * 1e20 : 0; 
-    }
 
     function _reward(address member, uint256 amountStake, uint256 amountLP) internal returns(uint256){
         address inviter = userInfo[member].additionalInviter;
@@ -479,8 +473,10 @@ contract MembershipV9 is StoreV1{
     function provide(address member, uint256 amount) external noReentrancy{
         User storage user = userInfo[member];
         require(user.inviter != address(0),"Membership: Invalid inviter address");
-        require(getAccessAmount(amount),"Membership: Invalid provide amount");
-        if(getAccessAmountIn() > 0) require(getAccessAmountIn() - user.staking >= amount,"Membership:No over-participation allowed");
+        // require(getAccessAmount(amount),"Membership: Invalid provide amount");
+        // if(getAccessAmountIn() > 0) require(getAccessAmountIn() - user.staking >= amount && amount % 100e18 == 0,"Membership:No over-participation allowed");
+        if(getAccessAmountIn(member) > 0) require(getAccessAmountIn(member) == amount,"Membership:No over-participation allowed");
+        else require(amount % 100e18 ==0,"Membership: Invalid provide amount");
         TransferHelper.safeTransferFrom(usdt, member, address(this), amount); 
         require(IERC20(usdt).balanceOf(address(this)) >= amount, "Membership: Insufficient token balance");
         user.staking += amount;
@@ -726,4 +722,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0x3ABfB1cDc25A5b8c8836d93Cc167B79C76d5F2a3
+//membership:0x533CCbeeA7EE9271432Acd62C76D73Ea337675F2

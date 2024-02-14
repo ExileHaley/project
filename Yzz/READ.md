@@ -1,5 +1,5 @@
 ### 前端更新内容备注
-- 更新membership地址。
+- getAccessAmountIn()更新为getAccessAmountIn(address member)，要更新json文件，因为要传地址参数，具体内容标注在下面的方法上。
 
 #### address
 - lp:0x6b78C08452FACDf8C52803d74FaB51f31B61a32e
@@ -8,7 +8,7 @@
 
 #### 正式版本
 - membership:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-
+- 复制json的地址:0x533CCbeeA7EE9271432Acd62C76D73Ea337675F2
 
 
 #### membership contract func list
@@ -60,9 +60,8 @@ _dailyInvite当前用户当日邀请业绩，_weeklyRemove当前用户通过dapp
 8. function getProsperOrEarlyBirdInfo(Target target) external view returns(address last, uint256 lastTime,uint256 count)；
 
 - 计算当前合约准入数量，返回100e18/200e18/300e18以及0。注意看描述
-- 用户信息的staking字段质押了100e18,那么此时返回100e18，用户可以质押的数量就是0，如果返回300e18，那么用户可以质押的数量就是300 - 100e18；
-- 返回0则代表数量没有限制，但要求输入的数量能被100e18整除，此时不考虑用户信息中的staking字段。
-9. function getAccessAmountIn() public pure returns(uint256 amountIn);
+- 传入用户地址，返回数量，这个数量可以直接给privode函数，如果返回的是0则代表没有限制，但要求输入数量是100的整数倍
+9. function getAccessAmountIn(address member) public pure returns(uint256 amountIn);
 
 - 计算lp的价值是多少u，amount输入lp的数量，会返回价值多少u
 10. function getLuidityPrice(uint256 amount) external view returns(uint256)
