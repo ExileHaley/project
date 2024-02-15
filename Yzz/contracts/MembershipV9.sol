@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at BscScan.com on 2024-02-14
-*/
-
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
@@ -371,12 +367,6 @@ contract MembershipV9 is StoreV1{
         return  _luidity;
     }
 
-    function getAccessAmountIn(address member) public view returns(uint256 amountIn) {
-        uint256 middleDiv = totalMembers / 1000;
-        amountIn = (middleDiv <= 2) ? (middleDiv + 1) * 1e20 - userInfo[member].staking : 0; 
-    }
-
-
     function _reward(address member, uint256 amountStake, uint256 amountLP) internal returns(uint256){
         address inviter = userInfo[member].additionalInviter;
         User storage upper = userInfo[inviter];
@@ -474,16 +464,10 @@ contract MembershipV9 is StoreV1{
         if(amount >= positiveRemove) earlyBirdDefense.push(member);
     }
 
-    function getLimit(address member, uint256 amount) public view returns(bool supp){
-        if(getAccessAmountIn(member) > 0)  supp = (amount <= getAccessAmountIn(member) && amount % 100e18 == 0);
-        else if(getAccessAmountIn(member) == 0 && totalMembers >= 3000) supp = amount % 100e18 == 0;
-        else supp = false;
-    }
-
     function provide(address member, uint256 amount) external noReentrancy{
         User storage user = userInfo[member];
         require(user.inviter != address(0),"Membership: Invalid inviter address");
-        require(getLimit(member,amount),"Invalid provide amount!");
+        require(amount % 100e18 == 0,"Invalid provide amount!");
         TransferHelper.safeTransferFrom(usdt, member, address(this), amount); 
         require(IERC20(usdt).balanceOf(address(this)) >= amount, "Membership: Insufficient token balance");
         user.staking += amount;
@@ -728,4 +712,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0xBcCC7aed76b7B5D06a4641774A2cF7A11c8C36b2
+//membership:0x575b8A1B752e7bFc2Fe0A48E13dcD7Eb6d658490
