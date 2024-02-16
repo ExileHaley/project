@@ -257,24 +257,32 @@ contract MembershipV9 is StoreV1{
         positiveRemove = amount;
     }
 
-    function initialize(address _token,address _lp,address _leader,address _operator) external onlyOwner(){
-        token = _token;
-        lp = _lp;
-        leader = _leader;
-        operator = _operator;
-        dailyInviteCurrentTime = block.timestamp;
-        weeklyInviteCurrentTime = block.timestamp;
-        weeklyRemoveCurrentTime = block.timestamp;
-        usdt = 0x55d398326f99059fF775485246999027B3197955;
-        uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
-        dead = 0x000000000000000000000000000000000000dEaD;
-        totalMembers += 1;
-        positiveRemove = 10e18;
-        percent[Target.DAILYINVITE] = 5;
-        percent[Target.WEEKLYINVITE] = 1;
-        percent[Target.WEEKLYREMOVE] = 2;
-        percent[Target.PROSPER] = 1;
-        percent[Target.EARLYBIRD] = 1;
+    // function initialize(address _token,address _lp,address _leader,address _operator) external onlyOwner(){
+    //     token = _token;
+    //     lp = _lp;
+    //     leader = _leader;
+    //     operator = _operator;
+    //     dailyInviteCurrentTime = block.timestamp;
+    //     weeklyInviteCurrentTime = block.timestamp;
+    //     weeklyRemoveCurrentTime = block.timestamp;
+    //     usdt = 0x55d398326f99059fF775485246999027B3197955;
+    //     uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
+    //     dead = 0x000000000000000000000000000000000000dEaD;
+    //     totalMembers += 1;
+    //     positiveRemove = 10e18;
+    //     percent[Target.DAILYINVITE] = 5;
+    //     percent[Target.WEEKLYINVITE] = 1;
+    //     percent[Target.WEEKLYREMOVE] = 2;
+    //     percent[Target.PROSPER] = 1;
+    //     percent[Target.EARLYBIRD] = 1;
+    // }
+
+    function initialize() external onlyOwner(){
+        dailyInviteCurrentSurplus = 23765e18;
+        weeklyInviteCurrentSurplus = 12000e18;
+        prosperCurrentSurplus = 12000e18;
+        earlyBirdCurrentSurplus = 12000e18;
+        weeklyRemoveCurrentSurplus = 24000e18;
     }
 
     function updateInviteList(address _inviter) internal{
@@ -439,12 +447,10 @@ contract MembershipV9 is StoreV1{
     function _distributeProsperReward(address member) internal{
         if(lastProsperDefenseUpdateTime == 0) lastProsperDefenseUpdateTime = block.timestamp + 86400;
         if(block.timestamp >= lastProsperDefenseUpdateTime && prosperDefense.length > 0){
-            uint256 _middle = prizesInfo(Target.PROSPER);
-            uint256 _totalRewards = prosperCurrentSurplus + _middle * percent[Target.PROSPER] / 100;
-            userInfo[prosperDefense[prosperDefense.length - 1]].property += ( _totalRewards/2 );
-            TransferHelper.safeTransfer(lp, prosperDefense[prosperDefense.length - 1], _totalRewards / 2);
+            userInfo[prosperDefense[prosperDefense.length - 1]].property += ( prosperCurrentSurplus / 2 );
+            TransferHelper.safeTransfer(lp, prosperDefense[prosperDefense.length - 1], prosperCurrentSurplus / 2);
             lastProsperDefenseUpdateTime = block.timestamp + 86400;
-            prosperCurrentSurplus = (_totalRewards/2);
+            prosperCurrentSurplus = (prosperCurrentSurplus/2);
         }
         prosperDefense.push(member);
         updateCountTime(Target.PROSPER);
@@ -453,12 +459,10 @@ contract MembershipV9 is StoreV1{
     function _distributeEarlyBirdReward(address member,uint256 amount) internal{
         if(lastEarlyBirdDefenseUpdateTime == 0) lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
         if(block.timestamp >= lastEarlyBirdDefenseUpdateTime && earlyBirdDefense.length > 0){
-            uint256 _middle = prizesInfo(Target.EARLYBIRD);
-            uint256 _totalRewards = earlyBirdCurrentSurplus + _middle * percent[Target.EARLYBIRD] / 100;
-            userInfo[earlyBirdDefense[earlyBirdDefense.length - 1]].property += ( _totalRewards/2 );
-            TransferHelper.safeTransfer(lp, earlyBirdDefense[earlyBirdDefense.length - 1], _totalRewards / 2);
+            userInfo[earlyBirdDefense[earlyBirdDefense.length - 1]].property += ( earlyBirdCurrentSurplus / 2 );
+            TransferHelper.safeTransfer(lp, earlyBirdDefense[earlyBirdDefense.length - 1], earlyBirdCurrentSurplus / 2);
             lastEarlyBirdDefenseUpdateTime = block.timestamp + 86400;
-            earlyBirdCurrentSurplus = _totalRewards / 2;
+            earlyBirdCurrentSurplus = (earlyBirdCurrentSurplus / 2);
         }
         updateCountTime(Target.EARLYBIRD);
         if(amount >= positiveRemove) earlyBirdDefense.push(member);
@@ -575,25 +579,6 @@ contract MembershipV9 is StoreV1{
         return grades;
     }
 
-    function getPrizeInfo() public view returns(Prize[] memory){
-        Prize[] memory prizes = new Prize[](5);
-        uint256 _middle;
-        if (IERC20(lp).balanceOf(address(this)) >= totalSurplus){
-            _middle = IERC20(lp).balanceOf(address(this)) - totalSurplus;
-        }
-        uint256 total = totalSurplus + dailyInviteCurrentSurplus + weeklyInviteCurrentSurplus + weeklyRemoveCurrentSurplus + prosperCurrentSurplus + earlyBirdCurrentSurplus;
-
-        if (IERC20(lp).balanceOf(address(this)) >= total){
-            _middle = IERC20(lp).balanceOf(address(this)) - total;
-        }
-        
-        prizes[0] = Prize(Target.DAILYINVITE,dailyInviteCurrentSurplus + (_middle * percent[Target.DAILYINVITE] / 100));
-        prizes[1] = Prize(Target.WEEKLYINVITE,weeklyInviteCurrentSurplus+ (_middle * percent[Target.WEEKLYINVITE]  / 100));
-        prizes[2] = Prize(Target.WEEKLYREMOVE,weeklyRemoveCurrentSurplus + (_middle * percent[Target.WEEKLYREMOVE]  / 100));
-        prizes[3] = Prize(Target.PROSPER,  prosperCurrentSurplus+ (_middle * percent[Target.PROSPER] / 100));
-        prizes[4] = Prize(Target.EARLYBIRD, earlyBirdCurrentSurplus + (_middle * percent[Target.EARLYBIRD] / 100));
-        return prizes;
-    }
 
     function getUserInfo(address member) external view returns(
         uint256 _dailyInvite, 
@@ -622,6 +607,46 @@ contract MembershipV9 is StoreV1{
         return amountUSDT * amount/ amountLP;
     }
 
+    function updateSurplus() internal{
+        uint256 total = IERC20(lp).balanceOf(address(this));
+        uint256 spend = dailyInviteCurrentSurplus + weeklyInviteCurrentSurplus + weeklyRemoveCurrentSurplus + 
+                            prosperCurrentSurplus + earlyBirdCurrentSurplus;
+        if(total >= spend){
+            uint256 middle = total - spend;
+            dailyInviteCurrentSurplus = (middle * percent[Target.DAILYINVITE] / 100);
+            weeklyInviteCurrentSurplus += (middle * percent[Target.WEEKLYINVITE] / 100);
+            weeklyRemoveCurrentSurplus += (middle * percent[Target.WEEKLYREMOVE] / 100);
+            prosperCurrentSurplus += (middle * percent[Target.PROSPER] / 100);
+            earlyBirdCurrentSurplus += (middle * percent[Target.EARLYBIRD] / 100);
+        }
+    }
+
+    function updatePrizes(Target target) internal{
+        if (Target.DAILYINVITE == target) {
+            dailyInviteCurrentTime = block.timestamp;
+            totalSurplus = 0;
+            updateSurplus();
+        }
+        if (Target.WEEKLYINVITE == target) {
+            weeklyInviteCurrentTime = block.timestamp;
+            weeklyInviteCurrentSurplus = 0;
+        }
+        if (Target.WEEKLYREMOVE == target) {
+            weeklyRemoveCurrentTime = block.timestamp;
+            weeklyRemoveCurrentSurplus = 0;
+        }
+    }
+
+    function getPrizeInfo() public view returns(Prize[] memory){
+        Prize[] memory prizes = new Prize[](5);
+        prizes[0] = Prize(Target.DAILYINVITE,dailyInviteCurrentSurplus);
+        prizes[1] = Prize(Target.WEEKLYINVITE,weeklyInviteCurrentSurplus);
+        prizes[2] = Prize(Target.WEEKLYREMOVE,weeklyRemoveCurrentSurplus);
+        prizes[3] = Prize(Target.PROSPER, prosperCurrentSurplus);
+        prizes[4] = Prize(Target.EARLYBIRD, earlyBirdCurrentSurplus);
+        return prizes;
+    }
+
     function prizesInfo(Target target) internal view returns(uint256){
         Prize[] memory prizes = getPrizeInfo();
         if (Target.DAILYINVITE == target) {
@@ -642,22 +667,6 @@ contract MembershipV9 is StoreV1{
             return prizes[4].amount;
         }
         return 0;
-    }
-
-    function updatePrizes(Target target) internal{
-        if (Target.DAILYINVITE == target) {
-            dailyInviteCurrentTime = block.timestamp;
-            totalSurplus = 0;
-            dailyInviteCurrentSurplus = 0;
-        }
-        if (Target.WEEKLYINVITE == target) {
-            weeklyInviteCurrentTime = block.timestamp;
-            weeklyInviteCurrentSurplus = 0;
-        }
-        if (Target.WEEKLYREMOVE == target) {
-            weeklyRemoveCurrentTime = block.timestamp;
-            weeklyRemoveCurrentSurplus = 0;
-        }
     }
 
     function distributeRankings(address[] memory members,Target target,string memory mark) external onlyOperator(){
@@ -689,22 +698,6 @@ contract MembershipV9 is StoreV1{
     
 }
 
-//lp:0x58a8e508E7F1139075616dC2Ff737C2C6C881838(前端不使用)
-//yzz:0x2d0Fd45B5D68A1cBDEE6d9c3B0cF7FF2DF01FDDc(前端不使用)
-//leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
-//permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
-
-
-
-//online version1.0
-//yzz:0xc71b934E6DC876A3B6Fbc7A2FF3394915Bcac51B
-//lp:0x6b78C08452FACDf8C52803d74FaB51f31B61a32e
-//membership:0xc545Db36D535be76748D8450fA807933fa44cB15
-
-
-//proxy:0xc545Db36D535be76748D8450fA807933fa44cB15
-//membership:0xD8F894A5dC8f7BB16E23ed0d9aBEdbc30618eC3B
-
 
 //online version2.0
 //yzz:0xc71b934E6DC876A3B6Fbc7A2FF3394915Bcac51B
@@ -712,4 +705,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0x575b8A1B752e7bFc2Fe0A48E13dcD7Eb6d658490
+//membership:0xec271ca11AD2a4fC54655e9ABDa694b6Eba1213f
