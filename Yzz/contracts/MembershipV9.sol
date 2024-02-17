@@ -133,8 +133,7 @@ contract StoreV1 is Store{
     struct User{
         address inviter;
         address additionalInviter;
-        //1707066288
-        //1707069888
+
         uint256 staking;
         uint256 property;
 
@@ -257,26 +256,6 @@ contract MembershipV9 is StoreV1{
         positiveRemove = amount;
     }
 
-    // function initialize(address _token,address _lp,address _leader,address _operator) external onlyOwner(){
-    //     token = _token;
-    //     lp = _lp;
-    //     leader = _leader;
-    //     operator = _operator;
-    //     dailyInviteCurrentTime = block.timestamp;
-    //     weeklyInviteCurrentTime = block.timestamp;
-    //     weeklyRemoveCurrentTime = block.timestamp;
-    //     usdt = 0x55d398326f99059fF775485246999027B3197955;
-    //     uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
-    //     dead = 0x000000000000000000000000000000000000dEaD;
-    //     totalMembers += 1;
-    //     positiveRemove = 10e18;
-    //     percent[Target.DAILYINVITE] = 5;
-    //     percent[Target.WEEKLYINVITE] = 1;
-    //     percent[Target.WEEKLYREMOVE] = 2;
-    //     percent[Target.PROSPER] = 1;
-    //     percent[Target.EARLYBIRD] = 1;
-    // }
-
     function initialize() external onlyOwner(){
         dailyInviteCurrentSurplus = 23765e18;
         weeklyInviteCurrentSurplus = 12000e18;
@@ -304,7 +283,6 @@ contract MembershipV9 is StoreV1{
         userInfo[_member].additionalInviter = _inviter;
         userInfo[_inviter].inviteForms.push(_member);
         totalMembers += 1;
-        updateInviteList(_inviter);
         iterativeInvite(_inviter, _member);
     }
 ////////////////////////////////////////////////////invite/////////////////////////////////////////////////////////////////
@@ -382,14 +360,18 @@ contract MembershipV9 is StoreV1{
         upper.weeklyInvite[weeklyInviteCurrentTime] += amountStake;
         uint256 totalPart = amountLP * 40 / 100;
 
-        if (upper.staking == 0) {
+        if (upper.staking ==0 || userInfo[member].staking >= upper.staking) {
             return totalPart;
-        }else if(upper.staking >= amountStake || upper.staking >= 300e18){
+        }else if(upper.staking >= 300e18){
             upper.property += totalPart;
             TransferHelper.safeTransfer(lp, inviter, totalPart);
             return 0;
-        }else{
-            uint256 surplusLP = amountLP / (amountStake / upper.staking) * 40 / 100;
+        }else{ 
+            uint256 rate;
+            if(amountStake >= upper.staking) rate = amountStake / upper.staking;
+            else rate = upper.staking / amountStake;
+
+            uint256 surplusLP = amountLP / rate  * 40 / 100;
             upper.property += surplusLP;
             TransferHelper.safeTransfer(lp, inviter, surplusLP);
             return (totalPart - surplusLP);
@@ -399,12 +381,15 @@ contract MembershipV9 is StoreV1{
     function _loopReward(address member, uint256 amountStake, uint256 amountLP) internal returns (uint256 iterations,uint256 total) {
         address _loop = userInfo[member].inviter;
         for (uint256 i = 0; i < 50 && _loop != address(0); i++) {
-            if (userInfo[_loop].staking > 0) {
-                if(userInfo[_loop].staking >= amountStake || userInfo[_loop].staking >= 300e18){
+            if (userInfo[_loop].staking > 0 && userInfo[_loop].staking >= userInfo[member].staking) {
+                if(userInfo[_loop].staking >= 300e18){
                     userInfo[_loop].property += amountLP * 2 / 1000;
                     TransferHelper.safeTransfer(lp, _loop, amountLP * 2 / 1000);
                 }else{
-                    uint256 surplusLP = amountLP / (amountStake / userInfo[_loop].staking) * 2 / 1000;
+                    uint256 rate;
+                    if(amountStake >= userInfo[_loop].staking) rate = amountStake / userInfo[_loop].staking;
+                    else rate = userInfo[_loop].staking / amountStake;
+                    uint256 surplusLP = amountLP / rate * 2 / 1000;
                     userInfo[_loop].property += surplusLP;
                     TransferHelper.safeTransfer(lp, _loop, surplusLP);
                     total += (amountLP * 2 / 1000 - surplusLP);
@@ -474,7 +459,7 @@ contract MembershipV9 is StoreV1{
         require(amount % 100e18 == 0,"Invalid provide amount!");
         TransferHelper.safeTransferFrom(usdt, member, address(this), amount); 
         require(IERC20(usdt).balanceOf(address(this)) >= amount, "Membership: Insufficient token balance");
-        user.staking += amount;
+        
         uint256 _luidity = _run();
         user.property += _luidity * 40 / 100;
         TransferHelper.safeTransfer(lp, member, _luidity * 40 / 100);
@@ -484,11 +469,13 @@ contract MembershipV9 is StoreV1{
         (uint256 index, uint256 total) = _loopReward(member, amount, _luidity);
         uint256 hierarchy = _luidity * 20 / 100;
         uint256 pre = _luidity * 2 / 1000;
+        user.staking += amount;
 
         uint256 currentSurplus = (hierarchy - pre * index) + recommecndSurplus + total;
         totalSurplus += currentSurplus;
         _distributeProsperReward(member);
         updateRewards(currentSurplus);
+        updateInviteList(userInfo[member].additionalInviter);
     }
 
 
@@ -705,4 +692,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0xec271ca11AD2a4fC54655e9ABDa694b6Eba1213f
+//membership:0xe8e94ffB7F78e26fd96E26C5B9EA4D39081c6779
