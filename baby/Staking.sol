@@ -181,12 +181,12 @@ contract Staking is StoreV1{
         maxlimit = 200e18;
     }
 
-    function invite(address _inviter, address _member) external{
-        require(_inviter != _member,"Invalid inviter address!");
+    function invite(address _inviter) external{
+        require(_inviter != msg.sender,"Invalid inviter address!");
         if(_inviter != prefixCode) require(userInfo[_inviter].staking > 0,"Not has invite permit!");
-        require(userInfo[_member].inviter == address(0),"Repeat operation!");
-        userInfo[_member].inviter = _inviter;
-        userInfo[_inviter].members.push(_member);
+        require(userInfo[msg.sender].inviter == address(0),"Repeat operation!");
+        userInfo[msg.sender].inviter = _inviter;
+        userInfo[_inviter].members.push(msg.sender);
     }
 
     function getAmountOut(address tokenIn,address tokenOut,uint256 amountIn) public view returns(uint256 amountOut){
@@ -250,8 +250,8 @@ contract Staking is StoreV1{
         User storage user = userInfo[msg.sender];
         require(user.staking > 0,"Withdraw amount error!");
         updateRewards(msg.sender);
-        TransferHelper.safeTransfer(token, msg.sender, user.staking * 95 / 100);
-        fees += (user.staking * 5 / 100);
+        TransferHelper.safeTransfer(token, msg.sender, user.staking * (100 - withdrawRate) / 100);
+        fees += (user.staking * withdrawRate / 100);
         synchronize(Operate.reduce, msg.sender, user.staking);
         user.staking = 0;
         user.dynamic = 0;
@@ -272,4 +272,26 @@ contract Staking is StoreV1{
     function managerWithdrawETH(address receiver,uint256 amount) external onlyOwner(){
         TransferHelper.safeTransferETH(receiver, amount);
     }
+
+
+    function getUserInfo(address member) external 
+        view 
+        returns(
+        address _inviter,
+        uint256 _staking,
+        uint256 _dynamic,
+        uint256 _income,
+        address[] memory _members,
+        Record[]  memory _records
+        )
+    {
+        _inviter = userInfo[member].inviter;
+        _staking = userInfo[member].staking;
+        _dynamic = userInfo[member].dynamic;
+        _income = getUserIncome(member);
+        _members = userInfo[member].members;
+        _records = userInfo[member].records;
+
+    }
 }
+
