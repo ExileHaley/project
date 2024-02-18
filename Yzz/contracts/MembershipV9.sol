@@ -256,14 +256,6 @@ contract MembershipV9 is StoreV1{
         positiveRemove = amount;
     }
 
-    function initialize() external onlyOwner(){
-        dailyInviteCurrentSurplus = 23765e18;
-        weeklyInviteCurrentSurplus = 12000e18;
-        prosperCurrentSurplus = 12000e18;
-        earlyBirdCurrentSurplus = 12000e18;
-        weeklyRemoveCurrentSurplus = 24000e18;
-    }
-
     function updateInviteList(address _inviter) internal{
         if(!dailyInviteDataAlreadyAdd[dailyInviteCurrentTime][_inviter] && _inviter != address(0)){
             dailyInviteRankings[dailyInviteCurrentTime].push(_inviter);
@@ -367,9 +359,8 @@ contract MembershipV9 is StoreV1{
             TransferHelper.safeTransfer(lp, inviter, totalPart);
             return 0;
         }else{ 
-            uint256 rate;
+            uint256 rate = 1;
             if(amountStake >= upper.staking) rate = amountStake / upper.staking;
-            else rate = upper.staking / amountStake;
 
             uint256 surplusLP = amountLP / rate  * 40 / 100;
             upper.property += surplusLP;
@@ -386,9 +377,9 @@ contract MembershipV9 is StoreV1{
                     userInfo[_loop].property += amountLP * 2 / 1000;
                     TransferHelper.safeTransfer(lp, _loop, amountLP * 2 / 1000);
                 }else{
-                    uint256 rate;
+                    uint256 rate = 1;
                     if(amountStake >= userInfo[_loop].staking) rate = amountStake / userInfo[_loop].staking;
-                    else rate = userInfo[_loop].staking / amountStake;
+
                     uint256 surplusLP = amountLP / rate * 2 / 1000;
                     userInfo[_loop].property += surplusLP;
                     TransferHelper.safeTransfer(lp, _loop, surplusLP);
@@ -692,4 +683,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0xe8e94ffB7F78e26fd96E26C5B9EA4D39081c6779
+//membership:0xE6dC96B2B3D4A9919c2F42546d941d4cD8f720A6
