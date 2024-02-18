@@ -57,6 +57,11 @@ library TransferHelper {
         (bool success, bytes memory data) = token.call(abi.encodeWithSelector(0x23b872dd, from, to, value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'TransferHelper: TRANSFER_FROM_FAILED');
     }
+
+    function safeTransferETH(address to, uint value) internal {
+        (bool success,) = to.call{value:value}(new bytes(0));
+        require(success, 'TransferHelper: ETH_TRANSFER_FAILED');
+    }
 }
 
 library SafeMath {
@@ -125,6 +130,7 @@ contract StoreV1 is Store{
     }
 
     struct Record{
+        Operate operate;
         Mark    mark;
         address members;
         uint256 amount;
@@ -150,11 +156,16 @@ contract StoreV1 is Store{
     uint256 withdrawRate;
     uint256 minlimit;
     uint256 maxlimit;
+    uint256 public fees;
 }
 
 contract Staking is StoreV1{
 
     receive() external payable{}
+
+    constructor(){
+        admin = msg.sender;
+    }
 
     modifier onlyOwner() {
         require(admin == msg.sender,"Caller is not owner!");
@@ -164,7 +175,7 @@ contract Staking is StoreV1{
     function initialize(address _token, address _prefixCode, uint256 _rate) external onlyOwner(){
         token = _token;
         prefixCode = _prefixCode;
-        rewardRate = _rate * 1e17 / 86400;
+        rewardRate = _rate * 1e15 / 86400;
         withdrawRate = 5;
         minlimit = 1e18;
         maxlimit = 200e18;
@@ -189,34 +200,33 @@ contract Staking is StoreV1{
 
     function _getUserIncome(address _member) public view returns(uint256){
         User storage user = userInfo[_member];
-        return (block.timestamp - user.stakingTime) * (user.staking + user.dynamic) * rewardRate + user.pending;
+        return ((block.timestamp - user.stakingTime) * (user.staking + user.dynamic) * rewardRate + user.pending) / 1e18;
     }
 
     function synchronize(Operate operate, address _member, uint256 _amount) internal{
         address _loop = userInfo[_member].inviter;
         for(uint i=0; i<3 && _loop != address(0); i++){
-            User storage user = userInfo[_member];
+            User storage user = userInfo[_loop];
             if(i==0){
-                user.records.push(Record(Mark.ONE,_member,_amount,block.timestamp));
+                user.records.push(Record(operate, Mark.ONE, _member, _amount, block.timestamp));
                 updateRewards(_loop);
                 uint256 _dynamic = _amount * 10 / 100;
                 if(operate == Operate.Increase) user.dynamic += _dynamic;
                 if(operate == Operate.reduce && user.dynamic >= _dynamic) user.dynamic -= _dynamic;
-            }
-            if(i==1){
-                user.records.push(Record(Mark.TWO,_member,_amount,block.timestamp));
+            }else if(i==1){
+                user.records.push(Record(operate, Mark.TWO, _member, _amount, block.timestamp));
                 updateRewards(_loop);
                 uint256 _dynamic = _amount * 6 / 100;
                 if(operate == Operate.Increase) user.dynamic += _dynamic;
                 if(operate == Operate.reduce && user.dynamic >= _dynamic) user.dynamic -= _dynamic;
-            }
-            if(i==2) {
-                user.records.push(Record(Mark.THREE,_member,_amount,block.timestamp));
+            }else{
+                user.records.push(Record(operate, Mark.THREE, _member, _amount, block.timestamp));
                 updateRewards(_loop);
                 uint256 _dynamic = _amount * 4 / 100;
                 if(operate == Operate.Increase) user.dynamic += _dynamic;
                 if(operate == Operate.reduce && user.dynamic >= _dynamic) user.dynamic -= _dynamic;
             }
+            _loop = userInfo[_loop].inviter;
         }
         
     }
@@ -233,10 +243,33 @@ contract Staking is StoreV1{
         TransferHelper.safeTransferFrom(token, msg.sender, address(this), _amount);
         updateRewards(msg.sender);
         user.staking += _amount;
-        synchronize(Operate.Increase,msg.sender,_amount);
+        synchronize(Operate.Increase, msg.sender, _amount);
     }
 
-    function withdraw(uint256 amount) external{}
+    function withdraw() external{
+        User storage user = userInfo[msg.sender];
+        require(user.staking > 0,"Withdraw amount error!");
+        updateRewards(msg.sender);
+        TransferHelper.safeTransfer(token, msg.sender, user.staking * 95 / 100);
+        fees += (user.staking * 5 / 100);
+        synchronize(Operate.reduce, msg.sender, user.staking);
+        user.staking = 0;
+        user.dynamic = 0;
+    }
 
-    function claim(uint256 amount) external {}
+    function claim() external {
+        require(getUserIncome(msg.sender) > 0,"Claim amount error!");
+        updateRewards(msg.sender);
+        TransferHelper.safeTransferETH(msg.sender, getUserIncome(msg.sender));
+        userInfo[msg.sender].pending = 0;
+    }
+
+    function managerWithdrawBaby(address receiver) external onlyOwner(){
+        TransferHelper.safeTransfer(token, receiver, fees);
+        fees = 0;
+    }
+
+    function managerWithdrawETH(address receiver,uint256 amount) external onlyOwner(){
+        TransferHelper.safeTransferETH(receiver, amount);
+    }
 }
