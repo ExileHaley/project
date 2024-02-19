@@ -203,8 +203,6 @@ contract Staking is StoreV1{
     
     function _getUserIncome(address _member) public view returns(uint256){
         User storage user = userInfo[_member];
-        // if(block.timestamp - user.stakingTime < 86400) return 0;
-        // else 
         return (block.timestamp - user.stakingTime) * (user.staking + user.dynamic) * rewardRate + user.pending;
     }
 
