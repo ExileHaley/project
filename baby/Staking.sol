@@ -146,10 +146,10 @@ contract StoreV1 is Store{
         address[] members;
         Record[]  records;
     }
-    mapping(address => User) public userInfo;
+    mapping(address => User) userInfo;
 
     address token;
-    address prefixCode;
+    address public prefixCode;
     address uniswapV2Factory;
     address WETH;
     uint256 rewardRate;
@@ -171,14 +171,16 @@ contract Staking is StoreV1{
         require(admin == msg.sender,"Caller is not owner!");
         _;
     }
-
+    
     function initialize(address _token, address _prefixCode, uint256 _rate) external onlyOwner(){
         token = _token;
         prefixCode = _prefixCode;
         rewardRate = _rate * 1e15 / 86400;
         withdrawRate = 5;
-        minlimit = 1e18;
+        minlimit = 1e16;
         maxlimit = 200e18;
+        WETH = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+        uniswapV2Factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
     }
 
     function invite(address _inviter) external{
@@ -195,37 +197,36 @@ contract Staking is StoreV1{
     }
 
     function getUserIncome(address _member) public view returns(uint256){
-        return getAmountOut(token, WETH, _getUserIncome(_member));
+        if (_getUserIncome(_member) > 0) return getAmountOut(token, WETH, _getUserIncome(_member) / 1e18);
+        else return 0;
     }
-
+    
     function _getUserIncome(address _member) public view returns(uint256){
         User storage user = userInfo[_member];
-        return ((block.timestamp - user.stakingTime) * (user.staking + user.dynamic) * rewardRate + user.pending) / 1e18;
+        // if(block.timestamp - user.stakingTime < 86400) return 0;
+        // else 
+        return (block.timestamp - user.stakingTime) * (user.staking + user.dynamic) * rewardRate + user.pending;
     }
 
     function synchronize(Operate operate, address _member, uint256 _amount) internal{
         address _loop = userInfo[_member].inviter;
         for(uint i=0; i<3 && _loop != address(0); i++){
+            updateRewards(_loop);
             User storage user = userInfo[_loop];
+            uint256 _dynamic;
             if(i==0){
                 user.records.push(Record(operate, Mark.ONE, _member, _amount, block.timestamp));
-                updateRewards(_loop);
-                uint256 _dynamic = _amount * 10 / 100;
-                if(operate == Operate.Increase) user.dynamic += _dynamic;
-                if(operate == Operate.reduce && user.dynamic >= _dynamic) user.dynamic -= _dynamic;
+                _dynamic = _amount * 10 / 100;
+                
             }else if(i==1){
                 user.records.push(Record(operate, Mark.TWO, _member, _amount, block.timestamp));
-                updateRewards(_loop);
-                uint256 _dynamic = _amount * 6 / 100;
-                if(operate == Operate.Increase) user.dynamic += _dynamic;
-                if(operate == Operate.reduce && user.dynamic >= _dynamic) user.dynamic -= _dynamic;
+                _dynamic = _amount * 6 / 100;
             }else{
                 user.records.push(Record(operate, Mark.THREE, _member, _amount, block.timestamp));
-                updateRewards(_loop);
-                uint256 _dynamic = _amount * 4 / 100;
-                if(operate == Operate.Increase) user.dynamic += _dynamic;
-                if(operate == Operate.reduce && user.dynamic >= _dynamic) user.dynamic -= _dynamic;
+                _dynamic = _amount * 4 / 100;
             }
+            if(operate == Operate.Increase) user.dynamic += _dynamic;
+            if(operate == Operate.reduce && user.dynamic >= _dynamic) user.dynamic -= _dynamic;
             _loop = userInfo[_loop].inviter;
         }
         
@@ -294,4 +295,8 @@ contract Staking is StoreV1{
 
     }
 }
-
+//token:0x38f2865142a4fc0f37f9dd833475c280bc3849ac
+//prefixCode:
+//rate:8
+//proxy:0x49D699E43Cb83A78EB440794485BB04f0901752e
+//staking:0xceA98c91597A7687FbC818b6Cf88D64CbE229872
