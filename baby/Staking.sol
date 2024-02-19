@@ -177,7 +177,7 @@ contract Staking is StoreV1{
         prefixCode = _prefixCode;
         rewardRate = _rate * 1e15 / 86400;
         withdrawRate = 5;
-        minlimit = 1e16;
+        minlimit = 1e18;
         maxlimit = 200e18;
         WETH = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
         uniswapV2Factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
@@ -294,7 +294,8 @@ contract Staking is StoreV1{
     }
 }
 //token:0x38f2865142a4fc0f37f9dd833475c280bc3849ac
-//prefixCode:
+//prefixCode:0x9C798bB3959b92a930C6C87769967F916dc5c8Dd
 //rate:8
-//proxy:0x49D699E43Cb83A78EB440794485BB04f0901752e
-//staking:0xceA98c91597A7687FbC818b6Cf88D64CbE229872
+
+//proxy:0x0C43E2D4891ed32afE81DE20571393ED618CCECB
+//staking:0xbb4FeA6B1e0c963b36E533a6c99a5c764c7D398e

@@ -1,6 +1,7 @@
-### baby token(代币合约):0x38f2865142a4fc0f37f9dd833475c280bc3849ac
+### 正式版本(注意切换)
+### baby token(代币合约):0x0C43E2D4891ed32afE81DE20571393ED618CCECB
 ### skaing(质押合约):0x49D699E43Cb83A78EB440794485BB04f0901752e
-### 复制json:0xceA98c91597A7687FbC818b6Cf88D64CbE229872
+
 
 ```solidity
 - 获取首码地址
