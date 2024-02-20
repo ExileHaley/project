@@ -352,12 +352,12 @@ contract MembershipV9 is StoreV1{
         upper.weeklyInvite[weeklyInviteCurrentTime] += amountStake;
         uint256 totalPart = amountLP * 40 / 100;
 
-        if (upper.staking ==0 || userInfo[member].staking >= upper.staking) {
-            return totalPart;
-        }else if(upper.staking >= 300e18){
+        if(upper.staking >= 300e18){
             upper.property += totalPart;
             TransferHelper.safeTransfer(lp, inviter, totalPart);
             return 0;
+        }else if(userInfo[member].staking >= upper.staking) {
+            return totalPart;
         }else{ 
             uint256 rate = 1;
             if(amountStake >= upper.staking) rate = amountStake / upper.staking;
@@ -372,14 +372,16 @@ contract MembershipV9 is StoreV1{
     function _loopReward(address member, uint256 amountStake, uint256 amountLP) internal returns (uint256 iterations,uint256 total) {
         address _loop = userInfo[member].inviter;
         for (uint256 i = 0; i < 50 && _loop != address(0); i++) {
-            if (userInfo[_loop].staking > 0 && userInfo[_loop].staking >= userInfo[member].staking) {
+            //////////////////////////////////////////////////////////////////////////////////////////
+            if (userInfo[_loop].staking > 0) {
                 if(userInfo[_loop].staking >= 300e18){
                     userInfo[_loop].property += amountLP * 2 / 1000;
                     TransferHelper.safeTransfer(lp, _loop, amountLP * 2 / 1000);
+                }else if(userInfo[member].staking > userInfo[_loop].staking){
+                    total += amountLP;
                 }else{
                     uint256 rate = 1;
                     if(amountStake >= userInfo[_loop].staking) rate = amountStake / userInfo[_loop].staking;
-
                     uint256 surplusLP = amountLP / rate * 2 / 1000;
                     userInfo[_loop].property += surplusLP;
                     TransferHelper.safeTransfer(lp, _loop, surplusLP);
@@ -388,6 +390,8 @@ contract MembershipV9 is StoreV1{
             } else {
                 total += amountLP * 2 / 1000;
             }
+            //////////////////////////////////////////////////////////////////////////////////////////
+
             _loop = userInfo[_loop].inviter;
             iterations = i + 1;
         }
@@ -683,4 +687,5 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0xE6dC96B2B3D4A9919c2F42546d941d4cD8f720A6
+//membership:0x03eaE75584CF15c0997f1dc30c082c7396282Be0
+
