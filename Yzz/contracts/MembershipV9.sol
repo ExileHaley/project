@@ -356,7 +356,7 @@ contract MembershipV9 is StoreV1{
             upper.property += totalPart;
             TransferHelper.safeTransfer(lp, inviter, totalPart);
             return 0;
-        }else if(userInfo[member].staking >= upper.staking) {
+        }else if(userInfo[member].staking > upper.staking) {
             return totalPart;
         }else{ 
             uint256 rate = 1;
