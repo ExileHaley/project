@@ -1,6 +1,6 @@
 ### 正式版本(注意切换)
-### baby token(代币合约):0x0C43E2D4891ed32afE81DE20571393ED618CCECB
-### skaing(质押合约):0x49D699E43Cb83A78EB440794485BB04f0901752e
+### baby token(代币合约):
+### skaing(质押合约):0x0C43E2D4891ed32afE81DE20571393ED618CCECB
 
 
 ```solidity
