@@ -17,7 +17,7 @@ function claim() external;
 
     enum Mark{
         INVAILD, //无效
-        ONE, //直退
+        ONE, //直推
         TWO, //二代
         THREE //三代
     }
@@ -32,7 +32,7 @@ function claim() external;
         Mark    mark;
         address members; //用户地址
         uint256 amount; //质押或赎回数量
-        uint256 time; //质押或赎回事件
+        uint256 time; //质押或赎回时间
     }
 
 - 获取用户信息,_inviter当前用户推荐人地址，_staking当前用户的质押数量，_dynamic当前用户的动态算力，_income当前用户的收益(BNB)
