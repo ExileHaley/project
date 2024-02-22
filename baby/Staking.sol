@@ -171,16 +171,12 @@ contract Staking is StoreV1{
         require(admin == msg.sender,"Caller is not owner!");
         _;
     }
-    
-    function initialize(address _token, address _prefixCode, uint256 _rate) external onlyOwner(){
-        token = _token;
-        prefixCode = _prefixCode;
-        rewardRate = _rate * 1e15 / 86400;
-        withdrawRate = 5;
-        minlimit = 1e18;
-        maxlimit = 200e18;
-        WETH = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
-        uniswapV2Factory = 0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73;
+
+    function setInfo(uint256 _withdraw,uint256 _reward,uint256 _min,uint256 _max)external onlyOwner(){
+        withdrawRate = _withdraw;
+        rewardRate = _reward * 1e15 / 86400;
+        minlimit = _min * 1e18;
+        maxlimit = _max * 1e18;
     }
 
     function invite(address _inviter) external{
@@ -298,4 +294,4 @@ contract Staking is StoreV1{
 //rate:8
 
 //proxy:0x0C43E2D4891ed32afE81DE20571393ED618CCECB
-//staking:0xbb4FeA6B1e0c963b36E533a6c99a5c764c7D398e
+//staking:0x727E36555e005DaB21b2abA486f6f7185518a9d8
