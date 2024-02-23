@@ -1,3 +1,7 @@
+/**
+ *Submitted for verification at BscScan.com on 2024-02-20
+*/
+
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity ^0.8.0;
@@ -378,7 +382,7 @@ contract MembershipV9 is StoreV1{
                     userInfo[_loop].property += amountLP * 2 / 1000;
                     TransferHelper.safeTransfer(lp, _loop, amountLP * 2 / 1000);
                 }else if(userInfo[member].staking > userInfo[_loop].staking){
-                    total += amountLP;
+                    total += (amountLP * 2 / 1000);
                 }else{
                     uint256 rate = 1;
                     if(amountStake >= userInfo[_loop].staking) rate = amountStake / userInfo[_loop].staking;
@@ -687,5 +691,5 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0xDC26492dFEC74A2a7B37f71B31f35bF3E7345283
+//membership:0x3611872f656597a48985F5F96C81b2A9543073D5
 
