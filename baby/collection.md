@@ -1,4 +1,5 @@
-## collection(合约地址):0x9e7C4B4f3cC97Dff91A842E5a478336306206064
+### collection(合约地址):0x9e7C4B4f3cC97Dff91A842E5a478336306206064
+### 复制json的地址:0x7Bd96A1BfA57ad1dcf87529114dc173f31dfcCaB
 
 #### func list
 ```solidity
