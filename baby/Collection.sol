@@ -75,6 +75,8 @@ contract StoreV1 is Store{
 
     mapping(address => User) userInfo;
     address token;
+    address receiver;
+    uint256 totalBNB;
     uint256 maxlimit;
     uint256 rate;
     bool    public withSwitch;
@@ -92,14 +94,15 @@ contract Collection is StoreV1{
         require(admin == msg.sender,"Caller is not owner!");
         _;
     }
-    //collection:
+    //receiver:0x78Df9bb8Cd46D8bE2D6339590bD678b58300fD2C
     //token:0xf079e0996aFe7A2f3B9165700c839f1110e8ddD9
     //rate:10
-    //proxy:0x9e7C4B4f3cC97Dff91A842E5a478336306206064
-    //collection:0x26AdFBdef9C883C7C50915CBE89AcF388fcE3044
-    function init(address _token, uint256 _rate) external onlyOwner(){
+    //proxy:0xA1dAaeB785599516d75618078e625A41F08F98aA
+    //collection:0xC41b76F4d88AdcdeAAF56098B76F237836869D2f
+    function init(address _token, address _receiver, uint256 _rate) external onlyOwner(){
         token = _token;
         rate = _rate;
+        receiver = _receiver;
         maxlimit = 1e18;
     }
 
@@ -123,9 +126,10 @@ contract Collection is StoreV1{
     function provide(uint256 amount) external payable{
         require(amount <= getQuota(msg.sender) && amount >= 1e17 && msg.value >= amount,"Provide amount error");
         require(!withSwitch,"Provide state error");
-        TransferHelper.safeTransferETH(address(this), msg.value);
+        TransferHelper.safeTransferETH(receiver, msg.value);
         userInfo[msg.sender].amountToken += (amount * rate);
         userInfo[msg.sender].amountBNB += amount;
+        totalBNB += amount;
         userInfo[msg.sender].records.push(Record(amount,block.timestamp));
     }
 
@@ -143,7 +147,7 @@ contract Collection is StoreV1{
     }
 
     function getCollectInfo() external view returns(uint256 _bnb,uint256 _token){
-        _bnb = address(this).balance;
-        _token = address(this).balance * rate;
+        _bnb = totalBNB;
+        _token = totalBNB * rate;
     }
 }

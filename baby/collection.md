@@ -1,7 +1,7 @@
 ### 修改内容
-- 更新json，有新增方法getCollectInfo
-### collection(合约地址):0x9e7C4B4f3cC97Dff91A842E5a478336306206064
-### 复制json的地址:0x26AdFBdef9C883C7C50915CBE89AcF388fcE3044
+- 更换collection合约地址即可，不需要更新json内容
+### collection(合约地址):0xA1dAaeB785599516d75618078e625A41F08F98aA
+### 复制json的地址:0xC41b76F4d88AdcdeAAF56098B76F237836869D2f
 
 
 #### func list
