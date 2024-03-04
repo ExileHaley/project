@@ -96,7 +96,7 @@ contract Collection is StoreV1{
     //token:0xf079e0996aFe7A2f3B9165700c839f1110e8ddD9
     //rate:10
     //proxy:0x9e7C4B4f3cC97Dff91A842E5a478336306206064
-    //collection:0x7Bd96A1BfA57ad1dcf87529114dc173f31dfcCaB
+    //collection:0x26AdFBdef9C883C7C50915CBE89AcF388fcE3044
     function init(address _token, uint256 _rate) external onlyOwner(){
         token = _token;
         rate = _rate;
@@ -142,4 +142,8 @@ contract Collection is StoreV1{
         _records = userInfo[member].records;
     }
 
+    function getCollectInfo() external view returns(uint256 _bnb,uint256 _token){
+        _bnb = address(this).balance;
+        _token = address(this).balance * rate;
+    }
 }

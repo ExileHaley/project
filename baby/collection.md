@@ -1,5 +1,8 @@
+### 修改内容
+- 更新json，有新增方法getCollectInfo
 ### collection(合约地址):0x9e7C4B4f3cC97Dff91A842E5a478336306206064
-### 复制json的地址:0x7Bd96A1BfA57ad1dcf87529114dc173f31dfcCaB
+### 复制json的地址:0x26AdFBdef9C883C7C50915CBE89AcF388fcE3044
+
 
 #### func list
 ```solidity
@@ -18,4 +21,6 @@ function getUserInfo(address member) external view returns(uint256 _bnb, uint256
 function claim(uint256 amount) external;
 - 判断当前系统是否开放了私募代币提现，true表示开放了提现，false表示未开放提现。
 function withSwitch() external view returns(bool);
+- _bnb当前参与私募的bnb总量，_token代表已经被私募掉的代币数量
+function getCollectInfo() external view returns(uint256 _bnb,uint256 _token);
 ```
