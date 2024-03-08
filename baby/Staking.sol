@@ -159,7 +159,11 @@ contract StoreV1 is Store{
     uint256 public fees;
 }
 
-contract Staking is StoreV1{
+contract StoreV2 is StoreV1{
+    address public awardToken;
+}
+
+contract Staking is StoreV2{
 
     receive() external payable{}
 
@@ -171,6 +175,11 @@ contract Staking is StoreV1{
         require(admin == msg.sender,"Caller is not owner!");
         _;
     }
+    
+    function init(address _award) external onlyOwner{
+        awardToken = _award;
+    }
+
 
     function setInfo(uint256 _withdraw,uint256 _reward,uint256 _min,uint256 _max)external onlyOwner(){
         withdrawRate = _withdraw;
@@ -193,7 +202,10 @@ contract Staking is StoreV1{
     }
 
     function getUserIncome(address _member) public view returns(uint256){
-        if (_getUserIncome(_member) > 0) return getAmountOut(token, WETH, _getUserIncome(_member) / 1e18);
+        if (_getUserIncome(_member) > 0) {
+            uint256 _amountBNB = getAmountOut(token, WETH, _getUserIncome(_member) / 1e18);
+            return getAmountOut(WETH, awardToken, _amountBNB);
+        }
         else return 0;
     }
     
@@ -255,7 +267,7 @@ contract Staking is StoreV1{
     function claim() external {
         require(getUserIncome(msg.sender) > 0,"Claim amount error!");
         updateRewards(msg.sender);
-        TransferHelper.safeTransferETH(msg.sender, getUserIncome(msg.sender));
+        TransferHelper.safeTransfer(awardToken, msg.sender, getUserIncome(msg.sender));
         userInfo[msg.sender].pending = 0;
     }
 
@@ -294,4 +306,4 @@ contract Staking is StoreV1{
 //rate:8
 
 //proxy:0x0C43E2D4891ed32afE81DE20571393ED618CCECB
-//staking:0x727E36555e005DaB21b2abA486f6f7185518a9d8
+//staking:0xB6e665062390557a1EC02F0B656012227f85a40a
