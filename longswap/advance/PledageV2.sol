@@ -3,12 +3,12 @@
 pragma solidity ^0.8.0;
 
 
-contract AdvanceStorage{
+contract Store{
     address public admin;
     address public implementation;
 }
 
-contract Proxy is AdvanceStorage{
+contract Proxy is Store{
     receive() external payable {}
     constructor() {
         admin = msg.sender;
@@ -61,10 +61,10 @@ library TransferHelper {
 }
 
 interface IPledage {
-    function userInfo(address _user) external view returns(bool staking,uint256 time,uint256 num,address inv,uint256 income);
+    function userInfo(address _user) external view returns(uint256 amount,uint256 time,uint256 num,address inv,uint256 income,bool isMap);
 }
 
-contract AdvanceStorageV1 is AdvanceStorage{
+contract PledageStoreV1 is Store{
 
     struct Record{
         address beInvited;
@@ -87,11 +87,12 @@ contract AdvanceStorageV1 is AdvanceStorage{
     address public beforePledage;
     address public dead;
     uint256 public baseRate;
+
+    uint256 public totalStaking;
 }
 
+contract PledageV1 is PledageStoreV1{
 
-
-contract AdvancePledage is AdvanceStorageV1{
     constructor(){
         admin = msg.sender;
     }
@@ -100,10 +101,16 @@ contract AdvancePledage is AdvanceStorageV1{
         require(admin == msg.sender,"Caller is not admin");
         _;
     }
+    //before:0xfC0475CbF48f4754AC2b3F44CCF3d9F14590913c
+    //earning:0xf079e0996afe7a2f3b9165700c839f1110e8ddd9
+    //testAddress:0xB82A403e9BDc58b121Ec839C269bbcC4eeCf7bD9
 
-    function initialize(address _staking,address _earning,address _before) external onlyAdmin(){
-        dead = 0x000000000000000000000000000000000000dEaD;
-        stakingToken = _staking;
+    //pledage:0x42A047cC6eC8cCDAd8204Dc3f3D21Fe2620A293b
+    //proxy:0x3dfBB78b66f737a01527976d9213D79c33fB8aEc
+    // ### 旧版本合约地址(废弃)
+    // ### pledage contract:0xfC0475CbF48f4754AC2b3F44CCF3d9F14590913c
+    // ### long token:0xfc8774321ee4586af183baca95a8793530056353
+    function initialize(address _earning,address _before) external onlyAdmin(){
         earningToken = _earning;
         beforePledage = _before;
         baseRate = 10;
@@ -129,16 +136,9 @@ contract AdvancePledage is AdvanceStorageV1{
         return recordInfos[_user];
     }
 
-    function bind(address _inviter) external{
-        User storage user = userInfo[msg.sender];
-        if(getIsMapping(msg.sender)) require(user.isMap,"Please complete data mapping first");
-        require(user.inviter == address(0),"Duplicate binding is not allowed");
-        user.inviter = _inviter;
-    }
-
     function getIsMapping(address _user) public view returns(bool isMap){
-       (bool staking,,uint256 num,address inv,) = IPledage(beforePledage).userInfo(_user);
-       bool contion = staking || num > 0 || inv != address(0);
+       (uint256 amount,,uint256 num,address inv,,) = IPledage(beforePledage).userInfo(_user);
+       bool contion = amount > 0 || num > 0 || inv != address(0);
        User memory user = userInfo[_user];
        if (contion && !user.isMap) isMap = true;
     }
@@ -146,40 +146,18 @@ contract AdvancePledage is AdvanceStorageV1{
     function execute(address _user) external {
         User storage user = userInfo[_user];
         if(getIsMapping(_user)) {
-            (bool whetherStaking,,uint256 num,address inv,uint256 income) = IPledage(beforePledage).userInfo(_user);
-            if(whetherStaking) {
-                user.amount = 1e17;
-            }
+            (uint256 _amount,,uint256 _num,address _inv,,) = IPledage(beforePledage).userInfo(_user);
+            user.amount += _amount;
+            totalStaking += _amount;
             user.stakingTime = block.timestamp;
-            user.inviterNum += num;
-            user.inviter = inv;
-            user.income = income;
-            Record[] memory records = AdvancePledage(beforePledage).getUserInviteRecords(_user);
+            user.inviterNum += _num;
+            user.inviter = _inv;
+            Record[] memory records = PledageV1(beforePledage).getUserInviteRecords(_user);
             for (uint i=0; i<records.length; i++){
                 recordInfos[_user].push(records[i]);
             }
             user.isMap = true;
         }
-
-    }
-
-    function provide(uint256 amount) external{
-        User storage user = userInfo[msg.sender];
-        if(getIsMapping(msg.sender)) require(user.isMap,"Please complete data mapping first");
-        require(user.inviter != address(0),"Invalid inviter address");
-        require(amount >= 1e17 && user.amount + amount <= 10e18,"Invalid provide amount");
-        TransferHelper.safeTransferFrom(stakingToken, msg.sender, dead, amount);
-        user.income = getUserIncome(msg.sender);
-        user.amount += amount;
-        user.stakingTime = block.timestamp;
-        updateSuperior(msg.sender);
-    }
-
-    function updateSuperior(address _beInvited) internal{
-        User memory user = userInfo[_beInvited];
-        recordInfos[user.inviter].push(Record(_beInvited,block.timestamp));
-        updateIncome(user.inviter);
-        userInfo[user.inviter].inviterNum++;
     }
 
     function updateIncome(address _user) internal {
@@ -191,12 +169,12 @@ contract AdvancePledage is AdvanceStorageV1{
     function getUserIncome(address _user) public view returns(uint256 _income){
         User memory user = userInfo[_user];
         if(user.amount > 0){
-            uint256 addBaseRate = (user.amount * baseRate) + user.inviterNum * 1e18;
+            uint256 addBaseRate = user.amount * baseRate / 1000;
             _income = (block.timestamp - user.stakingTime) * (addBaseRate / 86400) + user.income;
         }
     }
 
-    function withdraw(address _user,uint256 _amount) external{
+    function claim(address _user,uint256 _amount) external{
         uint256 _income = getUserIncome(_user);
         require(_income >= _amount, "Invalid withdraw amount");
         updateIncome(_user);
@@ -204,18 +182,4 @@ contract AdvancePledage is AdvanceStorageV1{
         TransferHelper.safeTransfer(earningToken, _user, _amount);
     }
 
-
 }
-
-
-//online version
-//logic:0x2Ce4EdcfC3Ce7D6f9151bd5d706A4A520d0E8a2e
-//proxy:0x6757d5E4C081bFEC63C7A1761B576555Ff2068d0
-//long:0xfc8774321ee4586af183baca95a8793530056353
-
-
-//new online version
-//long:0xfc8774321ee4586af183baca95a8793530056353
-//before:0x6757d5E4C081bFEC63C7A1761B576555Ff2068d0
-//proxy:0x5d25eAc9dB260975a5eE10089A640DD96261A4E0
-//logic:0x9fE87dD95d6E76CF63741627836BC41c44FE781E
