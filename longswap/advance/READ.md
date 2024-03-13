@@ -8,4 +8,6 @@
 function getUserIncome(address _user) public view returns(uint256 _income);
 - 用户提取收益
 function claim(address _user,uint256 _amount) external;
+- amount返回的是long销毁的数量，其余两个不用展示
+function userInfo(address member) external view returns(uint256 amount,uint256 stakingTime,uint256 income); 
 ```
