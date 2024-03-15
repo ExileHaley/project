@@ -455,7 +455,7 @@ contract MembershipV9 is StoreV1{
     function provide(address member, uint256 amount) external noReentrancy{
         User storage user = userInfo[member];
         require(user.inviter != address(0),"Membership: Invalid inviter address");
-        require(amount % 100e18 == 0,"Invalid provide amount!");
+        require(amount >= 1e18,"Invalid provide amount!");
         TransferHelper.safeTransferFrom(usdt, member, address(this), amount); 
         require(IERC20(usdt).balanceOf(address(this)) >= amount, "Membership: Insufficient token balance");
         
@@ -691,5 +691,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0x3611872f656597a48985F5F96C81b2A9543073D5
-
+//membership:0xd391d57BFE6941063eDA7a210DcCaD24cf413823
