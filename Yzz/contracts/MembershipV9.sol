@@ -1,6 +1,3 @@
-/**
- *Submitted for verification at BscScan.com on 2024-02-20
-*/
 
 // SPDX-License-Identifier: GPL-3.0
 
@@ -270,6 +267,10 @@ contract MembershipV9 is StoreV1{
             weeklyInviteRankings[weeklyInviteCurrentTime].push(_inviter);
             weeklyInviteDataAlreadyAdd[weeklyInviteCurrentTime][_inviter] = true;
         }
+    }
+
+    function getInviter(address member) external view returns(address){
+        return userInfo[member].additionalInviter;
     }
 
     function invite(address _inviter, address _member) external{
@@ -691,4 +692,4 @@ contract MembershipV9 is StoreV1{
 //leader:0x6A2F07083CA1F09700C237Bc699821012506c05A
 //permit:0x8EC1Cd137898008f50A623EF418D6eda5CE25052
 //proxy:0x1a3B98c59059480eE21eFb3b7d98B640B112470C
-//membership:0xd391d57BFE6941063eDA7a210DcCaD24cf413823
+//membership:0x6B595c5577294c278938Fc60E749Ff7147C50F4e
