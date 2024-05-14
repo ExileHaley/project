@@ -27,6 +27,11 @@ interface IUniswapV2Router {
     ) external payable;
 }
 
+interface IUniswapV2Pair {
+    function skim(address to) external;
+    function sync() external;
+}
+
 interface IERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -209,68 +214,81 @@ contract Template is ERC20{
 
     address marketing;
     address fundation;
-    address admin;
-    uint256 marketingRate;
-    uint256 fundationRate;
 
-    address dead = 0x000000000000000000000000000000000000dEaD;
+    address admin;
+    uint256 marketingRate = 1;
+    uint256 fundationRate = 2;
+
     address uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
-    address uniswapV2Pair;
-    uint256 tradingOpensBlock;
+    address public uniswapV2Pair;
+    uint256 public lastBurnTime;
+
+    bool    public stateSwitch = true;
+    bool    public openTrading;
 
     receive() external payable {}
 
-    constructor(address _marketing,address _fundation,uint256 _marketingRate,uint256 _fundationRate)ERC20("",""){
-        _mint(msg.sender, 10000e18);
+    constructor(address _receiver,address _marketing,address _fundation,uint256 _marketingRate,uint256 _fundationRate)ERC20("FAI","FAI"){
+        _mint(_receiver, 100000000e18);
         marketing = _marketing;
         fundation = _fundation;
         marketingRate = _marketingRate;
         fundationRate = _fundationRate;
         admin = msg.sender;
-
+        lastBurnTime = block.timestamp;
         uniswapV2Pair = IUniswapV2Factory(IUniswapV2Router(uniswapV2Router).factory()).createPair(
             IUniswapV2Router(uniswapV2Router).WETH(),
             address(this)
         );
+        
     }
 
-    function setConfig(address _marketing,address _fundation) external {
+    modifier onlyAdmin() {
         require(admin == msg.sender,"ERC20:Caller is not owner!");
+        _;
+    }
+
+    function setConfig(address _marketing,address _fundation) external onlyAdmin(){
         marketing = _marketing;
         fundation = _fundation;
     }
 
-    function _transfer(address from, address to, uint256 amount) internal virtual override{
-        bool lessTradingBlock = (from == uniswapV2Pair && block.number < tradingOpensBlock);
-        bool trading = (from == uniswapV2Pair || to == uniswapV2Pair);
-        /** 买入杀区块操作
-         *1.跟pair地址进行交互，买
-         *2.添加流动池后的10个区块内
-         *3.to地址当前token只到账1%
-        */
-        if(lessTradingBlock) _lessTradingBlock(from, to, amount);
-         /** 正常交易操作 Interaction
-         *1.跟pair地址进行交互，买卖
-         *2.to地址到账total - total * rate
-         *3.当前合约地址到账total * rate
-        */
-        else if(trading) _tradingTransfer(from, to, amount);
-        /** 转账操作
-         *1.没有与pair进行交互
-         *2.当前合约存储的代币数量大于10e18
-         *3.执行交换操作
-        */
-        else _standardTransfer(from, to, amount);
-        /**
-         *1.检测uniswapV2Pair的totalSupply
-         *2.如果大于0就更新tradingOpensBlock = 当前区块 + 10
-        */
-        if(IERC20(uniswapV2Pair).totalSupply() > 0) tradingOpensBlock = block.number + 10;
+    function setAdmin(address _admin) external onlyAdmin(){
+        admin = _admin;
     }
 
-    function _lessTradingBlock(address from, address to, uint256 amount) internal{
-        super._transfer(from, to, amount * 1 / 100);
-        super._transfer(from, address(this), amount * 99 / 100);
+    function update() external onlyAdmin(){
+        lastBurnTime = block.timestamp;
+    }
+
+    function updateState(bool _stateSwitch) external onlyAdmin(){
+        stateSwitch = _stateSwitch;
+    }
+
+    function setTrading(bool _openTrading) external onlyAdmin(){
+        openTrading = _openTrading;
+    }
+
+    function _transfer(address from, address to, uint256 amount) internal virtual override{
+        bool trading = (from == uniswapV2Pair || to == uniswapV2Pair);
+        if(trading && from != address(this)) {
+            require(openTrading, "no permit.");
+            _tradingTransfer(from, to, amount);
+        }else {
+            _standardTransfer(from, to, amount);
+        }
+        
+        bool nonswap = (!trading && from != uniswapV2Router && to != uniswapV2Router);
+        //burn base condtion = time middle && no exchange
+        if(block.timestamp - lastBurnTime >= 86400 && nonswap) {
+            //burn condtion = totalSupply &&  switch enecmy
+            if (IERC20(uniswapV2Pair).totalSupply() > 0 && stateSwitch){
+                _burn(uniswapV2Pair, balanceOf(uniswapV2Pair) * 3 / 100);
+                IUniswapV2Pair(uniswapV2Pair).sync();
+                IUniswapV2Pair(uniswapV2Pair).skim(marketing);
+                lastBurnTime = block.timestamp;
+            }
+        }    
     }
 
     function _tradingTransfer(address from, address to, uint256 amount) internal{
@@ -286,10 +304,14 @@ contract Template is ERC20{
             swapTokensForEth(swapAmount, address(this));
 
             uint256 distribution = address(this).balance;
+            //compute marketing rate
             uint256 partOfMarketingRate = marketingRate * 100 / (marketingRate + fundationRate);
+            //compute send token amount
             uint256 partOfMarketingToken = distribution * partOfMarketingRate / 100;
+            //send eth to marketking
             payable(marketing).transfer(partOfMarketingToken);
-            payable(marketing).transfer(distribution - partOfMarketingToken);
+            //send eth to fundation
+            payable(fundation).transfer(distribution - partOfMarketingToken);
         }
     }
 
@@ -312,36 +334,4 @@ contract Template is ERC20{
 }
 
 
-contract Test{
-
-    address admin;
-    address token;
-    address uniswapV2Router = 0x10ED43C718714eb63d5aA57B78B54704E256024E;
-
-    receive() external payable{}
-
-    constructor(address _token){
-        admin = msg.sender;
-        token = _token;
-    }
-
-    function excuteExchange(uint256 amount) external {
-        require(admin == msg.sender, "Caller is not owner!");
-        address[] memory path = new address[](2);
-        path[0] = IUniswapV2Router(uniswapV2Router).WETH();
-        path[1] = token;
-
-        IUniswapV2Router(uniswapV2Router).swapExactETHForTokensSupportingFeeOnTransferTokens{value:amount}(
-            0, 
-            path, 
-            address(this), 
-            block.timestamp + 10
-        );
-    }
-
-    function withdrawETH(address to) external {
-        require(admin == msg.sender, "Caller is not owner!");
-        payable(to).transfer(address(this).balance);
-    }
-
-}
+//FAI online:0xdAAb82F433c68249E3ddA9701732e22e796f9019
