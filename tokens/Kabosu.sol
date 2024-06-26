@@ -25,12 +25,18 @@ interface IUniswapV2Router {
         address to,
         uint deadline
     ) external payable;
+
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+
 }
 
-interface IUniswapV2Pair {
-    function skim(address to) external;
-    function sync() external;
-}
 
 interface IERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -274,31 +280,29 @@ contract Kabosu is ERC20{
        if(nonswap) _txFee();
     }
 
-    function _tradingTransfer(address from, address to, uint256 amount) internal{
+    function _tradingTransfer(address from, address to, uint256 amount) private{
         uint256 partOfRate = amount * (marketingRate + fundationRate + deadRate) / 1000;
         super._transfer(from, to, amount - partOfRate);
         super._transfer(from, address(this), amount * (marketingRate + fundationRate) / 1000);
         super._transfer(from, dead, amount * deadRate / 1000);
     }
 
-    function _txFee() internal{
+    function _txFee() private{
         if(IERC20(uniswapV2Pair).totalSupply() > 0 && balanceOf(address(this)) > 0){
-            uint256 swapAmount = balanceOf(address(this));
-            swapTokensForEth(swapAmount, address(this));
-
-            uint256 distribution = address(this).balance;
-            //compute marketing rate
-            uint256 partOfMarketingRate = marketingRate * 100 / (marketingRate + fundationRate);
-            //compute send token amount
-            uint256 partOfMarketingToken = distribution * partOfMarketingRate / 100;
-            //send eth to marketking
-            payable(marketing).transfer(partOfMarketingToken);
-            //send eth to fundation
-            payable(fundation).transfer(distribution - partOfMarketingToken);
+            //total token
+            uint256 swapAmount = balanceOf(address(this));            
+            //part token of marketing
+            uint256 partOfMarketingRate = marketingRate * 10000 / (marketingRate + fundationRate);
+            uint256 partOfMarketingToken = swapAmount * partOfMarketingRate / 10000;
+            _swapTokensForEth(partOfMarketingToken, marketing);
+            //part token of fundation
+            uint256 partOfFundation = balanceOf(address(this));
+            _swapTokensForEth(partOfFundation / 2, address(this));
+            _addLuidity(balanceOf(address(this)), address(this).balance);
         }
     }
 
-    function swapTokensForEth(uint256 amount, address to) internal {
+    function _swapTokensForEth(uint256 amount, address to) private {
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = IUniswapV2Router(uniswapV2Router).WETH();
@@ -314,4 +318,19 @@ contract Kabosu is ERC20{
         );
     }
 
+    function _addLuidity(uint256 amountToken, uint256 amountBNB) private{
+        _approve(address(this), address(uniswapV2Router), amountToken);
+        //bnb - token pair
+        IUniswapV2Router(uniswapV2Router).addLiquidityETH{value:amountBNB}(
+            address(this), 
+            amountToken, 
+            0, 
+            0, 
+            fundation, 
+            block.timestamp + 10
+        );
+    }
+
+
 }
+//online:0x539466a7291e4c03294527eD750b13109B5a34ba
