@@ -43,6 +43,9 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable{
     address public uniswapV2Factory;
     uint256 public rate;
     uint256 public fee;
+    //81018518518
+    //69444444444
+ 
     address public WETH;
     address public recipient;
 
@@ -113,6 +116,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable{
         User storage user = userInfo[msg.sender];
         require(user.inviter != address(0) && _amount >= 1e17,"NOT_PROVIDE_PERMIT.");
         TransferHelper.safeTransferFrom(token, msg.sender, recipient, _amount);
+        TransferHelper.safeTransferFrom(token, recipient, address(this), _amount);
         updateRewards(msg.sender);
         user.staking += _amount;
         synchronize(Operate.Increase, msg.sender, _amount);
@@ -144,16 +148,30 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable{
         User storage user = userInfo[msg.sender];
         require(user.staking > 0,"ERROR_AMOUNT.");
         updateRewards(msg.sender);
+
+        TransferHelper.safeTransfer(token, recipient, user.staking);
         TransferHelper.safeTransferFrom(token, recipient, msg.sender, user.staking * fee / 100);
+
         synchronize(Operate.reduce, msg.sender, user.staking);
         user.staking = 0;
         user.dynamic = 0;
     }
 
+    function isContract(address _addr) private view returns (bool) {
+        uint32 size;
+        assembly {
+            size := extcodesize(_addr)
+        }
+        return (size > 0);
+    }
+
     function claim() external {
+        require(!isContract(msg.sender),"ERROR_RECIPIENT.");
         require(getUserIncome(msg.sender) > 0,"ERROR_AMOUNT.");
         updateRewards(msg.sender);
-        TransferHelper.safeTransferETH(msg.sender, getUserIncome(msg.sender));
+        uint256 reward = getUserIncome(msg.sender);
+        TransferHelper.safeTransferETH(msg.sender, reward);
+        reward = 0;
         userInfo[msg.sender].pending = 0;
     }
 
