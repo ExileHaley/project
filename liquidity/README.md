@@ -21,7 +21,7 @@ $ forge script script/LiquidityScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.c
 ### abi: ./out/liquidity.sol/liquidity.json
 ### func list
 ```solidity
-
+//用户授权的时候。snake和usdt都要给contractAddress授权，判断getQuoteAmount的usdt数量以及输入sanke数量是否小于授权数量
 struct Record{
     address members; //用户钱包地址
     uint256 amountToken; //用户添加的snake数量
