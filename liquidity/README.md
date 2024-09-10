@@ -17,7 +17,7 @@ $ forge script script/LiquidityScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.c
 ```
 
 
-### contractAddress:0x44450A202db97dC3F42a21ab4220e8BE9fe0e3bf
+### contractAddress:0xa577b3177f308A38243F296cDa8b1741009f2056
 ### abi: ./out/liquidity.sol/liquidity.json
 ### func list
 ```solidity

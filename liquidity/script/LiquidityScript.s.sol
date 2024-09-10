@@ -11,11 +11,13 @@ contract LiquidityScript is Script {
     address token;
     address subToken;
     address prefixCode;
-
+    // 代币合0xf7d6243b937136d432adbc643f311b5a9436b0b0
+    //子币合0x9c1bd25a5064ca1470704d672c0725314e1a8f9c
+    //首码0x2F76d6DE5FD5Bfb1b51e36eEBCb85cb8AaC680eE
     function setUp() public {
         token = address(0xF7d6243b937136d432AdBc643f311b5A9436b0B0);
-        subToken = address(0x55d398326f99059fF775485246999027B3197955);
-        prefixCode = address(0x55d398326f99059fF775485246999027B3197955);
+        subToken = address(0x9C1BD25A5064ca1470704D672C0725314e1a8f9c);
+        prefixCode = address(0x2F76d6DE5FD5Bfb1b51e36eEBCb85cb8AaC680eE);
     }
 
     function run() public {
