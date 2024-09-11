@@ -107,7 +107,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable{
     }
 
     function updateRewards(address _member) internal{
-        userInfo[_member].pending = _getUserIncome(_member);
+        userInfo[_member].pending = _getUserIncome(_member) * 1e18;
         userInfo[_member].stakingTime = block.timestamp;
     }
 
