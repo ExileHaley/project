@@ -13,3 +13,6 @@
 [submodule "liquidity/lib/openzeppelin-contracts-upgradeable"]
 	path = liquidity/lib/openzeppelin-contracts-upgradeable
 	url = https://github.com/openzeppelin/openzeppelin-contracts-upgradeable
+[submodule "staking/lib/openzeppelin-contracts"]
+	path = staking/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts

@@ -161,7 +161,7 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         User storage user = userInfo[msg.sender];
         require(user.inviter != address(0), "NOT_ADD_LIQUIDITY_PERMIT.");
         uint256 mustUsdt = getQuoteAmount(amountToken);
-        (, uint256 usdtAmount, uint256 liquidityAmount) = addLiquidity(
+        (uint256 _amountToken, uint256 _usdtAmount, uint256 _liquidityAmount) = addLiquidity(
             token, 
             usdt, 
             amountToken, 
@@ -173,8 +173,10 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         );
 
         updateRewards(msg.sender);
-        user.staking += liquidityAmount;
-        user.value += (usdtAmount * 2);
+        user.staking += _liquidityAmount;
+        user.value += (_usdtAmount * 2);
+
+        upgrade(msg.sender, _amountToken, _usdtAmount, _liquidityAmount);
 
     }
 

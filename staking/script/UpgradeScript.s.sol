@@ -24,7 +24,7 @@ contract UpgradeScript is Script {
         bytes memory data= "";
         StakingV2(payable(stakingV2)).upgradeToAndCall(address(stakingImplV2), data);
 
-        stakingV2.setConfig(1157407407407407, 95);
+        stakingV2.setConfig(1157407407407407, 50);
         stakingV2.setSubToken(subToken);
         vm.stopBroadcast();
 

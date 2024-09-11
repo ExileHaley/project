@@ -91,7 +91,7 @@ contract StakingV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable{
     function invite(address _inviter) external {
         bool valid= (_inviter != msg.sender) || (userInfo[msg.sender].inviter == address(0));
         require(valid, "ERROR_INVITER.");
-        if(_inviter != prefixCode) require(userInfo[_inviter].staking >= 1e17,"NOT_HAS_INVITE_PERMIT.");
+        if(_inviter != prefixCode) require(userInfo[_inviter].staking >= 2e17,"NOT_HAS_INVITE_PERMIT.");
         userInfo[msg.sender].inviter = _inviter;
         userInfo[_inviter].members.push(msg.sender);
     }
@@ -108,14 +108,14 @@ contract StakingV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable{
     }
 
     function updateRewards(address _member) internal{
-        userInfo[_member].pending = _getUserIncome(_member);
+        userInfo[_member].pending = getUserIncome(_member);
         userInfo[_member].stakingTime = block.timestamp;
     }
 
 
     function provide(uint256 _amount) external{
         User storage user = userInfo[msg.sender];
-        require(user.inviter != address(0) && _amount >= 1e17,"NOT_PROVIDE_PERMIT.");
+        require(user.inviter != address(0) && _amount >= 1e17 && _amount <= 1e18,"NOT_PROVIDE_PERMIT.");
         TransferHelper.safeTransferFrom(token, msg.sender, recipient, _amount);
         TransferHelper.safeTransferFrom(token, recipient, address(this), _amount);
         updateRewards(msg.sender);
