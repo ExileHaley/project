@@ -16,6 +16,11 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit
 $ forge script script/StakingScriptMainnet.s.sol -vvv --rpc-url=https://bsc.meowrpc.com --broadcast --private-key=[privateKey]
 ```
 
+### deploy
+```shell
+$ forge script script/UpgradeScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com --broadcast --private-key=[privateKey]
+```
+
 ### staking部署地址
 - impl:0x56a0A2E82d7dfd651E796FD6D3750b1e166f77e1
 - 0x29F152B6881E5f3769972CeedDBC7Ca941947980
