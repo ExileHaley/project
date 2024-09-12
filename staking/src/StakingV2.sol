@@ -91,7 +91,7 @@ contract StakingV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable{
     function invite(address _inviter) external {
         bool valid= (_inviter != msg.sender) || (userInfo[msg.sender].inviter == address(0));
         require(valid, "ERROR_INVITER.");
-        if(_inviter != prefixCode) require(userInfo[_inviter].staking >= 2e17,"NOT_HAS_INVITE_PERMIT.");
+        if(_inviter != prefixCode) require(userInfo[_inviter].staking >= 1e17,"NOT_HAS_INVITE_PERMIT.");
         userInfo[msg.sender].inviter = _inviter;
         userInfo[_inviter].members.push(msg.sender);
     }
