@@ -16,10 +16,12 @@ $ forge install openzeppelin/openzeppelin-contracts-upgradeable --no-commit
 $ forge script script/LiquidityScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com --broadcast --private-key=[privateKey]
 ```
 
+### 合约地址有变化，abi文件也有变化
 
-### contractAddress:0x1818513B6D6d990097ed573045081b24C07981d5
+### contractAddress:0x282a3B11509C96e29Fbeb8B7968729ca2578AB9f
 ### abi: ./out/liquidity.sol/liquidity.json
 ### func list
+
 ```solidity
 //用户授权的时候。snake和usdt都要给contractAddress授权，判断getQuoteAmount的usdt数量以及输入sanke数量是否小于授权数量
 struct Record{
@@ -38,7 +40,8 @@ function provide(uint256 amountToken) external;
 function getUserInfo(address member) external view 
     returns(
         address   inviter, //当前钱包地址的邀请人地址
-        uint256   staking, //用户质押的lp数量
+        uint256   staking, //用户质押的snake数量是多少，也是算力
+        uint256   lpAmount; //用户质押的lp数量
         uint256   value,   //用户质押的lp价值多少u
         uint256   dynamic, //用户通过邀请获得的动态算力
         uint256   extracted, //用户已经提取的u/子币数量，因为u和子币是1:1的

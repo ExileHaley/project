@@ -25,6 +25,7 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
     struct User{
         address   inviter;
         uint256   staking;
+        uint256   lpAmount;
         uint256   value;
         uint256   dynamic;
         uint256   pending;
@@ -173,7 +174,9 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         );
 
         updateRewards(msg.sender);
-        user.staking += _liquidityAmount;
+
+        user.staking += _amountToken;
+        user.lpAmount += _liquidityAmount;
         user.value += (_usdtAmount * 2);
 
         upgrade(msg.sender, _amountToken, _usdtAmount, _liquidityAmount);
@@ -185,7 +188,7 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         if (upper != address(0)){
             userInfo[upper].records.push(Record(member, amountToken, amountUsdt, liquidity, block.timestamp));
             updateRewards(upper);
-            userInfo[upper].dynamic += (liquidity * 1 / 100);
+            userInfo[upper].dynamic += (amountToken * 1 / 100);
         }
     }
 
@@ -203,6 +206,7 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
     returns(
         address   inviter,
         uint256   staking,
+        uint256   lpAmount,
         uint256   value,
         uint256   dynamic,
         uint256   extracted,
@@ -213,6 +217,7 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         User memory user = userInfo[member];
         inviter = user.inviter;
         staking = user.staking;
+        lpAmount = user.lpAmount;
         value = user.value;
         dynamic = user.dynamic;
         extracted = user.extracted;

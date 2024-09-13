@@ -60,7 +60,7 @@ contract LiquidityTest is Test {
     function test_invite() public {
         vm.startPrank(user);
         liquidity.invite(prefixCode);
-        (address inviter,,,,,,) = liquidity.getUserInfo(user);
+        (address inviter,,,,,,,) = liquidity.getUserInfo(user);
         assertEq(inviter, prefixCode);
         vm.stopPrank();
     }
@@ -75,7 +75,7 @@ contract LiquidityTest is Test {
         liquidity.provide(1e18);
         vm.stopPrank();
 
-        (,,uint256 value,,,,) = liquidity.getUserInfo(user);
+        (,,,uint256 value,,,,) = liquidity.getUserInfo(user);
         console.log("User staking Value:", value);
         console.log("Liquidity amount of liquidity:", IERC20(lpToken).balanceOf(address(liquidity)));
     }
