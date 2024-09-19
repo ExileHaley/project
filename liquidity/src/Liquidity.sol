@@ -36,7 +36,7 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
     }
     mapping(address => User) userInfo;
 
-    uint256 rate;
+    uint256 public rate;
     address token;
     address subToken;
     address public prefixCode;
@@ -76,6 +76,10 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         prefixCode = _prefixCode;
     }
 
+    function setRate(uint256 _dayRate) external onlyOwner{
+        rate = _dayRate / 86400;
+    }
+
     function invite(address _inviter) external {
         bool valid= (_inviter != msg.sender) || (userInfo[msg.sender].inviter == address(0));
         require(valid, "ERROR_INVITER.");
@@ -96,9 +100,7 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
     function _getUserIncome(address member) internal view returns(uint256){
         User storage user = userInfo[member];
         uint256 _currentIncomeWithDecimals = (block.timestamp - user.stakingTime) * (user.staking + user.dynamic) * rate + user.pending;
-        uint256 _remainingIncomeNoDecimals = user.value * 3 - user.extracted;
-        if(_currentIncomeWithDecimals >= _remainingIncomeNoDecimals * 1e18) return _remainingIncomeNoDecimals * 1e18;
-        else return _currentIncomeWithDecimals;
+        return _currentIncomeWithDecimals;
     }
 
 
