@@ -35,7 +35,7 @@ $ forge script script/UpgradeScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com
 ```
 
 
-### StakingAddress:
+### StakingAddress:0xEdE92810065be4A55cbF0daca3a95e95D0f999E7
 ### abi: ./out/staking.sol/staking.json
 ### func list
 

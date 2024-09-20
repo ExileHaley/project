@@ -18,11 +18,16 @@ contract StakingScriptMainnet is Script {
     uint256 swapRate;
 
     function setUp() public {
-        token = address(0x1CCd53F4a12AE55BB8e2A19Fa37A7b1cfD4e7F3c);
-        prefixCode = address(0x975382725cF0F99bA69615e3fE9d1f0D8DBdF1D6);
-        recipient = address(0x975382725cF0F99bA69615e3fE9d1f0D8DBdF1D6);
-        subToken = address(0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73);
-        usdt = address(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
+// snake地址:0xf7d6243b937136d432adbc643f311b5a9436b0b0
+// 首码地址:0x2F76d6DE5FD5Bfb1b51e36eEBCb85cb8AaC680eE
+// 白名单没有手续费的地址:0xA5a28c00f8caCe967C2737ddFb1101Ee951B7d36
+// 子币地址:0x9c1bd25a5064ca1470704d672c0725314e1a8f9c
+
+        token = address(0xF7d6243b937136d432AdBc643f311b5A9436b0B0);
+        prefixCode = address(0x2F76d6DE5FD5Bfb1b51e36eEBCb85cb8AaC680eE);
+        recipient = address(0xA5a28c00f8caCe967C2737ddFb1101Ee951B7d36);
+        subToken = address(0x9C1BD25A5064ca1470704D672C0725314e1a8f9c);
+        usdt = address(0x55d398326f99059fF775485246999027B3197955);
     }
 
     function run() public {
@@ -44,3 +49,5 @@ contract StakingScriptMainnet is Script {
         console.log("Staking deployed to:", address(staking));
     }
 }
+// stakingImpl deployed to: 0xB4406AB0353CC0C64363e723969F233378F4B497
+//   Staking deployed to: 0xEdE92810065be4A55cbF0daca3a95e95D0f999E7
