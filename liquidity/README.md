@@ -31,7 +31,8 @@ $ forge script script/UpgradeScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com
 ### func list
 
 ```solidity
-
+    //转移管理权限，这个方法给对接到之前提lp那个管理页面
+    function transferOwnership(address _owner) external onlyOwner;
 ```
 
 
