@@ -26,6 +26,8 @@ $ forge script script/StakingScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com
 $ forge script script/UpgradeScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com --broadcast --private-key=[privateKey]
 ```
 
+
+##### 这是之前lp挖矿的那个东西，把transferOwnership方法给对接到移除流动性那个管理端
 ### liquidtyAddress:0x282a3B11509C96e29Fbeb8B7968729ca2578AB9f
 ### abi: ./out/liquidity.sol/liquidity.json
 ### func list
@@ -35,7 +37,7 @@ $ forge script script/UpgradeScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com
     function transferOwnership(address _owner) external onlyOwner;
 ```
 
-
+##### 这是新开发的质押项目，也就是说这个项目有一个lp合约，就是上面那个，还有一个质押合约下面这个
 ### StakingAddress:0xEdE92810065be4A55cbF0daca3a95e95D0f999E7
 ### abi: ./out/staking.sol/staking.json
 ### func list
