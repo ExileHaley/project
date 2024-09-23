@@ -13,9 +13,6 @@ contract StakingScriptMainnet is Script {
     address recipient;
     address subToken;
     address usdt;
-    uint256 rate;
-    uint256 fee;
-    uint256 swapRate;
 
     function setUp() public {
 // snake地址:0xf7d6243b937136d432adbc643f311b5a9436b0b0
@@ -38,7 +35,7 @@ contract StakingScriptMainnet is Script {
 
         ERC1967Proxy proxy = new ERC1967Proxy(address(stakingImpl), abi.encodeCall(
             stakingImpl.initialize, 
-            (token, prefixCode, recipient, subToken, usdt, uint256(1000e18)/86400, fee, 400)
+            (token, prefixCode, recipient, subToken, usdt, uint256(1000e18)/86400, 75, 400)
         ));
 
         staking = Staking(payable(proxy));
