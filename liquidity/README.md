@@ -26,6 +26,12 @@ $ forge script script/StakingScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com
 $ forge script script/UpgradeScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com --broadcast --private-key=[privateKey]
 ```
 
+### upgrade Staking
+```shell
+$ forge script script/UpgradeStaking.s.sol -vvv --rpc-url=https://bsc.meowrpc.com --broadcast --private-key=[privateKey]
+```
+
+
 
 ##### 这是之前lp挖矿的那个东西，把transferOwnership方法给对接到移除流动性那个管理端
 ### liquidtyAddress:0x282a3B11509C96e29Fbeb8B7968729ca2578AB9f

@@ -5,6 +5,7 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { TransferHelper } from "./library/TransferHelper.sol"; 
+import {IERC20} from "./interface/IERC20.sol";
 import { UniswapV2Library } from "./library/UniswapV2Library.sol";
 
 contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable{
@@ -73,8 +74,9 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable{
 
     function _authorizeUpgrade(address newImplementation)internal onlyOwner override{}
 
-    function emergencyWithdraw(address _to) external onlyOwner{
-        TransferHelper.safeTransferETH(_to, address(this).balance);
+    function emergencyWithdraw(address _token, address _to) external onlyOwner{
+        if(_token == address(0)) TransferHelper.safeTransferETH(_to, address(this).balance);
+        else TransferHelper.safeTransfer(_token, _to, IERC20(_token).balanceOf(address(this)));
     }
 
     function setConfig(uint256 _rate, uint256 _fee) external onlyOwner{
@@ -195,6 +197,7 @@ contract Staking is Initializable, OwnableUpgradeable, UUPSUpgradeable{
     }
     
     function swap(uint256 _amount) external {
+        
         TransferHelper.safeTransferFrom(subToken, msg.sender, address(this), _amount);
         uint256 swapAmount = 0;
         swapAmount = _amount * swapRate / 10000;

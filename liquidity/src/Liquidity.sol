@@ -227,3 +227,4 @@ contract Liquidity is Initializable, OwnableUpgradeable, UUPSUpgradeable, Reentr
         records = user.records;
     }
 }
+

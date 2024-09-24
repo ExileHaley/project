@@ -18,14 +18,11 @@ contract UpgradeStaking is Script {
     function run() public {
 
         vm.startBroadcast();
-        console.log("Before withdraw fee:", staking.fee());
-        console.log("Before reward rate:", staking.rate());
-        console.log("Before swap rate:", staking.swapRate());
-        staking.setConfig(uint256(1000e18)/86400, 75);
 
-        console.log("After withdraw fee:", staking.fee());
-        console.log("After reward rate:", staking.rate());
-        console.log("After swap rate:", staking.swapRate());
+        Staking stakingImpl = new Staking();
+
+        bytes memory data= "";
+        Staking(payable(staking)).upgradeToAndCall(address(stakingImpl), data);
 
         vm.stopBroadcast();
 
