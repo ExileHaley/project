@@ -14,14 +14,10 @@ contract UpgradeScript is Script {
     }
 
     function run() public {
-
         vm.startBroadcast();
         StakingV2 stakingImplV2 = new StakingV2();
         bytes memory data= "";
         StakingV2(payable(stakingV2)).upgradeToAndCall(address(stakingImplV2), data);
         vm.stopBroadcast();
-
-        console.log("StakingV2 deployed to:", address(stakingImplV2));
-        console.log("StakingV2 deployed to:", address(stakingV2));
     }
 }

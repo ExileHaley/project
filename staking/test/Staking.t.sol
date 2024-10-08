@@ -1,10 +1,83 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-// import {Test, console} from "forge-std/Test.sol";
-// import {Staking} from "../src/Staking.sol";
-// import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-// import {IERC20} from "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {Test, console} from "forge-std/Test.sol";
+import {StakingV3} from "../src/StakingV3.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {IERC20} from "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {Wukong} from "../src/Wukong.sol";
+
+contract StakingTest is Test {
+    StakingV3 public stakingV3;
+    Wukong public wukong;
+    address public nftRecipient;
+    address public owner;
+    address public prefixCode;
+    address public subToken;
+
+    uint256 mainnetFork;
+
+    function setUp() public{
+        mainnetFork = vm.createFork(vm.envString("rpc_url"));
+        vm.selectFork(mainnetFork);
+
+        owner = address(0x1e6470e6538E2A1BB02655Cd62195c6FbebdEBb4);
+        nftRecipient = address(0xae5A2FEf06951Dbd0D5E776a5E74c2bADdcE8F51);
+        stakingV3 = StakingV3(payable(0x29F152B6881E5f3769972CeedDBC7Ca941947980));
+        prefixCode = address(0x975382725cF0F99bA69615e3fE9d1f0D8DBdF1D6);
+        subToken = address(0x9c38c668028Ab460341D9a76Dc31599a485C69F3);
+        vm.startPrank(owner);
+        StakingV3 stakingImplV3 = new StakingV3();
+        bytes memory data= "";
+        StakingV3(payable(stakingV3)).upgradeToAndCall(address(stakingImplV3), data);
+
+        wukong = new Wukong();
+        wukong.transferOwnership(address(payable(stakingV3)));
+        stakingV3.setNftConfig(address(wukong), 3000e18, 1e17, nftRecipient, subToken);
+        vm.stopPrank();
+    }
+
+    
+    function test_purchase() public {
+        address user = vm.addr(1);
+        deal(user, 11 * 1e17);
+        vm.startPrank(user);
+        stakingV3.invite(prefixCode);
+        stakingV3.purchase{value:11 * 1e17}(11);
+        assertEq(wukong.balanceOf(user), 11);
+        assertEq(wukong.balanceOf(prefixCode), 1);
+        assertEq(stakingV3.getInvitePurchaseAmount(prefixCode), 1);
+        assertEq(wukong.index(), 13);
+        assertEq(nftRecipient.balance, 11 * 1e17);
+        vm.stopPrank;
+    }
+
+    function test_swap() public {
+        address user1 = vm.addr(2);
+        deal(user1, 10 * 1e17);
+        vm.startPrank(user1);
+        stakingV3.invite(prefixCode);
+        stakingV3.purchase{value:10 * 1e17}(10);
+        uint256[] memory tokenIds = new uint256[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            tokenIds[i] = i + 1; // 赋值 1 到 10
+        }
+
+        wukong.setApprovalForAll(address(stakingV3), true);
+
+        stakingV3.swap(tokenIds);
+        assertEq(wukong.balanceOf(user1), 0);
+        assertEq(wukong.balanceOf(address(stakingV3)), 10);
+
+        assertEq(wukong.balanceOf(prefixCode), 1);
+
+        assertEq(IERC20(subToken).balanceOf(user1), 10 * 3000e18);
+        assertEq(nftRecipient.balance, 10 * 1e17);
+        
+        vm.stopPrank;
+    }
+
+}
 
 // contract StakingTest is Test {
 //     Staking public staking;

@@ -43,8 +43,6 @@ contract StakingV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable{
     address public uniswapV2Factory;
     uint256 public rate;
     uint256 public fee;
-    //81018518518
-    //69444444444
  
     address public WETH;
     address public recipient;
