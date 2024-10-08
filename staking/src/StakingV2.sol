@@ -131,16 +131,19 @@ contract StakingV2 is Initializable, OwnableUpgradeable, UUPSUpgradeable{
             uint256 _dynamic;
             if(i==0){
                 user.records.push(Record(operate, Mark.ONE, _member, _amount, block.timestamp));
-                _dynamic = _amount * 10 / 100;   
+                _dynamic = _amount * 20 / 100;   
             }else{
                 user.records.push(Record(operate, Mark.TWO, _member, _amount, block.timestamp));
-                _dynamic = _amount * 5 / 100;
+                _dynamic = _amount * 10 / 100;
             }
+
             if(operate == Operate.Increase) user.dynamic += _dynamic;
-            if(operate == Operate.reduce && user.dynamic >= _dynamic){
-                user.dynamic -= _dynamic;
-                if(user.dynamic < _dynamic) user.dynamic = 0;
+
+            if(operate == Operate.reduce){
+                if(user.dynamic >= _dynamic) user.dynamic -= _dynamic;
+                else user.dynamic = 0;
             } 
+            
             _loop = userInfo[_loop].inviter;
         } 
     }
