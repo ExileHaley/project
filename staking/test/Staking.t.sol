@@ -32,6 +32,7 @@ contract StakingTest is Test {
         StakingV3(payable(stakingV3)).upgradeToAndCall(address(stakingImplV3), data);
 
         wukong = new Wukong();
+        wukong.setUrl("https://test.com/");
         wukong.transferOwnership(address(payable(stakingV3)));
         stakingV3.setNftConfig(address(wukong), 3000e18, 1e17, nftRecipient, subToken);
         vm.stopPrank();
@@ -75,6 +76,39 @@ contract StakingTest is Test {
         assertEq(nftRecipient.balance, 10 * 1e17);
         
         vm.stopPrank;
+    }
+
+    function test_url() public {
+        vm.startPrank(owner);
+        stakingV3.setNftOwner(owner);
+        wukong.mint(1);
+        console.log("1",wukong.tokenURI(1));
+        wukong.mint(999);
+        console.log("999",wukong.tokenURI(999));
+        wukong.mint(1000);
+        console.log("1000",wukong.tokenURI(1000));
+
+        wukong.mint(1001);
+        console.log("1001",wukong.tokenURI(1001));
+
+        wukong.mint(1999);
+        console.log("1999",wukong.tokenURI(1999));
+
+        wukong.mint(2000);
+        console.log("2000",wukong.tokenURI(2000));
+
+        wukong.mint(2001);
+        console.log("2001",wukong.tokenURI(2001));
+
+        wukong.mint(2999);
+        console.log("2999",wukong.tokenURI(2999));
+
+        wukong.mint(9999);
+        console.log("9999",wukong.tokenURI(9999));
+
+        wukong.mint(10000);
+        console.log("10000",wukong.tokenURI(10000));
+        vm.stopPrank();
     }
 
 }
