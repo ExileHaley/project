@@ -19,7 +19,7 @@ contract StakingScriptMainnet is Script {
         stakingV3 = StakingV3(payable(0x29F152B6881E5f3769972CeedDBC7Ca941947980));
         BNBRecipient = address(0xae5A2FEf06951Dbd0D5E776a5E74c2bADdcE8F51);
         //更新
-        nftSubToken = address(0x1CCd53F4a12AE55BB8e2A19Fa37A7b1cfD4e7F3c);
+        nftSubToken = address(0xae5A2FEf06951Dbd0D5E776a5E74c2bADdcE8F51);
     }
 
     function run() public {
@@ -27,7 +27,7 @@ contract StakingScriptMainnet is Script {
         vm.startBroadcast();
 
         wukong = new Wukong();
-        wukong.setUrl("https://test.com/");
+        wukong.setUrl("https://wukong-nft.s3.ap-east-1.amazonaws.com/wukong_nft/nft_json/WUKONG_JSON/");
 
         StakingV3 stakingImplV3 = new StakingV3();
         bytes memory data= "";

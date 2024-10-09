@@ -22,11 +22,11 @@ $ forge script script/UpgradeScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com
 ```
 
 ### staking部署地址
-- impl:0x56a0A2E82d7dfd651E796FD6D3750b1e166f77e1
 - 0x29F152B6881E5f3769972CeedDBC7Ca941947980
 
 ### abi文件
-- 在当前项目out文件夹下找到Staking.sol文件夹，abi就在其中。
+- 在当前项目out文件夹下找到StakingV3.sol文件夹，abi就在其中,要更新abi。
+- 在当前项目out文件夹下找到Wukong.sol文件夹，abi就在其中,要更新abi。
 
 ### staking function list
 ```solidity
@@ -48,6 +48,9 @@ $ forge script script/UpgradeScript.s.sol -vvv --rpc-url=https://bsc.meowrpc.com
     //兑换子币，tokenIds是一个tokenId的数组，可以兑换的子币数量根据getSwapResult方法计算
     function swap(uint256[] memory tokenIds) external;
 ```
+
+### wukong nft部署地址
+- 0xfA8573D7C529171967CdE1C25bEd1de95CF3c433
 
 ### NFT function list
 ```solidity

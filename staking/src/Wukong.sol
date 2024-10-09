@@ -46,7 +46,7 @@ contract Wukong is ERC721, Ownable{
         else  midId = div;
 
         string memory baseURI = _baseURI();
-        return bytes(baseURI).length > 0 ? string.concat(baseURI, midId.toString()) : "";
+        return bytes(baseURI).length > 0 ? string.concat(baseURI, midId.toString(), ".json") : "";
     }
 
     function mint(uint256 tokenId) external onlyOwner(){
