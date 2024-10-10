@@ -232,6 +232,7 @@ contract StakingV3 is Initializable, OwnableUpgradeable, UUPSUpgradeable, ERC721
     }
 
     function purchase(uint256 amount) external payable{
+        require(amount <= 10, "Error amount.");
         require(msg.value >= purchaseRate * amount, "Erorr msg.value");
         //用户支付并铸造NFT
         TransferHelper.safeTransferETH(nftRecipient, getPurchase(amount));
@@ -252,6 +253,7 @@ contract StakingV3 is Initializable, OwnableUpgradeable, UUPSUpgradeable, ERC721
     }
 
     function getPurchase(uint256 nfts) public view returns(uint256){
+        require(nfts <= 10, "Error nfts.");
         return nfts * purchaseRate;
     }
 
